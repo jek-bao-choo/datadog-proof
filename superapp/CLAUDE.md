@@ -21,20 +21,17 @@ A super app with multiple services (Transport, Banking, Mobile Payment, etc.) th
 - Naming convention: `[service-name]-[framework]-v[version]`
 - Example: `banking-nextjs-v14`, `transport-spring-v3`
 
+## Workflow Process
+1. **Research Phase**: Create high-level implementation plan in `2-RESEARCH.md`
+2. **Review Phase**: Wait for user review and feedback on the `2-RESEARCH.md`
+3. **Detailed Planning**: After user approval of `2-RESEARCH.md`, create a detailed implementation plan with detailed atomic stages in `3-PLAN.md`
+4. **Implementation Phase**: Implement `3-PLAN.md` step-by-step on a new branch and mark steps as "(COMPLETED)" in `3-PLAN.md` after each item and each step are completed
+
 ## Guidelines
-- Keep everything simple (as simple as Hello World examples) - iOS app, web apps, and backends
+- Keep everything simple (Hello World level) - iOS app, web apps, and backends
+- Keep explanations simple and assume no prior development knowledge
+- Break down tasks into small, manageable atomic steps
 - Run individual tests, not full test suites
 - Verify functionality after code changes
-- Each service should be focused and independent
-
-## Workflow Process
-1. **Planning Phase**: Create high-level implementation plan in `PLAN.md`
-2. **Review Phase**: Wait for user review and feedback on the plan
-3. **Detailed Planning**: After approval, create detailed implementation plan with atomic stages
-4. **Implementation Phase**: Implement the plan step-by-step on a new branch (when user is ready)
-
-## Guidelines
-- Keep explanations simple and assume no prior iOS development knowledge
-- Break down tasks into small, manageable atomic steps
 - Wait for explicit user approval before moving to the next phase
-- Focus on creating a working "Hello World" iOS app as simply as possible
+- Each service should be focused and independent
