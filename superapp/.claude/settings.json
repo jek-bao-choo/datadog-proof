@@ -1,15 +1,1 @@
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input.file_path' \\\n  | xargs -I {} git add \"{}\" \\\n  && git commit -m \"chores (superapp): claude code  updates\""
-          }
-        ]
-      }
-    ]
-  }
-}
+{}

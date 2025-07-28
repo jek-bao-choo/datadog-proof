@@ -4,7 +4,7 @@
 A super app with multiple services (Transport, Banking, Mobile Payment, etc.) that looks like the UI of Grab, Uber, or GoJek. Refer to image as mockup: ![image mobile-app-ui-reference.jpg](mobile-app-ui-reference.jpg).
 
 ## Architecture
-- **iOS Shell**: Native app container with navigation
+- **iOS or Android Shell**: Native app container with navigation
 - **Service Web Apps**: Each service is a separate web app rendered via WebView
 - **Backend**: Independent microservices for each service
 
