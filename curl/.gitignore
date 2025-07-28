@@ -1,5 +1,3 @@
-*.local.md
-
 # Environment variables
 .env
 *.env
