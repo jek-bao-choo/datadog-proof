@@ -1,15 +1,17 @@
-# Hello World - Super App
+# Payment App - Super App
 
-This is a simple Hello World Next.js application that serves as the foundation for the Super App project. Built with Next.js 15, TypeScript, and Tailwind CSS v4.
+This is a mobile payment interface for the Super App project, similar to payment features found in Grab, Uber, or GoJek. Built with Next.js 15, TypeScript, and Tailwind CSS v4 with Singapore mobile number validation.
 
 ## Features
 
-- ✨ Interactive Hello World page with click counter
-- 🎨 Modern responsive design using Tailwind CSS v4
-- 📱 Mobile-first responsive layout
-- 🚀 Built with Next.js 15 and App Router
-- 💡 TypeScript for type safety
-- 🔧 ESLint configuration for code quality
+- 💸 **Mobile Payment Form**: Send money with mobile number and amount inputs
+- 🇸🇬 **Singapore Mobile Validation**: Support for +65 XXXX XXXX format validation
+- 💰 **Dollar Amount Validation**: Currency input with $0.01-$10,000 range validation
+- 📱 **Mobile-First Design**: Touch-friendly interface optimized for mobile devices
+- ✅ **Real-Time Validation**: Instant feedback with visual indicators
+- 🎨 **Modern UI**: Clean, professional design with animations and transitions
+- 🔒 **Form Security**: Comprehensive client-side validation and error handling
+- ♿ **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 
 ## Getting Started
 
@@ -40,14 +42,45 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Form Validation Rules
+
+### Mobile Number Validation
+- **Format**: +65 XXXX XXXX, 65 XXXX XXXX, or XXXX XXXX
+- **Pattern**: `/^(\+65|65)?[689]\d{7}$/`
+- **Valid Prefixes**: 6, 8, 9 (Singapore mobile prefixes)
+- **Examples**: 
+  - ✅ +65 9123 4567
+  - ✅ 65 9123 4567  
+  - ✅ 9123 4567
+  - ❌ +65 1234 5678 (invalid prefix)
+
+### Dollar Amount Validation
+- **Range**: $0.01 to $10,000.00
+- **Pattern**: `/^\d+(\.\d{1,2})?$/`
+- **Format**: Up to 2 decimal places
+- **Examples**:
+  - ✅ 10.50
+  - ✅ 100
+  - ✅ 999.99
+  - ❌ -5.00 (negative)
+  - ❌ 10.555 (too many decimals)
+
 ## Project Structure
 
 ```
-hello-nextjs-v14/
+payment-nextjs-v15/
 ├── app/
 │   ├── globals.css          # Global styles with Tailwind imports
-│   ├── layout.tsx           # Root layout with metadata
-│   └── page.tsx             # Main Hello World page component
+│   ├── layout.tsx           # Root layout with payment app metadata
+│   └── page.tsx             # Main payment interface page
+├── components/              # Payment form components
+│   ├── PaymentForm.tsx      # Main payment form container
+│   ├── MobileInput.tsx      # Mobile number input with validation
+│   ├── AmountInput.tsx      # Amount input with currency formatting
+│   └── SendButton.tsx       # Submit button with loading states
+├── lib/                     # Utility functions and hooks
+│   ├── validation.ts        # Validation patterns and functions
+│   └── hooks.ts             # Custom React hooks for form management
 ├── public/                  # Static assets
 ├── package.json            # Dependencies and scripts
 ├── next.config.ts          # Next.js configuration
@@ -57,34 +90,68 @@ hello-nextjs-v14/
 
 ## Key Components
 
-- **`app/page.tsx`**: Main page component with interactive Hello World message
-- **`app/layout.tsx`**: Root layout with proper metadata and viewport configuration  
-- **`app/globals.css`**: Global styles using Tailwind CSS v4
+- **`PaymentForm.tsx`**: Main payment form with form state management
+- **`MobileInput.tsx`**: Singapore mobile number input with real-time validation
+- **`AmountInput.tsx`**: Currency amount input with dollar formatting
+- **`SendButton.tsx`**: Submit button with loading and disabled states
+- **`validation.ts`**: Validation functions for mobile numbers and amounts
+- **`hooks.ts`**: Custom React hooks for form state and validation
+
+## Usage Examples
+
+### Singapore Mobile Number Formats
+```typescript
+// All these formats are valid:
+"+65 9123 4567"  // International format
+"65 9123 4567"   // Country code without +
+"9123 4567"      // Local format
+"91234567"       // No spaces
+```
+
+### Dollar Amount Formats
+```typescript
+// Valid amounts:
+"10.50"    // With cents
+"100"      // Whole dollars
+"0.01"     // Minimum amount
+"10000"    // Maximum amount
+
+// Invalid amounts:
+"-5.00"    // Negative
+"10.555"   // Too many decimals
+"0"        // Below minimum
+"10001"    // Above maximum
+```
 
 ## Super App Integration
 
-This Hello World app is designed to be integrated into the larger Super App architecture:
+This payment app is designed for integration into the larger Super App architecture:
 
-- Built for embedding in WebView components
-- Mobile-responsive design ready for native app containers
-- Modular structure for easy extension and integration
-- Clean, simple codebase following Super App naming conventions
+- **WebView Ready**: Optimized for embedding in native mobile app containers
+- **Singapore-Focused**: Built specifically for Singapore market with local mobile formats
+- **Component-Based**: Reusable components for other payment flows
+- **Scalable Architecture**: Ready for backend integration and real payment processing
+- **Security-First**: Comprehensive validation prevents invalid submissions
 
 ## Quality Assurance
 
-✅ No ESLint warnings or errors  
-✅ TypeScript compilation passes  
-✅ Production build succeeds  
-✅ Mobile-responsive design  
-✅ Interactive elements function correctly  
+✅ **Code Quality**: No ESLint warnings or errors  
+✅ **Type Safety**: TypeScript compilation passes  
+✅ **Build Success**: Production build succeeds  
+✅ **Mobile Responsive**: Touch-friendly interface on all devices  
+✅ **Form Validation**: Real-time validation with comprehensive error handling  
+✅ **Accessibility**: ARIA labels and keyboard navigation support  
+✅ **User Experience**: Loading states, animations, and visual feedback  
 
 ## Next Steps
 
-This foundation is ready for:
-- Integration into the Super App mobile shell
-- Extension with additional features and services
-- Connection to backend microservices
-- Styling customization to match Super App design system
+This payment app is ready for:
+- **Backend Integration**: Connect to payment APIs (Stripe, PayPal, local banks)
+- **Authentication**: Add user login and payment authorization
+- **Transaction History**: Store and display payment records
+- **Security Enhancement**: Add OTP verification and biometric authentication
+- **Real Payment Processing**: Integration with Singapore banking infrastructure
+- **Super App Integration**: Embed in native iOS/Android app container
 
 ## Deploy on Vercel
 
