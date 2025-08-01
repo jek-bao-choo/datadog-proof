@@ -1,0 +1,19 @@
+# Terraform files
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/
+terraform.tfplan
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# SSH keys
+*.pem
+*.key
+id_*
