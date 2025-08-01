@@ -1,7 +1,8 @@
 ## TASK:
-- Create a terraform script in the folder ec2-eks-v1dot3 
-- spin up an EKS cluster based on EC2 in ap-southeast-1
-- It should have all the VPC, Subnet, Security Group pointing to My IP, and private key sign in
+- Create a terraform script in the folder fargate-eks-v1dot33
+- Use kubenernetes v1.33 or latest
+- set it up in ap-southeast-1
+<!-- - It should have all the VPC, Subnet, Security Group pointing to My IP, and private key sign in -->
 - Document the steps to run the terraform script to README.md including tear down steps
 
 ## Implementation should consider:
@@ -10,6 +11,7 @@
 - **Tagging**: [required tags, e.g., owner="jek", env="test"]
 - **README.md**: Include setup, deployment, verification, and teardown steps
 - **Git Ignore**: Create a .gitignore to avoid committing sensitive terraform files or output to Git repo
+- **Simplicity**: Keep the terraform script really simple
 
 <!-- ### Access & Authentication:
 - **SSH Key**: [key name in cloud provider]

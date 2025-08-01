@@ -1,0 +1,23 @@
+# Copy this file to terraform.tfvars and customize the values
+
+# AWS region where resources will be created
+aws_region = "ap-southeast-1"
+
+# Name of the EKS cluster - must be unique in your AWS account
+cluster_name = "jek-fargate-eks-cluster"
+
+# Kubernetes version - use latest supported version
+kubernetes_version = "1.33"
+
+# VPC CIDR block - adjust if conflicts with existing networks
+vpc_cidr = "10.0.0.0/16"
+
+# Resource tagging - customize as needed
+owner_tag = "jek"
+environment_tag = "test"
+
+# Instructions:
+# 1. Copy this file: cp terraform.tfvars.example terraform.tfvars
+# 2. Edit terraform.tfvars with your preferred values
+# 3. Run: terraform plan to review changes
+# 4. Run: terraform apply to deploy infrastructure
