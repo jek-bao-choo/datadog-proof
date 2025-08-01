@@ -6,11 +6,22 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
   }
 }
 
 provider "aws" {
   region = var.aws_region
+}
+
+# Random password generation
+resource "random_password" "master_password" {
+  count   = var.master_password == null ? 1 : 0
+  length  = 16
+  special = true
 }
 
 # Local values for naming convention
@@ -20,6 +31,7 @@ locals {
     owner = "jek"
     env   = "test"
   }
+  master_password = var.master_password != null ? var.master_password : random_password.master_password[0].result
 }
 
 # VPC
@@ -100,30 +112,42 @@ resource "aws_db_subnet_group" "mysql_subnet_group" {
   })
 }
 
-# Security Group for RDS
+# Security Group for RDS (base)
 resource "aws_security_group" "mysql_sg" {
   name        = "${local.name_prefix}-mysql-sg"
   description = "Security group for MySQL RDS instances"
   vpc_id      = aws_vpc.mysql_vpc.id
 
-  ingress {
-    description = "MySQL"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+  # Prevent accidental deletion while RDS instances are attached
+  lifecycle {
+    create_before_destroy = true
   }
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-mysql-sg"
   })
+}
+
+# Security Group Rule - MySQL Ingress
+resource "aws_security_group_rule" "mysql_ingress" {
+  type              = "ingress"
+  from_port         = 3306
+  to_port           = 3306
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "MySQL access from anywhere"
+  security_group_id = aws_security_group.mysql_sg.id
+}
+
+# Security Group Rule - All Egress
+resource "aws_security_group_rule" "mysql_egress" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "All outbound traffic"
+  security_group_id = aws_security_group.mysql_sg.id
 }
 
 # Primary MySQL RDS Instance
@@ -137,10 +161,15 @@ resource "aws_db_instance" "mysql_primary" {
   
   db_name  = var.database_name
   username = var.master_username
-  manage_master_user_password = true
+  password = local.master_password
   
   vpc_security_group_ids = [aws_security_group.mysql_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.mysql_subnet_group.name
+  
+  depends_on = [
+    aws_security_group_rule.mysql_ingress,
+    aws_security_group_rule.mysql_egress
+  ]
   
   publicly_accessible = true
   skip_final_snapshot = true

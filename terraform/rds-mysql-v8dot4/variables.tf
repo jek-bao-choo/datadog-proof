@@ -46,3 +46,11 @@ variable "master_username" {
   type        = string
   default     = "admin"
 }
+
+# Master Password (optional - if not provided, random password will be generated)
+variable "master_password" {
+  description = "Master password for the database (leave empty to generate random password)"
+  type        = string
+  default     = null
+  sensitive   = true
+}

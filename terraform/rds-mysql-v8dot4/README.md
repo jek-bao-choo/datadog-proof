@@ -15,49 +15,100 @@ This Terraform configuration creates an Amazon RDS MySQL 8.4 setup with a primar
 - Terraform >= 1.0 installed
 - AWS account with necessary permissions for RDS, VPC, and EC2
 
-## Quick Start
+## Step-by-Step Commands
 
-### 1. Deploy Infrastructure
+### 2. Configure AWS Credentials (if not already done)
 
 ```bash
-# Initialize Terraform
+# Option 1: Use AWS CLI configure
+aws configure
+
+# Option 2: Set environment variables
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="ap-southeast-1"
+```
+
+### 3. Initialize Terraform
+
+```bash
+# Download required providers (AWS and Random)
 terraform init
+```
 
-# Review the planned changes
+### 4. Review the Deployment Plan
+
+```bash
+# See what resources will be created
 terraform plan
+```
 
-# Deploy the infrastructure
+**Expected output**: Shows creation of VPC, subnets, security groups, primary DB, and read replica.
+
+### 5. Deploy the Infrastructure
+
+```bash
+# Deploy all resources
 terraform apply
 ```
 
-When prompted, type `yes` to confirm the deployment.
+When prompted `Do you want to perform these actions?`, type **`yes`** and press Enter.
 
-### 2. Get Connection Information
+**⏱️ Deployment time**: 10-15 minutes (RDS instances take time to provision).
 
-After deployment, Terraform will output the connection endpoints:
+### 6. Get Connection Information
 
 ```bash
-# View all outputs
+# View all connection details
 terraform output
 
-# Get specific endpoints
-terraform output primary_endpoint
-terraform output replica_endpoint
+# Get specific values
+terraform output -raw primary_endpoint
+terraform output -raw replica_endpoint
+terraform output -raw master_password
 ```
 
-### 3. Connect to Database
+### 7. Connect to Databases
 
-**Connect to Primary (Read/Write)**:
+**Copy the password to clipboard** (macOS):
+```bash
+terraform output -raw master_password | pbcopy
+```
+
+**Connect to Primary Database (Read/Write)**:
 ```bash
 mysql -h $(terraform output -raw primary_endpoint) -P 3306 -u admin -p
+# Paste the password when prompted
 ```
 
-**Connect to Read Replica (Read-Only)**:
+**Connect to Read Replica (Read/Only)**:
 ```bash
 mysql -h $(terraform output -raw replica_endpoint) -P 3306 -u admin -p
+# Use the same password
 ```
 
-> **Note**: The password is managed by AWS. Retrieve it from AWS Secrets Manager in the AWS Console.
+### 8. Test the Setup (Optional)
+
+**On Primary Database**:
+```sql
+-- Create test data
+CREATE DATABASE replication_test;
+USE replication_test;
+CREATE TABLE test_table (id INT AUTO_INCREMENT PRIMARY KEY, message VARCHAR(255));
+INSERT INTO test_table (message) VALUES ('Hello from primary!');
+SELECT * FROM test_table;
+```
+
+**On Read Replica**:
+```sql
+-- Verify replication
+USE replication_test;
+SELECT * FROM test_table;
+-- Should show the same data
+
+-- Try to write (this should fail)
+INSERT INTO test_table (message) VALUES ('This will fail');
+```
 
 ## Testing Replication
 
@@ -135,33 +186,143 @@ For production use:
 
 ## Troubleshooting
 
-### Connection Issues
-- Verify security group allows port 3306
-- Check that instances are in "available" state
-- Ensure AWS credentials are configured
+### Common Issues and Solutions
 
-### Replication Lag
-- Check replica status: `SHOW SLAVE STATUS\G`
-- Monitor CloudWatch metrics for lag
+#### 1. "Error: ExpiredToken" during terraform plan/apply
+**Problem**: AWS credentials expired
+**Solution**: 
+```bash
+aws configure
+# Or refresh your AWS SSO session
+aws sso login
+```
 
-### Password Retrieval
-1. Go to AWS Secrets Manager console
-2. Find the secret named like `rds-db-credentials/...`
-3. Retrieve the password value
+#### 2. "Error: creating RDS DB Instance" - read replica fails
+**Problem**: Primary instance not ready or password issue
+**Solution**: 
+```bash
+# Wait for primary to be fully available, then retry
+terraform apply
+```
 
-## Teardown
+#### 3. Cannot connect to MySQL database
+**Problem**: Security group or network issue
+**Solutions**:
+```bash
+# Check if instances are running
+aws rds describe-db-instances --region ap-southeast-1
 
-To destroy all resources:
+# Verify security group allows MySQL (port 3306)
+aws ec2 describe-security-groups --region ap-southeast-1 --group-names jek-mysql-sg
+
+# Test connection with telnet
+telnet $(terraform output -raw primary_endpoint) 3306
+```
+
+#### 4. "Access denied" when connecting to MySQL
+**Problem**: Wrong password or username
+**Solution**:
+```bash
+# Double-check the password
+terraform output -raw master_password
+
+# Ensure using correct username: admin
+mysql -h $(terraform output -raw primary_endpoint) -P 3306 -u admin -p
+```
+
+#### 5. Terraform state issues
+**Problem**: State file corruption or conflicts
+**Solution**:
+```bash
+# Refresh state from AWS
+terraform refresh
+
+# If corrupted, you may need to import resources
+terraform import aws_db_instance.mysql_primary your-db-identifier
+```
+
+### Connection Verification
+
+#### Check Database Status
+```bash
+# Primary instance status
+aws rds describe-db-instances --db-instance-identifier jek-mysql-primary --region ap-southeast-1
+
+# Replica instance status  
+aws rds describe-db-instances --db-instance-identifier jek-mysql-replica --region ap-southeast-1
+```
+
+#### Test Network Connectivity
+```bash
+# Test if port 3306 is accessible
+nc -zv $(terraform output -raw primary_endpoint) 3306
+nc -zv $(terraform output -raw replica_endpoint) 3306
+```
+
+### Replication Monitoring
+```sql
+-- On replica, check replication status
+SHOW SLAVE STATUS\G
+
+-- Look for:
+-- Slave_IO_Running: Yes
+-- Slave_SQL_Running: Yes  
+-- Seconds_Behind_Master: should be low (0-5)
+```
+
+### Password Information
+- **Secure random password** is automatically generated
+- **Username**: `admin`
+- **Get password**: `terraform output -raw master_password`
+- **Custom password**: Use `terraform apply -var="master_password=YourSecurePassword"`
+
+### Security Features
+✅ **No hardcoded passwords** in code  
+✅ **Random password generation** using Terraform  
+✅ **Sensitive outputs** - password not shown in logs  
+✅ **Safe for public repositories**
+✅ **Improved security group handling** - uses separate rule resources for reliability
+
+## Teardown Commands
+
+### Complete Cleanup (Destroy Everything)
 
 ```bash
+# Review what will be destroyed
+terraform plan -destroy
+
+# Destroy all resources
 terraform destroy
 ```
 
-Type `yes` when prompted. This will:
-- Delete both RDS instances
-- Remove all networking components
-- Clean up security groups
-- **Warning**: All data will be permanently lost!
+When prompted `Do you really want to destroy all resources?`, type **`yes`** and press Enter.
+
+**⏱️ Teardown time**: 5-10 minutes
+
+**⚠️ Warning**: This will permanently delete:
+- Both MySQL instances (primary and replica)
+- All database data
+- VPC and networking components
+- Security groups
+
+### Verify Cleanup
+
+```bash
+# Check that no resources remain
+terraform show
+
+# Should show: "No state."
+```
+
+### Optional: Clean Up Terraform Files
+
+```bash
+# Remove state files (optional - be careful!)
+rm -f terraform.tfstate*
+rm -rf .terraform/
+```
+
+> **Note**: Only remove state files if you're completely done and want to start fresh.
 
 ## Files Structure
 
@@ -174,10 +335,45 @@ rds-mysql-v8dot4/
 └── README.md        # This documentation
 ```
 
+## Quick Command Reference
+
+### Essential Commands
+```bash
+# Deploy
+terraform init
+terraform plan
+terraform apply
+
+# Get connection info
+terraform output -raw master_password
+terraform output -raw primary_endpoint
+terraform output -raw replica_endpoint
+
+# Connect to databases
+mysql -h $(terraform output -raw primary_endpoint) -P 3306 -u admin -p
+mysql -h $(terraform output -raw replica_endpoint) -P 3306 -u admin -p
+
+# Cleanup
+terraform destroy
+```
+
+### Useful AWS CLI Commands
+```bash
+# Check RDS instances
+aws rds describe-db-instances --region ap-southeast-1
+
+# Check specific instance
+aws rds describe-db-instances --db-instance-identifier jek-mysql-primary --region ap-southeast-1
+
+# View CloudWatch logs
+aws logs describe-log-groups --region ap-southeast-1 --log-group-name-prefix /aws/rds
+```
+
 ## Support
 
 For issues:
-1. Check AWS Console for resource status
-2. Review Terraform plan/apply output
-3. Check AWS CloudWatch logs
+1. Check the **Troubleshooting** section above
+2. Review AWS Console for resource status
+3. Check Terraform plan/apply output
 4. Verify AWS credentials and permissions
+5. Monitor AWS CloudWatch logs
