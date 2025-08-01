@@ -1,16 +1,20 @@
 ## TASK:
-- Create a terraform script in the folder rds-mysql-v8dot4 to setup Amazon RDS for MySQL
+- Create a terraform script in the folder ec2-mysql-v8dot4 to setup my self-managed MySQL on EC2
 - Use MySQL Long-Term Support (LTS) major versions i.e. MySQL 8.4
 - set it up in ap-southeast-1
-- I need two Amazon RDS for MySQL instances
-- I need it to prototype replication of master and slave replication. 
-    - Is this needed for Amazon RDS for MySQL or is replication offered by Amazon RDS for MySQL out of the box?
-<!-- - It should have all the VPC, Subnet, Security Group pointing to My IP, and private key sign in -->
+- I need two MySQL instances
+- I need it to help me prototype replication of master and slave replication. 
+- Keep the setup simple without using private subnet or bastion hosts to ssh
+- It should have relevant VPC, Subnet, Security Group pointing to My IP, and private key to ssh
+- Also include steps to setup MySQL Databases on the master and slave servers and test the replication (could be a bash script)
+- If needed explain the steps to copy the bash file from my local Macbook machine to the EC2 before giving me the command to SSH
+- Try to automate as much as possible 
+- Less is more so please keep it simple
 
-<!-- ### Access & Authentication:
-- **SSH Key**: [key name in cloud provider]
-- **Private Key Path**: [local path, e.g., ~/.ssh/id_ed25519]
-- **IP Restriction**: [current IP for SSH access] -->
+
+### Access & Authentication:
+- **SSH Key**: key name in cloud provider, it is called jek-macbook-pro-key in cloud provider
+- **IP Addresses**: [current IP of the EC2 for SSH access, do auto-detection such as curl to an address to get it]
 
 <!-- ## EXAMPLES:
 - [List any example files in the examples folders and explain how they should be used if any] -->
@@ -25,6 +29,7 @@
 - **Git Ignore**: Create a .gitignore to avoid committing sensitive terraform files or output to Git repo
 - **Simplicity**: Keep the terraform script really simple
 - **Teardown**: Document the steps to run the terraform script to README.md including tear down steps
+- **PII and Sensitive Data**: Do be mindful that I will be committing the script to a public Github repo
 
 ## OTHER CONSIDERATIONS:
 - My computer is a Macbook
