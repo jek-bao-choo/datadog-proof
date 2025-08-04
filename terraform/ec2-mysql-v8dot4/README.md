@@ -247,6 +247,113 @@ SELECT * FROM test_table ORDER BY id DESC LIMIT 5;
 
 The data should match between master and slave.
 
+## Add Datadog Agent for Database Monitoring
+
+Source: https://docs.datadoghq.com/database_monitoring/setup_mysql/selfhosted/?tab=mysql57
+
+```sql
+# Master host
+
+sudo mysql -u root
+
+# Create the datadog user and grant basic permissions:
+
+CREATE USER datadog@'%' IDENTIFIED by 'UNIQUEPASSWORD';
+```
+
+after that test that outside mysql> I can run `mysql -u datadog --password=UNIQUEPASSWORD -e "show status"`
+
+Back to `sudo mysql -u root`
+
+```sql
+ALTER USER datadog@'%' WITH MAX_USER_CONNECTIONS 5;
+GRANT REPLICATION CLIENT ON *.* TO datadog@'%';
+GRANT PROCESS ON *.* TO datadog@'%';
+
+SHOW DATABASES like 'performance_schema';
+
+GRANT SELECT ON performance_schema.* TO datadog@'%';
+
+GRANT SELECT ON mysql.innodb_index_stats TO 'datadog'@'%';
+
+
+# Create the following schema:
+
+CREATE SCHEMA IF NOT EXISTS datadog;
+GRANT EXECUTE ON datadog.* to datadog@'%';
+
+# Create the explain_statement procedure to enable the Agent to collect explain plans:
+
+DELIMITER $$
+CREATE PROCEDURE datadog.explain_statement(IN query TEXT)
+    SQL SECURITY DEFINER
+BEGIN
+    SET @explain := CONCAT('EXPLAIN FORMAT=json ', query);
+    PREPARE stmt FROM @explain;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END $$
+DELIMITER ;
+
+# See the schema I want
+
+SHOW DATABASES;
+
+# Additionally, create this procedure in every schema from which you want to collect explain plans. Replace <YOUR_SCHEMA> with your database schema:
+
+DELIMITER $$
+CREATE PROCEDURE replication_test.explain_statement(IN query TEXT)
+    SQL SECURITY DEFINER
+BEGIN
+    SET @explain := CONCAT('EXPLAIN FORMAT=json ', query);
+    PREPARE stmt FROM @explain;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END $$
+DELIMITER ;
+GRANT EXECUTE ON PROCEDURE replication_test.explain_statement TO datadog@'%';
+
+# To collect index metrics, grant the datadog user an additional privilege:
+
+GRANT SELECT ON mysql.innodb_index_stats TO datadog@'%';
+
+
+# Runtime setup consumers
+# Datadog recommends that you create the following procedure to give the Agent the ability to enable performance_schema.events_* consumers at runtime.
+
+DELIMITER $$
+CREATE PROCEDURE datadog.enable_events_statements_consumers()
+    SQL SECURITY DEFINER
+BEGIN
+    UPDATE performance_schema.setup_consumers SET enabled='YES' WHERE name LIKE 'events_statements_%';
+    UPDATE performance_schema.setup_consumers SET enabled='YES' WHERE name = 'events_waits_current';
+END $$
+DELIMITER ;
+GRANT EXECUTE ON PROCEDURE datadog.enable_events_statements_consumers TO datadog@'%';
+
+
+# Install Datadog Agent. 
+DD_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX \
+DD_SITE="datadoghq.com" \
+bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
+
+```
+
+Metric collection.
+Add this configuration block to your mysql.d/conf.yaml to collect MySQL metrics:
+```yaml
+init_config:
+
+instances:
+  - dbm: true
+    host: 127.0.0.1
+    port: 3306
+    username: datadog
+    password: 'UNIQUEPASSWORD' # from the CREATE USER step earlier
+```
+Restart the Agent to start sending MySQL metrics to Datadog.
+
+
 ## Troubleshooting
 
 ### Common Issues
