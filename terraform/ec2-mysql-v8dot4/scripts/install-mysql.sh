@@ -60,16 +60,16 @@ for i in {1..30}; do
     sleep 2
 done
 
-# Set root password using socket authentication
-log "Setting MySQL root password..."
+# Configure root user to use socket authentication (no password needed)
+log "Configuring MySQL root user for socket authentication..."
 mysql -u root << EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH auth_socket;
 FLUSH PRIVILEGES;
 EOF
 
 # Basic security configuration
 log "Configuring MySQL security..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF
+mysql -u root << EOF
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
 DROP DATABASE IF EXISTS test;
@@ -109,7 +109,7 @@ systemctl restart mysql
 # Wait for MySQL to be ready again
 log "Waiting for MySQL to be ready after restart..."
 for i in {1..30}; do
-    if mysqladmin ping -u root -p"$MYSQL_ROOT_PASSWORD" --silent; then
+    if mysqladmin ping --silent; then
         log "MySQL is ready after restart!"
         break
     fi
@@ -124,7 +124,7 @@ done
 log "MySQL 8.4 LTS installation completed successfully!"
 echo "MySQL 8.4 LTS installed on $(date)" > /var/log/mysql-install-complete
 
-# Display MySQL version
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SELECT VERSION();" 2>/dev/null | tee -a $LOG_FILE
+# Display MySQL version using socket authentication
+sudo mysql -u root -e "SELECT VERSION();" 2>/dev/null | tee -a $LOG_FILE
 
 log "MySQL installation script finished. Check $LOG_FILE for details."

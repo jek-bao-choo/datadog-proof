@@ -21,14 +21,10 @@ if ! systemctl is-active --quiet mysql; then
     sudo systemctl start mysql
 fi
 
-# Prompt for MySQL root password
-echo "Enter MySQL root password:"
-read -s MYSQL_ROOT_PASSWORD
-
-# Test MySQL connection
-log "Testing MySQL connection..."
-if ! mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SELECT 1;" > /dev/null 2>&1; then
-    log "ERROR: Cannot connect to MySQL with provided password"
+# Test MySQL connection using socket authentication
+log "Testing MySQL connection using socket authentication..."
+if ! sudo mysql -u root -e "SELECT 1;" > /dev/null 2>&1; then
+    log "ERROR: Cannot connect to MySQL using socket authentication"
     exit 1
 fi
 
@@ -91,16 +87,9 @@ for i in {1..30}; do
     sleep 2
 done
 
-# Reset root password after restart (may revert to socket auth)
-log "Ensuring root password is set correctly..."
-mysql -u root << EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '$MYSQL_ROOT_PASSWORD';
-FLUSH PRIVILEGES;
-EOF
-
 # Configure slave replication using MySQL 8.4 syntax
 log "Configuring slave replication..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF
+sudo mysql -u root << EOF
 STOP REPLICA;
 RESET REPLICA ALL;
 
@@ -120,7 +109,7 @@ sleep 5
 
 # Check replica status using MySQL 8.4 syntax
 log "Checking replica status..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SHOW REPLICA STATUS\G" > /tmp/replica-status.txt
+sudo mysql -u root -e "SHOW REPLICA STATUS\G" > /tmp/replica-status.txt
 
 # Check for common issues
 if grep -q "Replica_IO_Running: Yes" /tmp/replica-status.txt && grep -q "Replica_SQL_Running: Yes" /tmp/replica-status.txt; then
@@ -137,7 +126,7 @@ cat /tmp/replica-status.txt | tee -a $LOG_FILE
 
 # Create test database to verify replication
 log "Creating replica-side database structure..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF
+sudo mysql -u root << EOF
 CREATE DATABASE IF NOT EXISTS replication_test;
 EOF
 

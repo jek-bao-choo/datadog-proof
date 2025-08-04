@@ -21,14 +21,10 @@ if ! systemctl is-active --quiet mysql; then
     sudo systemctl start mysql
 fi
 
-# Prompt for MySQL root password
-echo "Enter MySQL root password:"
-read -s MYSQL_ROOT_PASSWORD
-
-# Test MySQL connection
-log "Testing MySQL connection..."
-if ! mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SELECT 1;" > /dev/null 2>&1; then
-    log "ERROR: Cannot connect to MySQL with provided password"
+# Test MySQL connection using socket authentication
+log "Testing MySQL connection using socket authentication..."
+if ! sudo mysql -u root -e "SELECT 1;" > /dev/null 2>&1; then
+    log "ERROR: Cannot connect to MySQL using socket authentication"
     exit 1
 fi
 
@@ -65,7 +61,7 @@ sudo systemctl restart mysql
 # Wait for MySQL to be ready
 log "Waiting for MySQL to be ready..."
 for i in {1..30}; do
-    if mysqladmin ping -u root -p"$MYSQL_ROOT_PASSWORD" --silent; then
+    if mysqladmin ping --silent; then
         log "MySQL is ready!"
         break
     fi
@@ -81,7 +77,7 @@ log "Creating replication user..."
 # Use the replication password from Terraform deployment
 REPLICATION_PASSWORD="RU)#3r==!@+4xGqK"
 
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF
+sudo mysql -u root << EOF
 CREATE USER IF NOT EXISTS 'replication_user'@'%' IDENTIFIED BY '$REPLICATION_PASSWORD';
 GRANT REPLICATION SLAVE ON *.* TO 'replication_user'@'%';
 FLUSH PRIVILEGES;
@@ -91,7 +87,7 @@ log "Replication user created successfully!"
 
 # Create test database for replication
 log "Creating test database..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF
+sudo mysql -u root << EOF
 CREATE DATABASE IF NOT EXISTS replication_test;
 USE replication_test;
 CREATE TABLE IF NOT EXISTS test_table (
@@ -104,7 +100,7 @@ EOF
 
 # Get master status using MySQL 8.4 syntax
 log "Getting master status..."
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "SHOW BINARY LOG STATUS;" > /tmp/master-status.txt
+sudo mysql -u root -e "SHOW BINARY LOG STATUS;" > /tmp/master-status.txt
 
 # Display master status
 log "Master status:"

@@ -80,8 +80,8 @@ ls -la /var/log/mysql-install-complete
 # Check MySQL service
 sudo systemctl status mysql
 
-# Test MySQL connection
-mysql -u root -p'<ROOT_PASSWORD_FROM_TERRAFORM>'
+# Test MySQL connection using socket authentication (no password needed)
+sudo mysql -u root
 ```
 
 ### 4. Configure Master Server
@@ -97,7 +97,7 @@ ssh -i ~/.ssh/id_ed25519 ubuntu@<MASTER_IP>
 
 # Run master setup script
 chmod +x /tmp/setup-master.sh
-/tmp/setup-master.sh
+sudo /tmp/setup-master.sh
 # Enter the MySQL root password when prompted
 ```
 
@@ -118,7 +118,7 @@ ssh -i ~/.ssh/id_ed25519 ubuntu@<SLAVE_IP>
 
 # Run slave setup script
 chmod +x /tmp/setup-slave.sh
-/tmp/setup-slave.sh
+sudo /tmp/setup-slave.sh
 ```
 
 The script will prompt for:
@@ -133,7 +133,7 @@ The script will prompt for:
 
 **Check on slave:**
 ```bash
-mysql -u root -p'<ROOT_PASSWORD>' -e "SHOW REPLICA STATUS\G" | grep -E "(Replica_IO_Running|Replica_SQL_Running|Seconds_Behind_Source)"
+sudo mysql -u root -e "SHOW REPLICA STATUS\G" | grep -E "(Replica_IO_Running|Replica_SQL_Running|Seconds_Behind_Source)"
 ```
 
 You should see:
@@ -145,11 +145,25 @@ You should see:
 
 **Method 1: Quick Test**
 ```bash
-# On master
-mysql -u root -p'<ROOT_PASSWORD>' -e "USE replication_test; INSERT INTO test_table (data) VALUES ('Test replication'); SELECT * FROM test_table;"
+# First, create database and table on master (IMPORTANT: Do this AFTER replication is set up)
+sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS replication_test;"
+sudo mysql -u root -e "USE replication_test; CREATE TABLE IF NOT EXISTS test_table (id INT AUTO_INCREMENT PRIMARY KEY, data VARCHAR(255));"
 
-# On slave
-mysql -u root -p'<ROOT_PASSWORD>' -e "USE replication_test; SELECT * FROM test_table;"
+# Check replication status on slave (MySQL 8.0.22+ uses REPLICA instead of SLAVE)
+sudo mysql -u root -e "SHOW REPLICA STATUS\G"
+
+# If you see replication errors (Last_SQL_Errno: 1146), skip the problematic transaction on slave:
+sudo mysql -u root -e "STOP REPLICA; SET GLOBAL sql_slave_skip_counter = 1; START REPLICA;"
+
+# Verify replication is working
+sudo mysql -u root -e "SHOW REPLICA STATUS\G" | grep -E "(Replica_IO_Running|Replica_SQL_Running)"
+
+# Test data replication
+# On master - insert test data
+sudo mysql -u root -e "USE replication_test; INSERT INTO test_table (data) VALUES ('Test replication'); SELECT * FROM test_table;"
+
+# On slave - verify data replicated
+sudo mysql -u root -e "USE replication_test; SELECT * FROM test_table;"
 ```
 
 **Method 2: Comprehensive Test Script**
@@ -186,8 +200,18 @@ This setup accounts for MySQL 8.4 changes:
 - Uses `SHOW BINARY LOG STATUS` instead of `SHOW MASTER STATUS`
 - Uses `SHOW REPLICA STATUS` instead of `SHOW SLAVE STATUS`
 - Uses `CHANGE REPLICATION SOURCE TO` instead of `CHANGE MASTER TO`
-- Uses `caching_sha2_password` authentication (default in 8.4)
+- **Uses socket authentication** instead of password authentication for root user
 - Removed deprecated `default-authentication-plugin` option
+
+## MySQL Authentication Method
+
+**Important**: This setup uses **socket authentication** for the MySQL root user, which means:
+- **No password required** when connecting as root from the same server
+- Use `sudo mysql -u root` instead of `mysql -u root -p`
+- More secure than password authentication for local connections
+- Only works when logged in as the `ubuntu` user (or root) on the same server
+
+This eliminates password-related connection issues and provides better security for local administration.
 
 ## Manual Verification
 
@@ -195,7 +219,7 @@ This setup accounts for MySQL 8.4 changes:
 
 **On Slave Server:**
 ```sql
-mysql -u root -p
+sudo mysql -u root
 SHOW REPLICA STATUS\G
 ```
 
@@ -208,7 +232,7 @@ Look for:
 
 **On Master:**
 ```sql
-mysql -u root -p
+sudo mysql -u root
 USE replication_test;
 INSERT INTO test_table (data) VALUES ('Manual test');
 SELECT * FROM test_table ORDER BY id DESC LIMIT 5;
@@ -216,7 +240,7 @@ SELECT * FROM test_table ORDER BY id DESC LIMIT 5;
 
 **On Slave:**
 ```sql
-mysql -u root -p
+sudo mysql -u root
 USE replication_test;
 SELECT * FROM test_table ORDER BY id DESC LIMIT 5;
 ```
@@ -264,10 +288,10 @@ sudo tail -f /var/log/mysql/error.log
 mysqladmin ping -u root -p
 
 # Check replication lag (MySQL 8.4 syntax)
-mysql -u root -p -e "SHOW REPLICA STATUS\G" | grep Seconds_Behind_Source
+sudo mysql -u root -e "SHOW REPLICA STATUS\G" | grep Seconds_Behind_Source
 
 # Reset replication if needed
-mysql -u root -p -e "STOP REPLICA; RESET REPLICA ALL;"
+sudo mysql -u root -e "STOP REPLICA; RESET REPLICA ALL;"
 ```
 
 ## Security Notes
@@ -297,7 +321,7 @@ terraform destroy
 
 To make the slave read-only:
 ```bash
-sudo mysql -u root -p -e "SET GLOBAL read_only = 1;"
+sudo sudo mysql -u root -e "SET GLOBAL read_only = 1;"
 ```
 
 ### Monitor Replication Lag
@@ -305,7 +329,7 @@ sudo mysql -u root -p -e "SET GLOBAL read_only = 1;"
 Create a monitoring script:
 ```bash
 #!/bin/bash
-mysql -u root -p -e "SHOW REPLICA STATUS\G" | grep Seconds_Behind_Source
+sudo mysql -u root -e "SHOW REPLICA STATUS\G" | grep Seconds_Behind_Source
 ```
 
 ### Backup Strategy
