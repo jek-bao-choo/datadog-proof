@@ -1,7 +1,7 @@
-# Curl Bash Script Development
+# Shell Script Development
 
 ## About
-This project is used to develop curl scripts
+This project is used to develop shell scripts
 
 ## Project Directory
 - Keep structure shallow, avoid deeply nested folders
