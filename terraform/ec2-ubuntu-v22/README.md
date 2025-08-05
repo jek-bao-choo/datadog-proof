@@ -1,4 +1,7 @@
-# EC2 Ubuntu 24.04 Terraform Script
+Syslog
+![syslog](proof/proof-syslog.png)
+
+# EC2 Ubuntu 22.04 Terraform Script
 
 This Terraform script creates an Amazon EC2 instance running Ubuntu 24.04 LTS in the ap-southeast-1 region with a complete networking setup.
 
@@ -122,11 +125,21 @@ sudo datadog-agent status
 
 # Find the "Logs Agent" section and show the 25 lines after it
 sudo datadog-agent status | grep -A 25 "Logs Agent"
+```
 
+To enable log collection, change logs_enabled: false to logs_enabled: true in your Agent’s main configuration file (datadog.yaml). 
 
-
+Create `/etc/datadog-agent/conf.d/syslog.d/conf.yaml` if doesn't exist.
 
 ```
+logs:
+  - type: file
+    path: /var/log/syslog
+    service: syslog
+    source: ubuntu
+```
+
+Restart datadog agent
 
 ## Teardown
 
