@@ -1,0 +1,150 @@
+Tree structure of mysql conf.yaml from datadog integration core repository
+```
+init_config:
+    propagate_agent_tags:
+    global_custom_queries:
+      - query:
+        columns:
+        tags:
+    service:
+instances:
+  - host:
+    username:
+    password:
+    port:
+    propagate_agent_tags:
+    reported_hostname:
+    exclude_hostname:
+    database_identifier:
+        template:
+    sock:
+    charset:
+    defaults_file:
+    connect_timeout:
+    read_timeout:
+    ssl:
+        key:
+        cert:
+        ca:
+        check_hostname:
+    only_custom_queries:
+    use_global_custom_queries:
+    custom_queries:
+      - query:
+        columns:
+          - name:
+            type:
+        tags:
+        collection_interval:
+        metric_prefix:
+    additional_status:
+      - name:
+        metric_name:
+        type:
+    additional_variable:
+      - name:
+        metric_name:
+        type:
+    max_custom_queries:
+    queries:
+      - query:
+        metric:
+        tags:
+        type:
+        field:
+    options:
+        replication:
+        replication_channel:
+        galera_cluster:
+        extra_status_metrics:
+        extra_innodb_metrics:
+        disable_innodb_metrics:
+        schema_size_metrics:
+        table_size_metrics:
+        system_table_size_metrics:
+        table_rows_stats_metrics:
+        extra_performance_metrics:
+    dbm:
+    collect_settings:
+        enabled:
+        collection_interval:
+    collect_schemas:
+        enabled:
+        collection_interval:
+        max_execution_time:
+    schemas_collection:
+        enabled:
+        collection_interval:
+        max_execution_time:
+    query_metrics:
+        enabled:
+        collection_interval:
+        only_query_recent_statements:
+    query_samples:
+        enabled:
+        collection_interval:
+        explained_queries_per_hour_per_query:
+        samples_per_hour_per_query:
+        explained_queries_cache_maxsize:
+        seen_samples_cache_maxsize:
+        events_statements_row_limit:
+        explain_procedure:
+        fully_qualified_explain_procedure:
+        events_statements_enable_procedure:
+        events_statements_temp_table_name:
+        collection_strategy_cache_maxsize:
+        collection_strategy_cache_ttl:
+    query_activity:
+        enabled:
+        collect_blocking_queries:
+    index_metrics:
+        enabled:
+        limit:
+    aws:
+        instance_endpoint:
+        region:
+        managed_authentication:
+            enabled:
+            role_arn:
+    gcp:
+        project_id:
+        instance_id:
+    azure:
+        deployment_type:
+        fully_qualified_domain_name:
+    obfuscator_options:
+        obfuscation_mode:
+        replace_digits:
+        collect_metadata:
+        collect_tables:
+        collect_commands:
+        collect_comments:
+        keep_sql_alias:
+        remove_space_between_parentheses:
+        keep_null:
+        keep_boolean:
+        keep_positional_parameter:
+        keep_trailing_semicolon:
+        keep_identifier_quotation:
+    tags:
+    service:
+    min_collection_interval:
+    empty_default_hostname:
+    disable_generic_tags:
+    metric_patterns:
+        include:
+        exclude:
+logs:
+  - type:
+    port:
+    path:
+    channel_path:
+    source:
+    encoding:
+    service:
+    tags:
+    log_processing_rules:
+      - type:
+        name:
+        pattern:
+```

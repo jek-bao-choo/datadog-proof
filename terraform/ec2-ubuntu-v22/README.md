@@ -96,6 +96,38 @@ env_tag           = "test"                # Environment tag
 - `t3.large` - 2 vCPU, 8GB RAM (default)
 - `t3.xlarge` - 4 vCPU, 16GB RAM
 
+## Install Datadog agent
+
+```bash
+DD_API_KEY=XXXXXXXXXXXXXXXXXXXXXX \
+DD_SITE="datadoghq.com" \
+bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
+
+
+sudo systemctl datadog-agent status
+
+sudo journalctl -u datadog-agent -p err
+
+sudo journalctl -u datadog-agent -p err -n 50
+
+sudo journalctl -u datadog-agent | grep -i "error"
+
+# Grep the log file for errors
+sudo grep -i "error" /var/log/datadog/agent.log
+
+# Tail the log file live and filter for errors
+sudo tail -f /var/log/datadog/agent.log | grep -i "error"
+
+sudo datadog-agent status
+
+# Find the "Logs Agent" section and show the 25 lines after it
+sudo datadog-agent status | grep -A 25 "Logs Agent"
+
+
+
+
+```
+
 ## Teardown
 
 ### Destroy Resources

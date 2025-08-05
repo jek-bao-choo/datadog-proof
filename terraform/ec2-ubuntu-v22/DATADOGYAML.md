@@ -1,0 +1,557 @@
+Tree structure of datadog.yaml.example from Ubuntu v22
+```
+api_key:
+app_key:
+site:
+dd_url:
+proxy:
+  https:
+  http:
+  no_proxy:
+skip_ssl_validation:
+sslkeylogfile:
+min_tls_version:
+hostname:
+hostname_file:
+hostname_fqdn:
+hostname_trust_uts_namespace:
+host_aliases:
+tags:
+extra_tags:
+env:
+tag_value_split_separator:
+checks_tag_cardinality:
+dogstatsd_tag_cardinality:
+histogram_aggregates:
+histogram_percentiles:
+histogram_copy_to_distribution:
+histogram_copy_to_distribution_prefix:
+aggregator_stop_timeout:
+aggregator_buffer_size:
+forwarder_timeout:
+forwarder_retry_queue_payloads_max_size:
+forwarder_num_workers:
+forwarder_stop_timeout:
+forwarder_http_protocol:
+forwarder_max_concurrent_requests:
+forwarder_storage_max_size_in_bytes:
+forwarder_storage_max_disk_ratio:
+forwarder_outdated_file_in_days:
+forwarder_high_prio_buffer_size:
+forwarder_low_prio_buffer_size:
+forwarder_requeue_buffer_size:
+forwarder_backoff_base:
+forwarder_backoff_max:
+cloud_provider_metadata:
+collect_ec2_tags:
+collect_ec2_instance_info:
+exclude_ec2_tags:
+collect_ec2_tags_use_imds:
+ec2_metadata_timeout:
+ec2_prefer_imdsv2:
+collect_gce_tags:
+exclude_gce_tags:
+gce_send_project_id_tag:
+gce_metadata_timeout:
+collect_gpu_tags:
+azure_hostname_style:
+scrubber:
+  additional_keys:
+no_proxy_nonexact_match:
+use_proxy_for_cloud_metadata:
+inventories_configuration_enabled:
+metadata_ip_resolution_from_hostname:
+auto_exit:
+  noprocess:
+    enabled:
+    excluded_processes:
+  validation_period:
+fips:
+  enabled:
+  local_address:
+observability_pipelines_worker:
+  metrics:
+    enabled:
+    url:
+  logs:
+    enabled:
+    url:
+  traces:
+    enabled:
+    url:
+confd_path:
+additional_checksd:
+expvar_port:
+cmd_port:
+GUI_port:
+GUI_session_expiration:
+health_port:
+check_runners:
+enable_metadata_collection:
+enable_gohai:
+enable_signing_metadata_collection:
+server_timeout:
+procfs_path:
+disable_py3_validation:
+python3_linter_timeout:
+memtrack_enabled:
+tracemalloc_debug:
+tracemalloc_include:
+tracemalloc_exclude:
+windows_use_pythonpath:
+secret_backend_command:
+secret_backend_arguments:
+secret_backend_output_max_size:
+secret_backend_timeout:
+secret_backend_skip_checks:
+secret_backend_remove_trailing_line_break:
+logs_enabled:
+logs_config:
+  container_collect_all:
+  logs_dd_url:
+  logs_no_ssl:
+  processing_rules:
+    - type:
+      name:
+      pattern:
+  auto_multi_line_detection:
+  force_use_http:
+  http_protocol:
+  force_use_tcp:
+  use_compression:
+  compression_level:
+  batch_wait:
+  open_files_limit:
+  file_wildcard_selection_mode:
+  max_message_size_bytes:
+  integrations_logs_files_max_size:
+  integrations_logs_total_usage:
+  kublet_api_client_read_timeout:
+  k8s_container_use_kubelet_api:
+  streaming:
+    streamlogs_log_file:
+apm_config:
+  enabled:
+  env:
+  receiver_port:
+  receiver_socket:
+  apm_non_local_traffic:
+  apm_dd_url:
+  max_traces_per_second:
+  target_traces_per_second:
+  errors_per_second:
+  max_events_per_second:
+  max_memory:
+  max_cpu_percent:
+  obfuscation:
+    credit_cards:
+      enabled:
+      luhn:
+      keep_values:
+    elasticsearch:
+      enabled:
+      keep_values:
+      obfuscate_sql_values:
+    opensearch:
+      enabled:
+      keep_values:
+      obfuscate_sql_values:
+    http:
+      remove_query_string:
+      remove_paths_with_digits:
+    memcached:
+      enabled:
+      keep_command:
+    mongodb:
+      enabled:
+      keep_values:
+      obfuscate_sql_values:
+    redis:
+      enabled:
+      remove_all_args:
+    valkey:
+      enabled:
+      remove_all_args:
+    remove_stack_traces:
+    sql_exec_plan:
+      enabled:
+      keep_values:
+      obfuscate_sql_values:
+    sql_exec_plan_normalize:
+      enabled:
+      keep_values:
+      obfuscate_sql_values:
+    cache:
+      enabled:
+      max_size:
+  sql_obfuscation_mode:
+  filter_tags:
+    require:
+    reject:
+  filter_tags_regex:
+    require:
+    reject:
+  replace_tags:
+    - name:
+      pattern:
+      repl:
+  ignore_resources:
+  log_file:
+  connection_limit:
+  compute_stats_by_span_kind:
+  peer_service_aggregation:
+  peer_tags_aggregation:
+  peer_tags:
+  features:
+  additional_endpoints:
+  debug:
+    port:
+  instrumentation:
+    enabled:
+    enabled_namespaces:
+    disabled_namespaces:
+  trace_buffer:
+  probabilistic_sampler:
+    enabled:
+    sampling_percentage:
+    hash_seed:
+  error_tracking_standalone:
+    enabled:
+process_config:
+  run_in_core_agent:
+    enabled:
+  process_collection:
+    enabled:
+  container_collection:
+    enabled:
+  enabled:
+  expvar_port:
+  cmd_port:
+  log_file:
+  intervals:
+    container:
+    container_realtime:
+    process:
+    process_realtime:
+  process_discovery:
+    enabled:
+    interval:
+  blacklist_patterns:
+  queue_size:
+  process_queue_bytes:
+  rt_queue_size:
+  max_per_message:
+  dd_agent_bin:
+  dd_agent_env:
+  scrub_args:
+  custom_sensitive_words:
+  disable_realtime_checks:
+network_path:
+  connections_monitoring:
+    enabled:
+  collector:
+    workers:
+compliance_config:
+  enabled:
+  dir:
+  check_interval:
+  check_max_events_per_run:
+sbom:
+  enabled:
+  host:
+    enabled:
+  container_image:
+    enabled:
+use_dogstatsd:
+dogstatsd_port:
+bind_host:
+dogstatsd_socket:
+dogstatsd_origin_detection:
+dogstatsd_origin_detection_client:
+dogstatsd_buffer_size:
+dogstatsd_non_local_traffic:
+dogstatsd_stats_enable:
+dogstatsd_logging_enabled:
+dogstatsd_log_file_max_size:
+dogstatsd_queue_size:
+dogstatsd_stats_buffer:
+dogstatsd_stats_port:
+dogstatsd_so_rcvbuf:
+dogstatsd_metrics_stats_enable:
+dogstatsd_tags:
+dogstatsd_mapper_profiles:
+  - name:
+    prefix:
+    mappings:
+      - match:
+        match_type:
+        name:
+        tags:
+      - match:
+        name:
+        tags:
+      - match:
+        match_type:
+        name:
+        tags:
+dogstatsd_mapper_cache_size:
+dogstatsd_entity_id_precedence:
+dogstatsd_no_aggregation_pipeline:
+dogstatsd_no_aggregation_pipeline_batch_size:
+statsd_forward_host:
+statsd_forward_port:
+statsd_metric_namespace:
+metadata_providers:
+  - name:
+    interval:
+jmx_custom_jars:
+jmx_use_cgroup_memory_limit:
+jmx_use_container_support:
+jmx_max_ram_percentage:
+jmx_log_file:
+jmx_max_restarts:
+jmx_restart_interval:
+jmx_check_period:
+jmx_thread_pool_size:
+jmx_collection_timeout:
+jmx_reconnection_thread_pool_size:
+jmx_reconnection_timeout:
+jmx_statsd_telemetry_enabled:
+jmx_telemetry_enabled:
+log_level:
+log_file:
+log_format_json:
+log_to_console:
+disable_file_logging:
+log_file_max_size:
+log_file_max_rolls:
+log_to_syslog:
+syslog_uri:
+syslog_rfc:
+syslog_pem:
+syslog_key:
+syslog_tls_verify:
+log_format_rfc3339:
+log_all_goroutines_when_unhealthy:
+autoconf_template_dir:
+autoconf_config_files_poll:
+autoconf_config_files_poll_interval:
+config_providers:
+  - name:
+    polling:
+  - name:
+    polling:
+  - name:
+    grace_time_seconds:
+  - name:
+    polling:
+    template_dir:
+    template_url:
+    username:
+    password:
+  - name:
+    polling:
+    template_dir:
+    template_url:
+    ca_file:
+    ca_path:
+    cert_file:
+    key_file:
+    username:
+    password:
+    token:
+  - name:
+    polling:
+    template_dir:
+    template_url:
+    username:
+    password:
+extra_config_providers:
+autoconfig_exclude_features:
+autoconfig_include_features:
+container_cgroup_root:
+container_proc_root:
+listeners:
+extra_listeners:
+ac_exclude:
+ac_include:
+exclude_pause_container:
+docker_query_timeout:
+ad_config_poll_interval:
+ad_allowed_env_vars:
+ad_disable_env_var_resolution:
+cloud_foundry_garden:
+  listen_network:
+  listen_address:
+podman_db_path:
+container_cgroup_prefix:
+docker_labels_as_tags:
+docker_env_as_tags:
+kubernetes_pod_labels_as_tags:
+kubernetes_pod_annotations_as_tags:
+kubernetes_namespace_labels_as_tags:
+container_env_as_tags:
+container_labels_as_tags:
+ecs_agent_container_name:
+ecs_agent_url:
+ecs_collect_resource_tags_ec2:
+ecs_resource_tags_replace_colon:
+ecs_metadata_timeout:
+ecs_task_collection_enabled:
+cri_socket_path:
+cri_connection_timeout:
+cri_query_timeout:
+containerd_socket_path:
+containerd_query_timeout:
+containerd_namespace:
+containerd_namespaces:
+containerd_exclude_namespaces:
+kubernetes_kubelet_host:
+kubernetes_http_kubelet_port:
+kubernetes_https_kubelet_port:
+kubelet_tls_verify:
+kubelet_client_ca:
+kubelet_auth_token_path:
+kubelet_client_crt:
+kubelet_client_key:
+kubelet_wait_on_missing_container:
+kubelet_cache_pods_duration:
+kubernetes_pod_expiration_duration:
+kubelet_listener_polling_interval:
+kubernetes_kubeconfig_path:
+kubernetes_apiserver_ca_path:
+kubernetes_apiserver_tls_verify:
+kubernetes_apiserver_use_protobuf:
+kubernetes_collect_metadata_tags:
+kubernetes_metadata_tag_update_freq:
+kubernetes_apiserver_client_timeout:
+collect_kubernetes_events:
+kubernetes_event_collection_timeout:
+leader_election:
+leader_lease_duration:
+kubernetes_node_labels_as_tags:
+kubernetes_node_annotations_as_tags:
+kubernetes_node_annotations_as_host_aliases:
+cluster_name:
+disable_cluster_name_tag_key:
+kubernetes_ad_tags_disabled:
+prometheus_scrape:
+  enabled:
+  service_endpoints:
+  checks:
+  version:
+network_devices:
+  namespace:
+  autodiscovery:
+    workers:
+    discovery_interval:
+    discovery_allowed_failures:
+    loader:
+    min_collection_interval:
+    use_device_id_as_hostname:
+    collect_topology:
+    ping:
+      enabled:
+      timeout:
+      count:
+      interval:
+      linux:
+        use_raw_socket:
+    use_deduplication:
+    configs:
+      - network_address:
+        ignored_ip_addresses:
+        port:
+        authentications:
+          - snmp_version:
+            timeout:
+            retries:
+            community_string:
+            user:
+            authKey:
+            authProtocol:
+            privKey:
+            privProtocol:
+            context_name:
+        tags:
+        ad_identifier:
+        loader:
+        min_collection_interval:
+        use_device_id_as_hostname:
+        oid_batch_size:
+        interface_configs:
+        ping:
+          enabled:
+          timeout:
+          count:
+          interval:
+          linux:
+            use_raw_socket:
+  snmp_traps:
+    enabled:
+    port:
+    community_strings:
+    users:
+    bind_host:
+    stop_timeout:
+  netflow:
+    enabled:
+    listeners:
+    stop_timeout:
+    reverse_dns_enrichment_enabled:
+reverse_dns_enrichment:
+  workers:
+  chan_size:
+  cache:
+    enabled:
+    entry_ttl:
+    clean_interval:
+    persist_interval:
+    max_retries:
+    max_size:
+  rate_limiter:
+    enabled:
+    limit_per_sec:
+    limit_throttled_per_sec:
+    throttle_error_threshold:
+    recovery_intervals:
+    recovery_interval:
+ha_agent:
+  enabled:
+config_id:
+otlp_config:
+  receiver:
+    protocols:
+      grpc:
+        endpoint:
+        transport:
+        max_recv_msg_size_mib:
+      http:
+        endpoint:
+  metrics:
+    enabled:
+    resource_attributes_as_tags:
+    instrumentation_scope_metadata_as_tags:
+    tag_cardinality:
+    delta_ttl:
+    histograms:
+      mode:
+      send_count_sum_metrics:
+      send_aggregation_metrics:
+    sums:
+      cumulative_monotonic_mode:
+      initial_cumulative_monotonic_value:
+    summaries:
+      mode:
+  traces:
+    enabled:
+    span_name_as_resource_name:
+    span_name_remappings:
+    probabilistic_sampler:
+      sampling_percentage:
+    ignore_missing_datadog_fields:
+  logs:
+    enabled:
+  debug:
+    verbosity:
+```
