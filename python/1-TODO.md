@@ -1,6 +1,12 @@
 ## TASK:
-- Walk me through creating a FastAPI and what server should I use?
-- The FastAPI is a API gateway which will call another python server using gRPC or other protocols (please recommend)
+- Walk me through creating a FastAPI version 0.116.1
+- I will be using Python 3.9.6
+- The server will be using Gunicorn with Uvicorn workers
+- The FastAPI is a API gateway which will send a prompt to an OpenAI API
+- The OpenAI API key would be saved in .env
+- The .env must NOT be committed to Github public repo
+- Use pydantic for data validation
+- Explain how this application could be containerised
 
 
 <!-- ## EXAMPLES:
