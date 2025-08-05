@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7.68.3
+    container_name: datadog-agent
+    restart: unless-stopped
+    
+    # Environment variables loaded from .env file
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_LOGS_ENABLED=false
+      - DD_APM_ENABLED=false
+      - DD_PROCESS_AGENT_ENABLED=false
+    
+    # Required Docker parameters for system monitoring
+    pid: host
+    network_mode: host
+    
+    # Security context
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    
+    # Required volume mounts (read-only for security)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    
+    # Port mapping for DogStatsD
+    ports:
+      - "8125:8125/udp"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "agent health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
