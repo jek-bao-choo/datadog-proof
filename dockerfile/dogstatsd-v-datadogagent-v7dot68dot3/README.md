@@ -58,7 +58,7 @@ Run the included Python test script to verify metrics are being sent:
 
 ```bash
 # Run the test script
-python3 test-metrics.py
+python3 test-metrics-no-datadog-dep.py
 ```
 
 **Expected Output:**
@@ -164,11 +164,11 @@ docker images | grep datadog
 
 ```
 dogstatsd-v-datadogagent-v7dot68dot3/
-├── .env.example          # Environment template
-├── .gitignore           # Git ignore rules
-├── docker-compose.yml   # Container configuration
-├── test-metrics.py      # Verification script
-└── README.md           # This file
+├── .env.example                    # Environment template
+├── .gitignore                     # Git ignore rules
+├── docker-compose.yml             # Container configuration
+├── test-metrics-no-datadog-dep.py # Verification script
+└── README.md                      # This file
 ```
 
 ## 🔒 Security Notes
