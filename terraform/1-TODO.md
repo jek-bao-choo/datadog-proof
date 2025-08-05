@@ -14,6 +14,7 @@
 
 ### Access & Authentication:
 - **SSH Key**: key name in cloud provider, it is called jek-macbook-pro-key in cloud provider
+- **SSH Locally**: when ssh use ~/.ssh/id_ed25519
 - **IP Addresses**: [current IP of the EC2 for SSH access, do auto-detection such as curl to an address to get it]
 
 <!-- ## EXAMPLES:
