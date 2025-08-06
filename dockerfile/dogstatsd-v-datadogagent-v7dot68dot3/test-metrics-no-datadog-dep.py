@@ -67,7 +67,7 @@ def test_connection(host="localhost", port=8125):
 def send_test_counter():
     """Send a test counter metric."""
     return send_metric(
-        metric_name="test.counter",
+        metric_name="jek.test.counter",
         value=1,
         metric_type="c",
         tags=["environment:test", "source:python_script"]
@@ -78,7 +78,7 @@ def send_test_gauge():
     """Send a test gauge metric with a random value."""
     random_value = random.randint(1, 100)
     return send_metric(
-        metric_name="test.gauge",
+        metric_name="jek.test.gauge",
         value=random_value,
         metric_type="g",
         tags=["environment:test", "source:python_script"]
@@ -88,7 +88,7 @@ def send_test_gauge():
 def send_test_histogram():
     """Send a test histogram metric."""
     return send_metric(
-        metric_name="test.histogram",
+        metric_name="jek.test.histogram",
         value=random.uniform(0.1, 2.0),
         metric_type="h",
         tags=["environment:test", "source:python_script"]
@@ -132,9 +132,9 @@ def main():
     
     if success_count == total_tests:
         print("🎉 All tests passed! Check your Datadog dashboard for the metrics:")
-        print("   - test.counter")
-        print("   - test.gauge")
-        print("   - test.histogram")
+        print("   - jek.test.counter")
+        print("   - jek.test.gauge")
+        print("   - jek.test.histogram")
         print("\n💡 Tip: It may take a few minutes for metrics to appear in Datadog")
     else:
         print("⚠️  Some tests failed. Check the Datadog Agent logs:")

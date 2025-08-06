@@ -110,15 +110,104 @@ docker-compose logs datadog-agent
 - **Key Not Found**: Make sure `.env` file exists and contains `DD_API_KEY=your_key`
 - **Permission Denied**: Check that your API key has proper permissions
 
-### Network Connectivity
+### 🕵️ Network Troubleshooting (Advanced)
 
+If metrics aren't appearing in Datadog, follow this systematic troubleshooting approach:
+
+#### Step 1: Verify Container Health
 ```bash
-# Test if port 8125 is accessible
-nc -u -v localhost 8125
+# Check if container is running and healthy
+docker-compose ps
 
-# Check Docker network
-docker network ls
-docker-compose exec datadog-agent netstat -tuln
+# Should show: Up X minutes (healthy)
+```
+
+#### Step 2: Check DogStatsD Reception
+```bash
+# Get detailed agent status
+docker-compose exec datadog-agent agent status
+
+# Look for the "DogStatsD" section:
+# =========
+# DogStatsD
+# =========
+#   Metric Packets: 0     ← Should be > 0 after sending metrics
+#   Udp Bytes: 0          ← Should be > 0 after sending metrics  
+#   Udp Packets: 0        ← Should be > 0 after sending metrics
+```
+
+**If all values are 0**: DogStatsD isn't receiving your metrics!
+
+#### Step 3: Test Network Connectivity
+```bash
+# Test if port 8125 is accessible from host
+nc -u -v localhost 8125
+# Should connect without errors
+
+# Check if DogStatsD port is listening inside container
+docker-compose exec datadog-agent netstat -tuln | grep 8125
+# Should show: udp 0.0.0.0:8125
+```
+
+#### Step 4: Verify Docker Network Configuration
+```bash
+# Check Docker Compose configuration for conflicts
+cat docker-compose.yml | grep -A5 -B5 "network_mode\|ports"
+
+# Common issues:
+# ❌ network_mode: host + ports mapping = CONFLICT!
+# ✅ Either use network_mode: host OR ports mapping, not both
+```
+
+#### Step 5: Test Metric Sending
+```bash
+# Send test metrics and immediately check reception
+uv run test-metrics.py
+
+# Then quickly check agent status
+docker-compose exec datadog-agent agent status | grep -A 15 "DogStatsD"
+```
+
+#### Step 6: Check Agent Logs for Errors
+```bash
+# Look for DogStatsD-related errors
+docker-compose logs datadog-agent | grep -i dogstatsd
+
+# Look for network binding issues
+docker-compose logs datadog-agent | grep -i "bind\|port\|8125"
+```
+
+### Common Network Issues & Solutions
+
+| Problem | Symptoms | Solution |
+|---------|----------|----------|
+| **Port mapping ignored** | `Udp Packets: 0` in status | Remove `network_mode: host` |
+| **Port already in use** | Container fails to start | Change port or stop conflicting service |
+| **Firewall blocking** | Connection timeout | Configure firewall rules |
+| **Wrong host/port in script** | Connection refused | Verify `127.0.0.1:8125` in Python script |
+
+### Network Configuration Examples
+
+```yaml
+# ✅ GOOD: Standard setup with port mapping
+services:
+  datadog-agent:
+    ports:
+      - "8125:8125/udp"
+    # No network_mode specified = bridge mode
+
+# ❌ BAD: Conflicting configuration  
+services:
+  datadog-agent:
+    network_mode: host
+    ports:
+      - "8125:8125/udp"  # This is ignored!
+
+# ✅ GOOD: Host networking (advanced use case)
+services:
+  datadog-agent:
+    network_mode: host
+    # No ports mapping needed
 ```
 
 ### Test Script Fails
@@ -132,6 +221,8 @@ ls -la /var/run/docker.sock
 
 # Python issues: Verify Python 3.8+ is installed
 python3 --version
+
+# Network issues: Follow network troubleshooting above
 ```
 
 ## 🧹 Cleanup

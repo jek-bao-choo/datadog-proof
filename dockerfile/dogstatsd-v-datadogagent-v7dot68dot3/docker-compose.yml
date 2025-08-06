@@ -16,7 +16,7 @@ services:
     
     # Required Docker parameters for system monitoring
     pid: host
-    network_mode: host
+    # network_mode: host  # Commented out to allow port mapping
     
     # Security context
     cap_add:
