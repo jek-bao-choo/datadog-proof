@@ -1,6 +1,9 @@
 Custom metrics
 ![](proof-custom-metrics.png)
 
+Custom events
+![](proof-custom-events.png)
+
 # Datadog Agent Docker Setup
 
 A simple Docker Compose setup for running the Datadog Agent with environment-based API key configuration.
