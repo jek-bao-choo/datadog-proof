@@ -12,7 +12,8 @@ Before you begin, make sure you have:
 - **Docker**: [Install Docker](https://docs.docker.com/get-docker/)
 - **Docker Compose**: Usually included with Docker Desktop
 - **Datadog Account**: [Sign up for free](https://www.datadoghq.com/)
-- **Python 3.8+**: For running the test script
+- **uv**: [Install uv](https://docs.astral.sh/uv/getting-started/installation/) - Modern Python package manager
+- **Python 3.9+**: For running the test script (handled automatically by uv)
 
 ## 🚀 Quick Setup
 
@@ -57,39 +58,64 @@ docker-compose logs datadog-agent
 
 ### Send Test Metrics
 
-Run the included Python test script to verify metrics are being sent:
+#### Option 1: Using uv (Recommended)
+
+Run the test script with automatic dependency management:
 
 ```bash
-# Run the test script
-python3 test-metrics-no-datadog-dep.py
+# Run with uv (automatically installs datadog dependency)
+uv run test-metrics.py
 ```
 
-**Expected Output:**
+#### Option 2: Using the no-dependency version
+
+If you prefer not to install any dependencies:
+
+```bash
+# Run the pure Python version (no external dependencies)
+uv run test-metrics-no-datadog-dep.py
+```
+
+**Note**: The uv version (`test-metrics.py`) uses the official Datadog library for more reliable metric delivery. The no-dependency version uses raw UDP sockets.
+
+**Expected Output (uv version):**
+```
+🔍 Sending custom metrics to Datadog...
+✓ Sent increment metric: jek.test_metric.increment [environment:test]
+✓ Sent decrement metric: jek.test_metric.decrement [environment:dev]
+✓ Sent gauge metric: jek.test_metric.gauge = 42 [environment:prod, team:backend]
+✓ Sent histogram metric: jek.test_metric.response_time = 150.5ms [endpoint:api, method:POST]
+✓ Sent timing metric: jek.test_metric.db_query = 25.3ms [database:postgres, table:users]
+
+🎉 All metrics sent successfully!
+```
+
+**Expected Output (no-dependency version):**
 ```
 🔍 Testing Datadog Agent DogStatsD Connection
 ==================================================
 ✓ Connection test successful to localhost:8125
-
 📊 Sending test metrics...
-
-Counter Metric:
-✓ Sent metric: test.counter:1|c|#environment:test,source:python_script
-
-Gauge Metric:
-✓ Sent metric: test.gauge:42|g|#environment:test,source:python_script
-
-Histogram Metric:
-✓ Sent metric: test.histogram:1.23|h|#environment:test,source:python_script
-
-==================================================
-📈 Results: 3/3 metrics sent successfully
+✓ Sent metric: jek.test.counter:1|c|#environment:test,source:python_script
+✓ Sent metric: jek.test.gauge:42|g|#environment:test,source:python_script
+✓ Sent metric: jek.test.histogram:1.23|h|#environment:test,source:python_script
+🎉 All tests passed!
 ```
 
 ### Verify in Datadog Dashboard
 
 1. Go to your [Datadog Metrics Explorer](https://app.datadoghq.com/metric/explorer)
-2. Search for metrics starting with `test.`
-3. You should see: `test.counter`, `test.gauge`, `test.histogram`
+2. Search for metrics starting with `jek.`
+3. **uv version** - You should see:
+   - `jek.test_metric.increment`
+   - `jek.test_metric.decrement`
+   - `jek.test_metric.gauge`
+   - `jek.test_metric.response_time`
+   - `jek.test_metric.db_query`
+4. **No-dependency version** - You should see:
+   - `jek.test.counter`
+   - `jek.test.gauge`
+   - `jek.test.histogram`
 
 **Note**: It may take 2-5 minutes for metrics to appear in Datadog.
 
@@ -261,7 +287,8 @@ dogstatsd-v-datadogagent-v7dot68dot3/
 ├── .env.example                    # Environment template
 ├── .gitignore                     # Git ignore rules
 ├── docker-compose.yml             # Container configuration
-├── test-metrics-no-datadog-dep.py # Verification script
+├── test-metrics.py                # Test script (with uv dependencies)
+├── test-metrics-no-datadog-dep.py # Test script (no dependencies)
 └── README.md                      # This file
 ```
 
