@@ -1,24 +1,23 @@
 # Shell Script Development
 
 ## About
-This project is used to develop shell scripts
+Shell script development project
 
-## Project Directory
-- Keep structure shallow, avoid deeply nested folders
-- Naming convention: `[verb such as send, post, etc...]-[purpose such as test logs, custom metrics, etc...]`
-- Example: `send-test-logs`, `send-test-spans`, `send-custom-metrics`
+## Structure
+- Shallow directories, avoid deep nesting
+- Naming: `[verb]-[purpose]`
+- Example: `send-test-logs`, `post-custom-metrics`
 
-## Workflow Process
-1. **Research Phase**: Create high-level implementation plan in `2-RESEARCH.md`
-2. **Review Phase**: Wait for user review and feedback on the `2-RESEARCH.md`
-3. **Detailed Planning**: After user approval of `2-RESEARCH.md`, create a detailed implementation plan with detailed atomic stages in `3-PLAN.md`
-4. **Implementation Phase**: Implement `3-PLAN.md` step-by-step on a new branch and mark steps as "(COMPLETED)" in `3-PLAN.md` after each item and each step are completed
+## Workflow
+1. **Research**: Create `2-RESEARCH.md` implementation plan
+2. **Review**: Wait for user approval
+3. **Plan**: Create detailed `3-PLAN.md` with atomic steps
+4. **Implement**: Execute step-by-step, mark "(COMPLETED)"
 
 ## Guidelines
-- Keep everything simple (Hello World level)
-- Keep explanations simple and assume no prior development knowledge
-- Break down tasks into small, manageable atomic steps
-- Run individual tests, not full test suites
-- Verify functionality after code changes
-- Wait for explicit user approval before moving to the next phase
-- Each service should be focused and independent
+- Keep simple (Hello World level)
+- Assume no prior dev knowledge
+- Small, atomic steps
+- Individual tests only
+- Wait for explicit approval between phases
+- Focus and independence per script

@@ -1,23 +1,22 @@
 # Dockerfile Development
 
 ## About
-This project is used to develop dockerfile for containerising applications into containers
+Dockerfile development for containerizing applications
 
-## Project Directory
-- Keep structure shallow, avoid deeply nested folders
-- Folder naming convention: `[primary purpose tech stack]-v[version of the primary tech stack]-[secondary purpose tech stack]-v[version of the secondary tech stack]`
+## Structure
+- Shallow directories, avoid deep nesting
+- Naming: `[primary-tech]-v[version]-[secondary-tech]-v[version]`
 - Example: `dogstatsd-v-datadogagent-v7dot68dot3`
 
-## Workflow Process
-1. **Research Phase**: Create high-level implementation plan in `2-RESEARCH.md`
-2. **Review Phase**: Wait for user review and feedback on the `2-RESEARCH.md`
-3. **Detailed Planning**: After user approval of `2-RESEARCH.md`, create a detailed implementation plan with detailed atomic stages in `3-PLAN.md`
-4. **Implementation Phase**: Implement `3-PLAN.md` step-by-step on a new branch and mark steps as "(COMPLETED)" in `3-PLAN.md` after each item and each step are completed
+## Workflow
+1. **Research**: Create `2-RESEARCH.md` implementation plan
+2. **Review**: Wait for user approval
+3. **Plan**: Create detailed `3-PLAN.md` with atomic steps
+4. **Implement**: Execute step-by-step, mark "(COMPLETED)"
 
 ## Guidelines
-- Keep the dockerfile as simple as possible (Hello World level)
-- Keep explanations simple and assume no prior dockerfile knowledge
-- Break down tasks into small, manageable atomic steps
-- Run individual tests, not full test suites
-- Verify functionality after code changes
-- Wait for explicit user approval before moving to the next phase
+- Keep simple (Hello World level)
+- Assume no prior Docker knowledge
+- Small, atomic steps
+- Individual tests only
+- Wait for explicit approval between phases
