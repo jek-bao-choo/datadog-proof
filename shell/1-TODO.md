@@ -16,6 +16,7 @@ curl -X POST 'https://http-intake.logs.datadoghq.com/v1/input/<api_key> \
 ```
 - The API key should be read from my .env file.
 - The .env must NOT be committed to Git.
+- Think hard
 
 <!-- ## EXAMPLES:
 - [List any example files in the examples folders and explain how they should be used if any] -->

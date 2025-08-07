@@ -13,6 +13,7 @@ docker run -d --cgroupns host \
 ```
 - But I want the <DATADOG_API_KEY> to be read from .env
 - The .env must not be committed to Github
+- Think hard
 
 ## Verification Strategy
 1. Start Datadog Agent container

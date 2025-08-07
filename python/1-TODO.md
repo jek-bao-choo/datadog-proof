@@ -7,6 +7,7 @@
 - The .env must NOT be committed to Github public repo
 - Use pydantic for data validation
 - Explain how this application could be containerised
+- Think hard
 
 
 <!-- ## EXAMPLES:

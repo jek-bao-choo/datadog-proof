@@ -7,6 +7,7 @@
 - Both fields requires validation to ensure it is mobile number and it is dollar amount
 - The button is "Send"
 - There will NOT be a backend yet
+- Think hard
 
 <!-- ## EXAMPLES:
 - [List any example files in the examples folders and explain how they should be used if any]

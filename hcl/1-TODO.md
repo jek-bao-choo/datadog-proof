@@ -10,6 +10,7 @@
 - If needed explain the steps to copy the bash file from my local Macbook machine to the EC2 before giving me the command to SSH
 - Try to automate as much as possible 
 - Less is more so please keep it simple
+- Think hard
 
 
 ### Access & Authentication:
