@@ -23,6 +23,10 @@
 
 <!-- ## DOCUMENTATION: -->
 
+## USE CONTEXT7
+- use library /hashicorp/terraform 
+- use library /terraform-docs/terraform-docs /hashicorp/terraform-mcp-server /hashicorp/terraform-provider-aws /petoju/terraform-provider-mysql /terraform-aws-modules/terraform-aws-rds /terraform-aws-modules/terraform-aws-ecs /terraform-provider-datadog /terraform/docs 
+
 ## Implementation should consider:
 - **Naming Convention**: All resources use "jek-" prefix with tags: owner="jek", env="test"
 - **Resource naming**: [prefix-resourcename, e.g., "jek-"]

@@ -15,6 +15,9 @@
 ## DOCUMENTATION:
 - [Inlcude links to relevant documentation, APIs, or MCP server resources if any] -->
 
+## USE CONTEXT7
+- use library /tiangolo/fastapi
+
 ## OTHER CONSIDERATIONS:
 - My computer is a Macbook M4
 - My development tools are iTerm2, tmux, Claude Code, and Visual Studio Code

@@ -21,8 +21,11 @@ curl -X POST 'https://http-intake.logs.datadoghq.com/v1/input/<api_key> \
 <!-- ## EXAMPLES:
 - [List any example files in the examples folders and explain how they should be used if any] -->
 
-## DOCUMENTATION:
-- https://docs.datadoghq.com/api/latest/logs/?code-lang=curl
+<!-- ## DOCUMENTATION:
+- https://docs.datadoghq.com/api/latest/logs/?code-lang=curl -->
+
+## USE CONTEXT7
+- use library /tiangolo/fastapi
 
 ## OTHER CONSIDERATIONS:
 - My computer is a Macbook

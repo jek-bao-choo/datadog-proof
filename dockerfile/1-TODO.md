@@ -30,8 +30,12 @@ docker run -d --cgroupns host \
 <!-- ## EXAMPLES:
 - [List any example files in the examples folders and explain how they should be used if any] -->
 
-## DOCUMENTATION:
-- https://docs.datadoghq.com/developers/dogstatsd/?tab=containeragent
+<!-- ## DOCUMENTATION:
+- https://docs.datadoghq.com/developers/dogstatsd/?tab=containeragent -->
+
+## USE CONTEXT7
+- use library /hashicorp/terraform 
+- use library /terraform-docs/terraform-docs /hashicorp/terraform-mcp-server /hashicorp/terraform-provider-aws /petoju/terraform-provider-mysql /terraform-aws-modules/terraform-aws-rds /terraform-aws-modules/terraform-aws-ecs /terraform-provider-datadog /terraform/docs 
 
 ## Implementation should consider:
 - **README.md**: Include setup, deployment, verification, and teardown steps

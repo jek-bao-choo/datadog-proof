@@ -13,8 +13,11 @@
 <!-- ## EXAMPLES:
 - [List any example files in the examples folders and explain how they should be used if any] -->
 
-## DOCUMENTATION:
-- **FastAPI**: https://github.com/fastapi/fastapi
+<!-- ## Documentation:
+- **FastAPI**: https://github.com/fastapi/fastapi -->
+
+## USE CONTEXT7
+- use library /tiangolo/fastapi
 
 ## Implementation should consider:
 - **README.md**: Include setup, deployment, verification, and cleanup steps
