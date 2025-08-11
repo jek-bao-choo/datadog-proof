@@ -1,3 +1,5 @@
+![](proof-helm.png)
+
 # EKS Cluster on EC2 with Terraform
 
 This Terraform configuration creates an Amazon EKS (Elastic Kubernetes Service) cluster on EC2 instances in the ap-southeast-1 region. The setup includes a complete VPC infrastructure, security groups, IAM roles, and a managed node group with 2 worker nodes.
@@ -117,6 +119,52 @@ aws ec2 describe-instances --region ap-southeast-1 \
 ssh -i ~/.ssh/id_ed25519 ec2-user@<node-public-ip>
 ```
 
+## Install Datadog Helm
+```bash
+# Add the Datadog repository
+helm repo add datadog https://helm.datadoghq.com
+
+# Fetch the latest information from all repositories
+helm repo update
+
+# Create secret
+kubectl create secret generic datadog-secret --from-literal api-key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# helm pull <repository>/<chart-name> --version <chart-version>
+helm pull datadog/datadog --version 3.129.0
+# or
+helm pull datadog/datadog --version 3.129.0 --untar
+
+# Install
+helm install datadog-agent -f datadog-values-helm.yaml datadog/datadog
+```
+
+## Uninstall Datadog Helm
+```bash
+# Uninstall
+helm uninstall datadog-agent
+```
+
+## Install Datadog Operator
+```bash
+helm repo add datadog https://helm.datadoghq.com
+helm install datadog-operator datadog/datadog-operator
+
+# Create secret
+kubectl create secret generic datadog-secret --from-literal api-key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+helm pull datadog/datadog-operator --untar
+```
+
+Follow the steps here https://docs.datadoghq.com/getting_started/containers/datadog_operator/
+
+
+## Uninstall Datadog Operator
+```bash
+# Uninstall
+helm uninstall datadog-agent
+```
+
 
 ## Teardown Instructions
 
@@ -213,6 +261,153 @@ terraform plan
 # Check AWS resource status
 aws eks list-clusters --region ap-southeast-1
 aws eks describe-cluster --name jek-eks-cluster --region ap-southeast-1
+```
+
+## Kubernetes DaemonSet Scheduling Troubleshooting
+
+### Problem: DaemonSet Pods Failing to Schedule
+
+**Error Message**: `0/2 nodes are available: 1 Too many pods, 1 node(s) didn't satisfy plugin(s) [NodeAffinity]. preemption: 0/2 nodes are available: 1 No preemption victims found for incoming pod, 1 Preemption is not helpful for scheduling.`
+
+### Systematic Troubleshooting Methodology
+
+#### Step 1: Identify the Problem
+```bash
+# Check daemonset status - look for DESIRED vs READY mismatch
+kubectl get ds -A
+
+# Example output showing issue:
+# NAMESPACE     NAME            DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+# default       datadog-agent   2         2         1       2            1           kubernetes.io/os=linux   58m
+```
+
+#### Step 2: Examine Recent Events
+```bash
+# Check recent scheduling events for specific error details
+kubectl get events --sort-by=.metadata.creationTimestamp -A | tail -20
+
+# Look for messages like:
+# - "Too many pods"
+# - "didn't satisfy plugin(s) [NodeAffinity]"
+# - "No preemption victims found"
+```
+
+#### Step 3: Investigate Node Capacity vs Usage
+```bash
+# Check pod capacity limits per node
+kubectl get nodes -o custom-columns=NAME:.metadata.name,PODS_CAPACITY:.status.capacity.pods,PODS_ALLOCATABLE:.status.allocatable.pods
+
+# Count actual pods running per node
+for node in $(kubectl get nodes --no-headers | awk '{print $1}'); do
+  echo "=== $node ==="
+  kubectl describe node $node | grep -E "Capacity:|Allocatable:" | grep pods
+  echo "Current pods:"
+  kubectl get pods -A --field-selector spec.nodeName=$node --no-headers | wc -l
+  echo
+done
+```
+
+**Key Discovery**: Node `ip-10-0-3-243.ap-southeast-1.compute.internal` was at exactly 17/17 pods (capacity limit reached)
+
+#### Step 4: Check DaemonSet Configuration
+```bash
+# Examine node affinity and selector constraints
+kubectl get daemonset <DAEMONSET_NAME> -n <NAMESPACE> -o yaml | grep -A 20 -B 5 affinity
+kubectl get daemonset <DAEMONSET_NAME> -n <NAMESPACE> -o yaml | grep -A 10 nodeSelector
+
+# Check for tolerations
+kubectl get daemonset <DAEMONSET_NAME> -n <NAMESPACE> -o yaml | grep -A 10 -B 5 tolerations
+```
+
+#### Step 5: Investigate Node Constraints
+```bash
+# Check node labels and taints
+kubectl get nodes --show-labels
+kubectl describe nodes | grep -A 5 -B 5 Taints
+```
+
+### Solution Applied
+
+#### Primary Fix: Remove Scheduling Constraints
+```bash
+# Remove all scheduling constraints from the daemonset
+kubectl patch daemonset datadog-agent -n default --type='merge' -p='{
+  "spec": {
+    "template": {
+      "spec": {
+        "affinity": null,
+        "nodeSelector": null,
+        "tolerations": [
+          {
+            "operator": "Exists"
+          }
+        ]
+      }
+    }
+  }
+}'
+```
+
+#### Secondary Fix: Free Up Pod Capacity
+```bash
+# Scale down non-essential deployments to free pod slots
+kubectl scale deployment grafana --replicas=0 -n default
+
+# Alternative: Delete completed/failed pods
+kubectl delete pods --field-selector=status.phase=Succeeded -A
+kubectl delete pods --field-selector=status.phase=Failed -A
+```
+
+### Root Cause Analysis
+
+1. **Primary Issue**: Node capacity exhaustion (17/17 pods on first node)
+2. **Secondary Issue**: NodeAffinity constraints preventing scheduling on available nodes
+3. **Contributing Factor**: No pod eviction possible due to all pods being essential
+
+### Prevention Strategies
+
+1. **Monitor Pod Capacity**:
+   ```bash
+   # Regular capacity monitoring
+   kubectl top nodes
+   kubectl describe nodes | grep -E "Allocated resources|pods"
+   ```
+
+2. **Configure Proper Resource Limits**:
+   - Set appropriate CPU/memory requests and limits
+   - Use Pod Disruption Budgets for critical workloads
+
+3. **Implement Node Auto-scaling**:
+   - Configure cluster autoscaler for dynamic node provisioning
+   - Set appropriate max pod limits per node based on workload
+
+4. **DaemonSet Best Practices**:
+   - Use universal tolerations: `operator: Exists`
+   - Avoid restrictive node selectors unless necessary
+   - Test scheduling constraints in development first
+
+### Quick Resolution Commands
+
+```bash
+# Emergency fix for "Too many pods" error:
+# 1. Check which daemonset is failing
+kubectl get ds -A
+
+# 2. Remove all scheduling constraints
+kubectl patch daemonset <DS_NAME> -n <NAMESPACE> --type='merge' -p='{
+  "spec": {
+    "template": {
+      "spec": {
+        "affinity": null,
+        "nodeSelector": null,
+        "tolerations": [{"operator": "Exists"}]
+      }
+    }
+  }
+}'
+
+# 3. Free up pod slots if needed
+kubectl scale deployment <non-essential-app> --replicas=0
 ```
 
 ## Security Considerations
