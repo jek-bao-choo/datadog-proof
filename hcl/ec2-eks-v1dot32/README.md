@@ -148,7 +148,7 @@ helm uninstall datadog-agent
 ## Install Datadog Operator
 ```bash
 helm repo add datadog https://helm.datadoghq.com
-helm install datadog-operator datadog/datadog-operator
+helm install datadog-operator datadog/datadog-operator --version 2.12.0
 
 # Create secret
 kubectl create secret generic datadog-secret --from-literal api-key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
