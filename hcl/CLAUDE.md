@@ -1,7 +1,7 @@
-# Terraform Script Development
+# IaC Terraform .hcl Script Development
 
 ## About
-Terraform scripts development project
+IaC Terraform .hcl script developments
 
 ## Structure
 - Shallow directories, avoid deep nesting

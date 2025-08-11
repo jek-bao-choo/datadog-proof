@@ -25,7 +25,15 @@
 
 ## USE CONTEXT7
 - use library /hashicorp/terraform 
-- use library /terraform-docs/terraform-docs /hashicorp/terraform-mcp-server /hashicorp/terraform-provider-aws /petoju/terraform-provider-mysql /terraform-aws-modules/terraform-aws-rds /terraform-aws-modules/terraform-aws-ecs /terraform-provider-datadog /terraform/docs 
+- use library /hashicorp/hcl
+- use library /terraform-docs/terraform-docs 
+- use library /hashicorp/terraform-mcp-server 
+- use library /hashicorp/terraform-provider-aws 
+- use library /petoju/terraform-provider-mysql 
+- use library /terraform-aws-modules/terraform-aws-rds 
+- use library /terraform-aws-modules/terraform-aws-ecs 
+- use library /terraform-provider-datadog 
+- use library /terraform/docs 
 
 ## Implementation should consider:
 - **Naming Convention**: All resources use "jek-" prefix with tags: owner="jek", env="test"
