@@ -18,6 +18,8 @@
 
 ## USE CONTEXT7
 - use library /tiangolo/fastapi
+- use library /microsoft/playwright and python/docs/intro
+- use library /microsoft/playwright-python for end-to-end testing
 
 ## Implementation should consider:
 - **README.md**: Include setup, deployment, verification, and cleanup steps
