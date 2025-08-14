@@ -10,7 +10,7 @@ Multiple Python server applications
 
 ## Preference
 - Use uv https://github.com/astral-sh/uv
-- Exampl quick start:
+- Example quick start:
 ```bash
 uv init -p 3.9.6 fastapi0dot116__cpython3dot9dot6
 cd fastapi0dot116__cpython3dot9dot6

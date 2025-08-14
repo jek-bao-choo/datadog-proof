@@ -5,8 +5,8 @@ This folder contains multiple standalone javascript apps
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `<frameworkName><frameworkVersion>-<foundationalFrameworkName_or_langName><foundationalFramework_or_langVersion>`
-- Example: `nextjs15dot4-react19dot1`
+- Naming: `<frameworkName><frameworkVersion>__<foundationalFrameworkName_or_langName><foundationalFramework_or_langVersion>`
+- Example: `nextjs15dot4__react19dot1`
 
 ## Preference
 - Document steps in README.md

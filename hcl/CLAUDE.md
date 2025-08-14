@@ -5,8 +5,8 @@ IaC Terraform .hcl script developments
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `[vm-product]-[os]-v[os-version]`
-- Example: `ec2-ubuntu-v24`, `azurevm-fedora-v40`, `gce-ubuntu-v24`
+- Naming: `<vm-product>__<os><os-version>`
+- Example: `ec2__ubuntu24`, `azurevm__fedora40`, `gce__ubuntu24`
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan

@@ -5,8 +5,8 @@ Dockerfile development for containerizing applications
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `[primary-tech]-v[version]-[secondary-tech]-v[version]`
-- Example: `dogstatsd-v-datadogagent-v7dot68dot3`
+- Naming: `<primaryTechStack><techStackVersion>__<secondaryTechStack><techStackVersion>`
+- Example: `dogstatsd__datadogagent7dot68dot3`
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan
