@@ -1,28 +1,29 @@
 ## TASK:
-- Walk me through creating a FastAPI version 0.116.1
-- I will be using Python 3.9.6
-- The server will be using Gunicorn with Uvicorn workers
-- The FastAPI is a API gateway which will send a prompt to an OpenAI API
-- The OpenAI API key would be saved in .env
+- Walk me through creating the latest Langgraph application with tool calling and routing capabilities
+- First tool is online search
+- Second tool is get some metric data from Datadog API from app.datadoghq.com
+- It will be using OpenAI API
+- The credentials will be saved in .env
 - The .env must NOT be committed to Github public repo
-- Use pydantic for data validation
-- Explain how this application could be containerised
+- Use `MemorySaver` (in-memory) for simple Hello World implementation
+- Each conversation gets a unique `thread_id` for state management
+- FastAPI will expose REST endpoints that trigger Langgraph workflows
+- I will be using Python 3.9.6
+- Keep simple (Hello World level)
 - Think hard
 
-
-<!-- ## EXAMPLES:
-- [List any example files in the examples folders and explain how they should be used if any] -->
-
-<!-- ## Documentation:
-- **FastAPI**: https://github.com/fastapi/fastapi -->
-
 ## USE CONTEXT7
-- use library /tiangolo/fastapi
-- use library /microsoft/playwright and python/docs/intro
+- use library /llmstxt/langchain-ai_github_io-langgraph-llms.txt
+- use library /context7/playwright_dev-python
 - use library /microsoft/playwright-python for end-to-end testing
+- use library /context7/fastapi_tiangolo
+- use library /context7/platform_openai
+- use library /context7/python_langchain-langgraph
+- use library /context7/python_langchain
+- use library /datadog/datadog-api-client-python
 
-## Implementation should consider:
-- **README.md**: Include setup, deployment, verification, and cleanup steps
+## IMPLEMENTATION CONSIDERATION:
+- **README.md**: Include setup, start up, deployment, verification, and cleanup steps
 - **Git Ignore**: Create a .gitignore to avoid committing common Python files or output to Git repo
 - **Simplicity**: Keep the Python project really simple
 - **PII and Sensitive Data**: Do be mindful that I will be committing the Python project to a public Github repo so do NOT commit private key or secrets.

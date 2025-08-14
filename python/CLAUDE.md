@@ -5,18 +5,18 @@ Multiple Python server applications
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `<framework><version>__<implementation><python-version>`
-- Example: `fastapi0dot116__cpython3dot9dot6`
+- Naming: `<framework><version>__<implementation><pythonVersion>`
+    - Example: `fastapi0dot116__cpython3dot9dot6`, `langgraph0dot6dot5__cpython3dot9dot6`
 
 ## Preference
 - Use uv https://github.com/astral-sh/uv
 - Example quick start:
 ```bash
-uv init -p 3.9.6 fastapi0dot116__cpython3dot9dot6
-cd fastapi0dot116__cpython3dot9dot6
+uv init -p <pythonVersion> <framework><version>__<implementation><pythonVersion>
+cd <framework><version>__<implementation><pythonVersion>
 uv venv .venv
 source .venv/bin/activate
-uv add "fastapi=0.116.1"
+uv add "<framework>=<frameworkVersion>"
 deactivate  # cleanup
 ```
 - Document steps in README.md
