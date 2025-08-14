@@ -5,7 +5,10 @@ from datadog_api_client.v1.api.metrics_api import MetricsApi
 from datadog_api_client.v1.model.metrics_query_response import MetricsQueryResponse
 from typing import Dict, Any
 import os
+import logging
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 # Configure Datadog API client
 def get_datadog_client():
@@ -16,13 +19,13 @@ def get_datadog_client():
     return ApiClient(configuration)
 
 @tool
-def datadog_metrics_tool(metric_query: str, hours_back: int = 1) -> Dict[str, Any]:
+def datadog_metrics_tool(metric_query: str, time_period: str = "1h") -> Dict[str, Any]:
     """
     Retrieve metrics from Datadog using a query.
     
     Args:
-        metric_query (str): Datadog metric query (e.g., "avg:system.cpu.idle{*}")
-        hours_back (int): How many hours back to query (default: 1)
+        metric_query (str): Datadog metric query (e.g., "avg:system.cpu.idle{*}" or "system.cpu.system")
+        time_period (str): Time period to query (e.g., "1h", "24h", "7d", "10d") (default: "1h")
         
     Returns:
         Dict[str, Any]: Metric data including values and metadata
@@ -36,13 +39,33 @@ def datadog_metrics_tool(metric_query: str, hours_back: int = 1) -> Dict[str, An
                 "values": []
             }
         
-        # Calculate time range
+        # Parse time period and calculate time range
         end_time = datetime.now()
-        start_time = end_time - timedelta(hours=hours_back)
+        
+        # Parse time_period string (e.g., "1h", "24h", "7d", "10d")
+        if time_period.endswith('h'):
+            hours = int(time_period[:-1])
+            start_time = end_time - timedelta(hours=hours)
+        elif time_period.endswith('d'):
+            days = int(time_period[:-1])
+            start_time = end_time - timedelta(days=days)
+        else:
+            # Default to 1 hour if format not recognized
+            start_time = end_time - timedelta(hours=1)
         
         # Convert to Unix timestamps
         start_timestamp = int(start_time.timestamp())
         end_timestamp = int(end_time.timestamp())
+        
+        # Normalize metric query format
+        if not metric_query.startswith(('avg:', 'sum:', 'min:', 'max:')):
+            # Add default aggregation if not specified
+            if '{' not in metric_query:
+                metric_query = f"avg:{metric_query}{{*}}"
+            else:
+                metric_query = f"avg:{metric_query}"
+        
+        logger.info(f"Executing Datadog query: {metric_query} from {start_time} to {end_time}")
         
         # Initialize Datadog client
         with get_datadog_client() as api_client:
@@ -55,22 +78,46 @@ def datadog_metrics_tool(metric_query: str, hours_back: int = 1) -> Dict[str, An
                 query=metric_query
             )
             
+            logger.info(f"Datadog API response: {response}")
+            
             # Format response data
             formatted_values = []
             if response.series:
                 for series in response.series:
                     series_data = {
-                        "metric": series.metric,
-                        "tags": series.tags if series.tags else [],
-                        "points": []
+                        "metric": getattr(series, 'metric', 'Unknown'),
+                        "display_name": getattr(series, 'display_name', 'Unknown'),
+                        "scope": getattr(series, 'scope', '*'),
+                        "tags": getattr(series, 'tag_set', []),
+                        "unit": getattr(series, 'unit', [None, None]),
+                        "points": [],
+                        "total_points": 0
                     }
                     
-                    if series.pointlist:
-                        for point in series.pointlist:
-                            series_data["points"].append({
-                                "timestamp": point[0] if len(point) > 0 else None,
-                                "value": point[1] if len(point) > 1 else None
-                            })
+                    if hasattr(series, 'pointlist') and series.pointlist:
+                        # Limit points to avoid overwhelming response
+                        points_to_include = series.pointlist[-20:] if len(series.pointlist) > 20 else series.pointlist
+                        for point in points_to_include:
+                            try:
+                                # Point can be either a list or a Point object
+                                if hasattr(point, '__len__') and len(point) >= 2:
+                                    timestamp = datetime.fromtimestamp(point[0] / 1000).isoformat()
+                                    value = point[1]
+                                elif hasattr(point, '__getitem__'):
+                                    timestamp = datetime.fromtimestamp(point[0] / 1000).isoformat()
+                                    value = point[1]
+                                else:
+                                    # Skip this point if we can't process it
+                                    continue
+                                    
+                                series_data["points"].append({
+                                    "timestamp": timestamp,
+                                    "value": value
+                                })
+                            except (IndexError, TypeError, AttributeError) as e:
+                                logger.warning(f"Skipping point due to error: {e}")
+                                continue
+                        series_data["total_points"] = len(series.pointlist)
                     
                     formatted_values.append(series_data)
             
@@ -79,15 +126,18 @@ def datadog_metrics_tool(metric_query: str, hours_back: int = 1) -> Dict[str, An
                 "time_range": {
                     "start": start_time.isoformat(),
                     "end": end_time.isoformat(),
-                    "hours_back": hours_back
+                    "time_period": time_period
                 },
                 "values": formatted_values,
-                "total_series": len(formatted_values)
+                "total_series": len(formatted_values),
+                "success": True
             }
             
     except Exception as e:
+        logger.error(f"Datadog query failed: {str(e)}", exc_info=True)
         return {
             "error": f"Datadog query failed: {str(e)}",
             "metric_query": metric_query,
-            "values": []
+            "values": [],
+            "success": False
         }
