@@ -19,13 +19,12 @@
 
 ## Implementation should consider:
 - **README.md**: Include setup, deployment, verification, and cleanup steps
-- **Git Ignore**: Create a .gitignore to avoid committing common Python files or output to Git repo
-- **Simplicity**: Keep the Python project really simple
-- **PII and Sensitive Data**: Do be mindful that I will be committing the Python project to a public Github repo so do NOT commit private key or secrets.
+- **Git Ignore**: Create a .gitignore to avoid committing common Java files or output to Git repo
+- **Simplicity**: Keep the Java project really simple
+- **PII and Sensitive Data**: Do be mindful that I will be committing the Java project to a public Github repo so do NOT commit private key or secrets.
 
 ## OTHER CONSIDERATIONS:
-- My computer is a Macbook
-- My development tools are iTerm2, tmux, Claude Code, and Visual Studio Code
+- Run the project on MacOS bash terminal
 - Explain the steps you would take in clear, beginner-friendly language
 - Write the research on performing the task
 - Save the research to `2-RESEARCH.md`
