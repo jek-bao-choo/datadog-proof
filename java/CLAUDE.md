@@ -6,7 +6,7 @@ Multiple Java applications
 ## Structure
 - Shallow directories, avoid deep nesting
 - Naming: `<framework><framework_version>__<server><server_version>__<java><java_version>`
-- Example: `springboot2.7.5__tomcat9.0__openjdk8u422`
+- Example: `springboot2dot7dot5__tomcat9dot0__openjdk8u422`, `springboot3dot1__jboss7dot4__corretto17u16`
 
 ## Preference
 - Document steps in README.md
