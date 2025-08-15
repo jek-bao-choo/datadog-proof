@@ -9,7 +9,7 @@ Multiple Java applications
 - Example: `springboot2dot7dot5__tomcat9dot0__openjdk8u422`, `springboot3dot1__jboss7dot4__corretto17u16`
 
 ## Tooling
-- Use SDKMAN for java version control
+- Use SDKMAN! CLI for Gradle, Maven, and Java version control and installation
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan
