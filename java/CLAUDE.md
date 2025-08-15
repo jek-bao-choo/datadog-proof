@@ -8,8 +8,8 @@ Multiple Java applications
 - Naming: `<framework><framework_version>__<server><server_version>__<java><java_version>`
 - Example: `springboot2dot7dot5__tomcat9dot0__openjdk8u422`, `springboot3dot1__jboss7dot4__corretto17u16`
 
-## Preference
-- Document steps in README.md
+## Tooling
+- Use SDKMAN for java version control
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan
