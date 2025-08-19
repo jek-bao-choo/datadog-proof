@@ -1,0 +1,35 @@
+# Bicep compiled files
+*.json
+!parameters.template.json
+
+# Azure authentication files
+*.azureauth
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Log files
+*.log
+
+# Secrets and credentials
+*secret*
+*password*
+*credential*
+*key*
+
+# Temporary files
+*.tmp
+temp/
+
+# Local parameters file (contains sensitive data)
+parameters.json
+
+# Azure deployment outputs
+*.deploymentOutput.json

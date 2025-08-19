@@ -1,5 +1,5 @@
 ## TASK:
-- Create a Windows Server 2022 using Bicep in Azure (Asia Pacific) Southeast Asia region
+- Create a Windows Server 2022, of Standard_D4_v5 (4 vCPUs, 16GB RAM) or similar series, using Bicep in Azure (Asia Pacific) Southeast Asia region
 - It should have relevant Resource Group, VPC, Subnet, amd Security Group pointing to My IP.
 - After the creation of Windows Server 2022, create a .NET Framework v4.8.1 app running on IIS server in the Windows Server 2022.
 - Keep simple (Hello World level)
