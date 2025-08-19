@@ -11,6 +11,23 @@
 - use library /websites/learn_microsoft-en-us-dotnet-csharp?tokens=5000
 - use library /websites/playwright_dev-dotnet?tokens=5000
 
+## DOTNET VERSION MANAGER
+- Use asdf for dotnet version manager
+- An example of how it is used
+```
+asdf list all dotnet         # see available SDKs
+asdf install dotnet 8.0.401  # example: latest 8.0 feature SDK
+asdf global dotnet 8.0.401
+dotnet --info
+
+dotnet new globaljson --sdk-version 8.0.401 --force
+# or create manually:
+# {
+#   "sdk": { "version": "8.0.401", "rollForward": "latestFeature" }
+# }
+```
+
+
 ## IMPLEMENTATION CONSIDERATION:
 - **README.md**: Include setup, start up, deployment, verification, and cleanup steps
 - **Git Ignore**: Create a .gitignore to avoid committing common Python files or output to Git repo
