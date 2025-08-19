@@ -3,7 +3,7 @@
 - Keep simple (Hello World level)
 - Answer my questions: 
     - What do I need to have as pre-requisites for running this application on a Macbook?
-    - What server should I run it on?
+    - What server should I run it on? IIS?
 - Think hard
 
 ## USE CONTEXT7

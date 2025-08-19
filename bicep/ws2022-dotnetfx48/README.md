@@ -40,7 +40,19 @@ Edit `parameters.json` and replace:
 - `REPLACE_WITH_SECURE_PASSWORD` - Strong password (12+ chars, mixed case, numbers, symbols)
 - `REPLACE_WITH_YOUR_IP/32` - Your public IP with /32 subnet (e.g., "203.0.113.1/32")
 
+```bash
+az login
+```
+
 ### 3. Deploy Infrastructure
+
+```bash
+az deployment sub validate \
+  --location southeastasia \
+  --template-file main.bicep \
+  --parameters @parameters.json
+```
+
 ```bash
 # Deploy to Azure
 az deployment sub create \

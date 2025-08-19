@@ -13,7 +13,7 @@ param vmSize string = 'Standard_D4_v5'
 
 // Resource naming with jek- prefix
 var resourcePrefix = 'jek-'
-var projectSuffix = 'ws2022dotnet'
+var projectSuffix = 'ws2022dotnet${uniqueString(subscription().subscriptionId, deployment().name)}'
 var commonTags = {
   owner: 'jek'
   env: 'test'

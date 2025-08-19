@@ -1,5 +1,5 @@
 // VM Module for Windows Server 2022 + .NET Framework v4.8.1
-// Creates Public IP, NIC, VM with Trusted Launch, and VM extensions for IIS/.NET setup
+// Creates Public IP, NIC, VM, and VM extensions for IIS/.NET setup
 
 param location string
 param resourcePrefix string  
@@ -60,7 +60,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       vmSize: vmSize 
     }
     osProfile: {
-      computerName: '${resourcePrefix}vm${projectSuffix}'
+      computerName: 'jek-ws2022-vm'
       adminUsername: adminUsername
       adminPassword: adminPassword
       windowsConfiguration: {
@@ -89,13 +89,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
         }
       ]
     }
-    securityProfile: {
-      securityType: 'TrustedLaunch'
-      uefiSettings: {
-        secureBootEnabled: true
-        vTpmEnabled: true
-      }
-    }
   }
 }
 
@@ -103,6 +96,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 resource iisExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: vm
   name: 'IISConfiguration'
+  location: location
   properties: {
     publisher: 'Microsoft.Powershell'
     type: 'DSC'
@@ -123,6 +117,7 @@ resource iisExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' 
 resource appExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: vm
   name: 'AppDeployment'  
+  location: location
   dependsOn: [iisExtension]
   properties: {
     publisher: 'Microsoft.Compute'
