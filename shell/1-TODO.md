@@ -24,8 +24,8 @@ curl -X POST 'https://http-intake.logs.datadoghq.com/v1/input/<api_key> \
 <!-- ## DOCUMENTATION:
 - https://docs.datadoghq.com/api/latest/logs/?code-lang=curl -->
 
-## USE CONTEXT7
-- use library /tiangolo/fastapi
+<!-- ## USE CONTEXT7
+- use library /tiangolo/fastapi -->
 
 ## OTHER CONSIDERATIONS:
 - My computer is a Macbook

@@ -30,12 +30,12 @@ dotnet new globaljson --sdk-version 8.0.401 --force
 
 ## IMPLEMENTATION CONSIDERATION:
 - **README.md**: Include setup, start up, deployment, verification, and cleanup steps
-- **Git Ignore**: Create a .gitignore to avoid committing common Python files or output to Git repo
-- **Simplicity**: Keep the Python project really simple
-- **PII and Sensitive Data**: Do be mindful that I will be committing the Python project to a public Github repo so do NOT commit private key or secrets.
+- **Git Ignore**: Create a .gitignore to avoid committing common C# files or output to Git repo
+- **Simplicity**: Keep the C# project really simple
+- **PII and Sensitive Data**: Do be mindful that I will be committing the C# project to a public Github repo so do NOT commit private key or secrets.
 
 ## OTHER CONSIDERATIONS:
-- My development tools are iTerm and Visual Studio Code
+- My development tools are Macbook terminal and Visual Studio Code
 - Explain the steps you would take in clear, beginner-friendly language
 - Write the research on performing the task
 - Save the research to `2-RESEARCH.md`
