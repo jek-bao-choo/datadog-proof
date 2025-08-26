@@ -1,4 +1,4 @@
-"""Online search tool using Tavily API with DuckDuckGo fallback."""
+"""Online search tool using DuckDuckGo."""
 from langchain_core.tools import tool
 from typing import Dict, Any
 import os
@@ -6,49 +6,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Try to import Tavily
-try:
-    from tavily import TavilyClient
-    tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY", ""))
-    TAVILY_AVAILABLE = bool(os.getenv("TAVILY_API_KEY"))
-except ImportError:
-    TAVILY_AVAILABLE = False
-    tavily_client = None
 
-# Import DuckDuckGo as fallback
+# Import DuckDuckGo
 try:
     from duckduckgo_search import DDGS
     DUCKDUCKGO_AVAILABLE = True
 except ImportError:
     DUCKDUCKGO_AVAILABLE = False
 
-def search_with_tavily(query: str) -> Dict[str, Any]:
-    """Search using Tavily API."""
-    try:
-        response = tavily_client.search(
-            query=query,
-            search_depth="basic",
-            max_results=5
-        )
-        
-        # Format results for better readability
-        formatted_results = []
-        for result in response.get("results", []):
-            formatted_results.append({
-                "title": result.get("title", "No title"),
-                "content": result.get("content", "No content"),
-                "url": result.get("url", "No URL")
-            })
-        
-        return {
-            "query": query,
-            "results": formatted_results,
-            "total_results": len(formatted_results),
-            "search_engine": "Tavily"
-        }
-    except Exception as e:
-        logger.error(f"Tavily search failed: {str(e)}")
-        raise
 
 def search_with_duckduckgo(query: str) -> Dict[str, Any]:
     """Search using DuckDuckGo with retry logic."""
@@ -122,8 +87,7 @@ def search_with_duckduckgo(query: str) -> Dict[str, Any]:
 @tool
 def search_tool(query: str) -> Dict[str, Any]:
     """
-    Search the internet for information using available search engines.
-    Tries Tavily first (if configured), then falls back to DuckDuckGo.
+    Search the internet for information using DuckDuckGo.
     
     Args:
         query (str): The search query to execute
@@ -133,15 +97,7 @@ def search_tool(query: str) -> Dict[str, Any]:
     """
     logger.info(f"Executing search query: {query}")
     
-    # Try Tavily first if available
-    if TAVILY_AVAILABLE:
-        try:
-            logger.info("Using Tavily search")
-            return search_with_tavily(query)
-        except Exception as e:
-            logger.warning(f"Tavily search failed: {str(e)}, trying fallback")
-    
-    # Try DuckDuckGo as fallback
+    # Use DuckDuckGo search
     if DUCKDUCKGO_AVAILABLE:
         try:
             logger.info("Using DuckDuckGo search")
@@ -149,14 +105,14 @@ def search_tool(query: str) -> Dict[str, Any]:
         except Exception as e:
             logger.error(f"DuckDuckGo search failed: {str(e)}")
             return {
-                "error": f"All search engines failed. DuckDuckGo error: {str(e)}",
+                "error": f"Search failed. DuckDuckGo error: {str(e)}",
                 "query": query,
                 "results": []
             }
     
     # No search engines available
     return {
-        "error": "No search engines available. Please configure TAVILY_API_KEY or ensure duckduckgo-search is installed.",
+        "error": "No search engines available. Please ensure duckduckgo-search is installed.",
         "query": query,
         "results": []
     }

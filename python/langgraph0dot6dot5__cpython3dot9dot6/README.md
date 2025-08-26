@@ -6,7 +6,7 @@ A conversational AI service built with LangGraph and FastAPI that provides tool 
 
 - **LangGraph Integration**: State-based conversation management with MemorySaver
 - **Tool Calling**: Two integrated tools:
-  - Online search using Tavily API
+  - Online search using DuckDuckGo
   - Datadog metrics retrieval
 - **FastAPI REST API**: Clean endpoints for chat interactions
 - **Thread Management**: Conversation continuity with unique thread IDs
@@ -38,7 +38,6 @@ cp .env .env.local
 # OPENAI_API_KEY=your_openai_api_key
 # DATADOG_API_KEY=your_datadog_api_key  
 # DATADOG_APP_KEY=your_datadog_app_key
-# TAVILY_API_KEY=your_tavily_api_key (optional for search)
 ```
 
 4. **Run the application:**
@@ -191,7 +190,6 @@ The application uses the following environment variables:
 - `OPENAI_API_KEY`: Required for LLM functionality
 - `DATADOG_API_KEY`: Required for Datadog metrics
 - `DATADOG_APP_KEY`: Required for Datadog metrics  
-- `TAVILY_API_KEY`: Optional for online search
 - `ENVIRONMENT`: Application environment (default: development)
 
 ## Architecture
