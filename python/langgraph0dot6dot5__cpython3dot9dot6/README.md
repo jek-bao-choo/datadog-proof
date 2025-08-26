@@ -142,6 +142,22 @@ print(response.json())
 }
 ```
 
+## Instrument Datadog dd-trace-py
+```bash
+source .venv/bin/activate
+
+uv add ddtrace
+
+ddtrace-run uv run main.py
+# a Tracer (a wrapper) and a Runner (a context setter). The Tracer must wrap the Runner.
+# ddtrace-run is a wrapper script. Its only job is to set up a special environment that can trace a Python process and then execute whatever command comes after it.
+# Starts First: It hijacks the environment.
+# Injects Tracing: It modifies environment variables and hooks into Python's module system so that any subsequent Python script it runs will be automatically instrumented.
+# Executes Its Arguments: It then takes the rest of the command (uv run main.py in this case) and runs it as a new child process.
+```
+
+
+
 ## Project Structure
 
 ```
