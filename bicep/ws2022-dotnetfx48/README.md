@@ -85,7 +85,7 @@ mstsc /v:<PUBLIC_IP>
 
 **Credentials:**
 - Username: `azureuser` (or your specified adminUsername)
-- Password: Your specified secure password
+- Password: Your specified secure password in file parameters.json
 
 ### 2. Web Application Test
 Open browser and navigate to:
