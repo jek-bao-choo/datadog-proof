@@ -5,8 +5,8 @@
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `<os>__<feature-or-runtime>`
-- Example: `ws2016-base`, `ubuntu2204-base`, `ws2022-dotnetfx48`
+- Naming: `<os>__<feature-or-runtime>__<other-info>`
+- Example: `ws2016__base`, `ubuntu2204__base`, `ws2022__dotnetfx48__aspdotnet`
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan
