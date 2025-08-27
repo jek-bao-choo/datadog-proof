@@ -92,46 +92,18 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   }
 }
 
-// PowerShell DSC Extension for IIS Installation
-resource iisExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
+// Simple Custom Script Extension - inline commands only
+resource jekDotNetApp 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
   parent: vm
-  name: 'IISConfiguration'
+  name: 'JekDotNetApp'
   location: location
-  properties: {
-    publisher: 'Microsoft.Powershell'
-    type: 'DSC'
-    typeHandlerVersion: '2.83'
-    autoUpgradeMinorVersion: true
-    settings: {
-      wmfVersion: 'latest'
-      configuration: {
-        url: 'https://github.com/Azure/azure-quickstart-templates/raw/master/quickstarts/microsoft.compute/vm-simple-windows/DSC/iisInstall.zip'
-        script: 'iisInstall.ps1'
-        function: 'InstallIIS'
-      }
-    }
-  }
-}
-
-// Custom Script Extension for .NET Framework and Application Deployment
-resource appExtension 'Microsoft.Compute/virtualMachines/extensions@2023-07-01' = {
-  parent: vm
-  name: 'AppDeployment'  
-  location: location
-  dependsOn: [iisExtension]
   properties: {
     publisher: 'Microsoft.Compute'
     type: 'CustomScriptExtension'
     typeHandlerVersion: '1.10'
     autoUpgradeMinorVersion: true
     settings: {
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File configure-app.ps1'
-      fileUris: [
-        'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.compute/vm-simple-windows/configure-app.ps1'
-      ]
-    }
-    protectedSettings: {
-      commandToExecute: 'powershell -ExecutionPolicy Bypass -Command "Import-Module WebAdministration; New-WebAppPool -Name DotNetApp -Force; Set-ItemProperty IIS:\\AppPools\\DotNetApp managedRuntimeVersion v4.0; New-Item C:\\inetpub\\wwwroot\\DotNetApp -ItemType Directory -Force; New-Website -Name DotNetApp -Port 80 -PhysicalPath C:\\inetpub\\wwwroot\\DotNetApp -ApplicationPool DotNetApp; echo \'<%@ Page Language=C# %><!DOCTYPE html><html><head><title>.NET Framework Hello World</title></head><body><h1>Hello World from .NET Framework!</h1><p>Server: <%= Environment.MachineName %></p><p>.NET Version: <%= Environment.Version %></p><p>Time: <%= DateTime.Now %></p></body></html>\' > C:\\inetpub\\wwwroot\\DotNetApp\\Default.aspx; iisreset"'
+      commandToExecute: 'powershell -ExecutionPolicy Bypass -Command "Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerRole,IIS-WebServer,IIS-CommonHttpFeatures,IIS-StaticContent,IIS-DefaultDocument,IIS-ASPNET45 -All; Import-Module WebAdministration; New-WebAppPool JekApp -Force; Set-ItemProperty IIS:/AppPools/JekApp managedRuntimeVersion v4.0; try { Remove-Website DefaultWebSite } catch {}; echo Hello World Jek from .NET Framework 4.8 > C:/inetpub/wwwroot/index.html; New-Website JekApp -Port 80 -PhysicalPath C:/inetpub/wwwroot -ApplicationPool JekApp; iisreset"'
     }
   }
 }

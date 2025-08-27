@@ -75,3 +75,6 @@ Run the provided test script:
 ## Stopping Application
 - Press Ctrl+C in terminal
 - Or send SIGTERM signal: `kill <process_id>`
+
+## Datadog's dd-trace-java
+To download the latest build of a specific major version, use the https://dtdg.co/java-tracer-vX link instead, where X is the desired major version. For example, use https://dtdg.co/java-tracer-v1 for the latest version 1 build. Minor version numbers must not be included. Alternatively, see Datadog’s Maven repository https://repo1.maven.org/maven2/com/datadoghq/dd-java-agent/ for any specific version.

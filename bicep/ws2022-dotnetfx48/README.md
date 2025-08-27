@@ -9,7 +9,7 @@ This project deploys a Windows Server 2022 virtual machine in Azure Southeast As
 - **.NET Framework 4.8.1** Hello World application
 - **Virtual Network** with secure NSG rules
 - **Trusted Launch** security features enabled
-- **Automated deployment** via Bicep and PowerShell DSC
+- **Automated deployment** via Bicep and Custom Script Extension
 
 ## 📋 Prerequisites
 
@@ -59,19 +59,19 @@ az deployment sub create \
   --location southeastasia \
   --template-file main.bicep \
   --parameters @parameters.json \
-  --name ws2022-dotnet-deployment
+  --name ws2022-dotnet-deployment-v6
 ```
 
 ### 4. Monitor Deployment
 ```bash
 # Check deployment status
 az deployment sub show \
-  --name ws2022-dotnet-deployment \
+  --name ws2022-dotnet-deployment-v4 \
   --query "properties.provisioningState"
 
 # Get deployment outputs
 az deployment sub show \
-  --name ws2022-dotnet-deployment \
+  --name ws2022-dotnet-deployment-v4 \
   --query "properties.outputs"
 ```
 
@@ -150,8 +150,11 @@ ws2022-dotnetfx48/
 | AllowHTTPS | TCP | 443 | Any | Secure web access |
 
 ### VM Extensions
-1. **PowerShell DSC** - Installs IIS and ASP.NET features
-2. **Custom Script** - Installs .NET Framework 4.8.1 and deploys application
+1. **Custom Script Extension** - Single extension that:
+   - Installs IIS and ASP.NET features
+   - Creates application pool and website
+   - Deploys .NET Framework 4.8.1 Hello World application
+   - Configures web.config and restarts IIS
 
 ## 🔒 Security Features
 
@@ -194,9 +197,11 @@ az group delete \
 ### Common Issues
 
 #### Deployment Fails
-- Verify your public IP is correctly formatted (e.g., "1.2.3.4/32")
+- **Most Common**: Previous PowerShell DSC timeout issue has been fixed
+- Verify your public IP is correctly formatted (e.g., "1.2.3.4/32")  
 - Ensure password meets complexity requirements
 - Check Azure CLI is logged in: `az account show`
+- If you still get errors, delete any failed resource group and retry
 
 #### Can't RDP to VM
 - Verify NSG allows your current public IP
@@ -209,10 +214,12 @@ az group delete \
 - Check Windows Firewall settings
 - Review deployment logs in Azure Portal
 
-#### .NET Framework Issues
-- Extensions may take 10-15 minutes to complete
+#### Extension Issues
+- **Timeout Fixed**: Replaced problematic PowerShell DSC with streamlined Custom Script Extension
+- Extension typically completes in 5-10 minutes
 - Check C:\WindowsAzure\Logs\Plugins\ for extension logs
-- Manually run scripts in scripts/ folder if needed
+- Extension now includes verbose logging for easier troubleshooting
+- If still having issues, manually run scripts in scripts/ folder
 
 ### Getting Help
 
