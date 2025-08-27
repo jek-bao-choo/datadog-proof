@@ -59,19 +59,19 @@ az deployment sub create \
   --location southeastasia \
   --template-file main.bicep \
   --parameters @parameters.json \
-  --name ws2022-dotnet-deployment-v6
+  --name ws2022-dotnet-deployment-v7
 ```
 
 ### 4. Monitor Deployment
 ```bash
 # Check deployment status
 az deployment sub show \
-  --name ws2022-dotnet-deployment-v4 \
+  --name ws2022-dotnet-deployment-v7 \
   --query "properties.provisioningState"
 
 # Get deployment outputs
 az deployment sub show \
-  --name ws2022-dotnet-deployment-v4 \
+  --name ws2022-dotnet-deployment-v7 \
   --query "properties.outputs"
 ```
 
@@ -87,30 +87,133 @@ mstsc /v:<PUBLIC_IP>
 - Username: `azureuser` (or your specified adminUsername)
 - Password: Your specified secure password in file parameters.json
 
-### 2. Web Application Test
+### 2. Initial Web Application Test
 Open browser and navigate to:
 ```
 http://<PUBLIC_IP>
 ```
 
-**Expected Results:**
-- ✅ Hello World page loads successfully
-- ✅ Server information displayed
-- ✅ .NET Framework version shows 4.8.x
-- ✅ Current date/time updates on refresh
+**Initial Expected Results:**
+- ✅ Basic HTML page loads with "Hello World Jek from .NET Framework 4.8"
+- ✅ IIS is running and serving content
+- ✅ Application pool is configured
 
-### 3. Manual Verification Steps
+### 3. Upgrade to TRUE .NET Framework 4.8 Application
 
-#### On the Server (via RDP):
-1. **IIS Manager** - Verify DotNetApp site is running
-2. **Application Pools** - Confirm DotNetApp pool uses .NET Framework v4.0
-3. **Windows Features** - Check IIS and ASP.NET are installed
-4. **File System** - Verify files exist in `C:\inetpub\wwwroot\DotNetApp\`
+**🎯 Important:** The initial deployment creates a static HTML page. Follow these steps to convert it to a real .NET Framework 4.8 application:
 
-#### From External Browser:
-1. **HTTP Access** - http://PUBLIC_IP loads the application
-2. **Server Info** - Page displays correct server name and .NET version
-3. **Responsive Design** - Page displays properly formatted
+#### Step 1: Connect via RDP
+```bash
+mstsc /v:<PUBLIC_IP>
+```
+
+#### Step 2: Verify .NET Framework 4.8 Installation
+Open PowerShell as Administrator and run:
+```powershell
+# Check .NET Framework version
+Get-ItemProperty "HKLM:SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\" -Name Release
+
+# Expected result: 528449 or higher (528449 = .NET Framework 4.8.0)
+```
+
+#### Step 3: Create Real .NET Framework 4.8 ASPX Application
+
+1. **Navigate to:** `C:\inetpub\wwwroot\`
+2. **Delete existing files** (index.html or any static content)
+3. **Create `Default.aspx`** with this content:
+
+```aspx
+<%@ Page Language="C#" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World Jek - .NET Framework 4.8 VERIFIED</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2 { color: #005a9e; }
+        .success { color: #107c10; font-weight: bold; }
+        .info { background: #e8f4fd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 5px solid #0078d4; }
+        p { line-height: 1.6; }
+        hr { border: 0; height: 1px; background: #ddd; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello World Jek!</h1>
+        <h2>.NET Framework 4.8 VERIFIED & WORKING</h2>
+
+        <div class="info">
+            <h3>Server Information</h3>
+            <p><strong>Server Name:</strong> <%= Environment.MachineName %></p>
+            <p><strong>.NET Version:</strong> <%= Environment.Version.ToString() %></p>
+            <p><strong>Framework:</strong> <%= System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription %></p>
+            <p><strong>Current Time:</strong> <%= DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") %></p>
+        </div>
+
+        <div class="info">
+            <h3>📋 Technical Details</h3>
+            <p><strong>Application Pool:</strong> JekApp (.NET Framework v4.0 runtime)</p>
+            <p><strong>Deployment:</strong> Azure Bicep Template</p>
+            <p><strong>Platform:</strong> Windows Server 2022</p>
+        </div>
+
+        <hr>
+        <p class="footer">
+            Successfully deployed .NET Framework 4.8 application via Azure Bicep!<br>
+        </p>
+    </div>
+</body>
+</html>
+```
+
+4. **Create `web.config`** in the same directory:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.web>
+    <compilation targetFramework="4.8" debug="false" />
+    <httpRuntime targetFramework="4.8" />
+    <customErrors mode="RemoteOnly" />
+  </system.web>
+  <system.webServer>
+    <defaultDocument>
+      <files>
+        <clear />
+        <add value="Default.aspx" />
+      </files>
+    </defaultDocument>
+  </system.webServer>
+</configuration>
+```
+
+#### Step 4: Verify the Application
+1. **Refresh your browser** at `http://<PUBLIC_IP>`
+2. **Confirm you see:**
+   - "🎉 Hello World Jek!" heading
+   - Dynamic server information (changes on refresh)
+   - .NET Framework version 4.8.x
+   - Green checkmarks showing verification status
+
+### 4. Verification Checklist
+
+#### ✅ .NET Framework 4.8 Verification:
+- **Registry Release:** 528449 or higher (528449 = .NET Framework 4.8.0)
+- **Framework Description:** Shows ".NET Framework 4.8.4775.0" or similar
+- **Dynamic Content:** Server name, timestamp update on page refresh
+- **Server-side Execution:** ASP.NET code (<%=...%>) renders correctly
+
+#### ✅ IIS Configuration Verification:
+1. **IIS Manager** → Sites → JekApp (running on port 80)
+2. **Application Pools** → JekApp (uses .NET Framework v4.0)
+3. **File System** → Files exist in `C:\inetpub\wwwroot\`
+
+#### ✅ Technical Validation:
+- **HTTP Response Headers:** Include `X-AspNet-Version` and `Server: Microsoft-IIS/10.0`
+- **Application Pool:** Shows .NET Framework v4.0 (runs .NET Framework 4.8)
+- **Web.config:** `targetFramework="4.8"` specified
 
 ## 📁 Project Structure
 
