@@ -27,7 +27,7 @@ curl ifconfig.me
 
 ### 1. Clone and Navigate
 ```bash
-cd ws2022-dotnetfx48
+cd ws2022__dotnetfx48__aspdotnet
 ```
 
 ### 2. Create Parameters File
