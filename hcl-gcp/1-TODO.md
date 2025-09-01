@@ -17,7 +17,7 @@
 <!-- ## DOCUMENTATION: -->
 
 ## USE CONTEXT7
-- - use library id /googlecloudplatform/terraformer
+- use library id /googlecloudplatform/terraformer
 - use library id /hashicorp/terraform 
 - use library id /hashicorp/hcl
 - use library id /terraform-docs/terraform-docs 
