@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jek-nginx-test
+  labels:
+    app: jek-nginx
+    owner: jek
+    env: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jek-nginx
+  template:
+    metadata:
+      labels:
+        app: jek-nginx
+        owner: jek
+        env: test
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jek-nginx-service
+  labels:
+    owner: jek
+    env: test
+spec:
+  selector:
+    app: jek-nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: LoadBalancer
