@@ -1,3 +1,5 @@
+![](image.png)
+
 # Mobile Payment App
 
 A simple Next.js mobile payment application with a 3-page flow.
@@ -134,6 +136,13 @@ lib/
 - Optimal button and input sizes for touch
 - Single-column layout for mobile screens
 - Consistent spacing and typography
+
+## Add Datadog RUM SDK
+- Open up Datadog App > Digital Experience > Create App to get the client token and app id
+- Follow the setups here
+- Add to package.json, datadog-init.tsx, and layout.tsx
+- npm install and start it up
+- Send traffic to the app
 
 ## Deployment
 

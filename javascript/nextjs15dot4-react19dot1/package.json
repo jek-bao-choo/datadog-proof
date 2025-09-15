@@ -18,7 +18,8 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "tailwind-merge": "^3.3.1",
-    "zod": "^4.0.17"
+    "zod": "^4.0.17",
+    "@datadog/browser-rum": "^6.19.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
