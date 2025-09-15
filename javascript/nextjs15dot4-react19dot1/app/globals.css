@@ -2,14 +2,29 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1f2937;
+  --card-background: #ffffff;
+  --card-border: #e5e7eb;
+  --input-background: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #1f2937;
+  --button-primary: #2563eb;
+  --button-primary-hover: #1d4ed8;
+  --button-text: #ffffff;
+  --error-text: #dc2626;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-border: #e5e7eb;
-  --color-ring: #3b82f6;
+  --color-border: var(--input-border);
+  --color-ring: var(--button-primary);
+  --color-card: var(--card-background);
+  --color-card-foreground: var(--foreground);
+  --color-input: var(--input-background);
+  --color-primary: var(--button-primary);
+  --color-primary-foreground: var(--button-text);
+  --color-destructive: var(--error-text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,9 +43,33 @@ body {
   color: var(--foreground);
 }
 
+/* Ensure all inputs have proper contrast */
+input[type="tel"], input[type="number"], input {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #d1d5db !important;
+}
+
+input::placeholder {
+  color: #9ca3af !important;
+}
+
 @layer components {
   .mobile-input {
-    @apply h-12 text-lg px-4 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors;
+    @apply h-12 text-lg px-4 rounded-lg border-2 transition-colors;
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #1f2937 !important;
+  }
+  
+  .mobile-input::placeholder {
+    color: #9ca3af !important;
+  }
+  
+  .mobile-input:focus {
+    @apply outline-none;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
   }
   
   .mobile-button {
@@ -38,7 +77,16 @@ body {
   }
   
   .mobile-button-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+    background-color: var(--button-primary);
+    color: var(--button-text);
+  }
+  
+  .mobile-button-primary:hover {
+    background-color: var(--button-primary-hover);
+  }
+  
+  .mobile-button-primary:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
   }
   
   .mobile-button-secondary {
