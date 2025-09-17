@@ -13,6 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.helloworld.ui.theme.Android7__api24__helloworldTheme
 
+// Add for mocking my code
+import androidx.compose.foundation.clickable
+
+// Add Datadog lib
+import com.datadog.android.rum.GlobalRumMonitor
+import com.datadog.android.rum.RumActionType
+
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +30,7 @@ class MainActivity : ComponentActivity() {
             Android7__api24__helloworldTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "YYYAndroidJek",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -32,9 +41,21 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
+
     Text(
-        text = "Hello $name!",
-        modifier = modifier
+        text = "Hello $name! This is Jek",
+        //    add for Datadog custom event
+        modifier = modifier.clickable {
+            // Track custom RUM action
+            GlobalRumMonitor.get().addAction(
+                type = RumActionType.TAP,
+                name = "greeting_tapped_by_Jek",
+                attributes = mapOf(
+                    "greeting_name" to name,
+                    "timestamp" to System.currentTimeMillis()
+                )
+            )
+        }
     )
 }
 
@@ -42,6 +63,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     Android7__api24__helloworldTheme {
-        Greeting("Android")
+        Greeting("XAndroid created by Jek")
     }
 }

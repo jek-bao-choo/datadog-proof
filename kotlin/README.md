@@ -184,3 +184,300 @@ https://github.com/DataDog/dd-sdk-android-gradle-plugin is used to upload your P
 After adding the code, IntelliJ or Android Studio will prompt you to sync your project. Click Sync Now. This action downloads the library and integrates it into your app.
 
 If the prompt doesn't appear, you can manually sync by going to View > Tool Windows > Gradle and clicking the refresh icon 🔄.
+
+Create an Application Class if it doesn't exist.
+**Objective**: Create a custom Application class for Datadog initialization if it doesn't exist because this will initialise Datadog SDK Android earlier than just putting it in MainActivity.kt
+
+**Actions**:
+1. Navigate to `android7__api24__helloworld/app/src/main/java/com/example/helloworld/`
+2. Create new file: `MyApplication.kt`
+3. Add the following code:
+
+```kotlin
+package com.example.helloworld
+
+import android.app.Application
+import com.datadog.android.Datadog
+import com.datadog.android.DatadogSite
+import com.datadog.android.core.configuration.Configuration
+import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
+import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        // Hard-coding for initial setup - will move to BuildConfig later
+        val clientToken = "YOUR_CLIENT_TOKEN_HERE"
+        val applicationId = "YOUR_APPLICATION_ID_HERE"
+        val environmentName = "test"
+        val appVariantName = "jek-android7-api24-helloworld"
+
+        // Initialize Datadog Core SDK
+        val configuration = Configuration.Builder(
+            clientToken = clientToken,
+            env = environmentName,
+            variant = appVariantName
+        )
+            .useSite(DatadogSite.US1)
+            .setUseDeveloperModeWhenDebuggable(true)
+            .build()
+
+        Datadog.initialize(this, configuration, TrackingConsent.GRANTED)
+
+        // Configure RUM
+        val rumConfiguration = RumConfiguration.Builder(applicationId)
+            .trackUserInteractions()
+            .trackLongTasks()
+            .useViewTrackingStrategy(ActivityViewTrackingStrategy(true))
+            .setSessionSampleRate(100.0f)
+            .trackBackgroundEvents(true)
+            .build()
+
+        Rum.enable(rumConfiguration)
+    }
+}
+```
+
+**Verification**:
+- File `MyApplication.kt` created successfully
+- No compilation errors in Android Studio
+- Code follows Kotlin conventions
+
+### Step 1.2: Update AndroidManifest.xml
+**Objective**: Configure the custom Application class in the manifest
+
+**Actions**:
+1. Open `android7__api24__helloworld/app/src/main/AndroidManifest.xml`
+2. Add `android:name=".MyApplication"` to the `<application>` tag
+3. Updated manifest should look like:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+            android:name=".MyApplication"
+            android:allowBackup="true"
+            android:dataExtractionRules="@xml/data_extraction_rules"
+            android:fullBackupContent="@xml/backup_rules"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.Android7__api24__helloworld">
+        <activity
+                android:name=".MainActivity"
+                android:exported="true"
+                android:label="@string/app_name"
+                android:theme="@style/Theme.Android7__api24__helloworld">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+**Verification**:
+- Manifest updated successfully
+- No manifest merge errors
+- Application class reference is correct
+
+### Step 1.3: Add Internet Permission
+**Objective**: Ensure the app can send data to Datadog servers
+
+**Actions**:
+1. In the same `AndroidManifest.xml` file
+2. Add internet permission before the `<application>` tag:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+**Verification**:
+- Internet permission added
+- Manifest validates without errors
+
+### Step 1.4: Initial Build Test
+**Objective**: Verify the app builds successfully with basic Datadog integration
+
+**Actions**:
+1. Use IntelliJ IDEA CE
+
+**Expected Result**: Build succeeds
+**Verification**:
+- Build completes successfully
+- No compilation errors
+
+
+Add Custom RUM Actions
+**Objective**: Implement custom tracking for user interactions
+
+**Actions**:
+1. Open `MainActivity.kt`
+2. Add imports at top:
+
+```kotlin
+package com.example.helloworld
+
+import android.app.Application
+import com.datadog.android.Datadog
+import com.datadog.android.DatadogSite
+import com.datadog.android.core.configuration.Configuration
+import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.Rum
+import com.datadog.android.rum.RumConfiguration
+import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        // Hard-coding for initial setup - will move to BuildConfig later
+        val clientToken = "pubd47aaf2e7d73372a4151770349a33889"
+        val applicationId = "c31dcf2f-7f03-4da2-bea1-1b3d94d9d43f"
+        val environmentName = "test"
+        val appVariantName = "jek-android7-api24-helloworld"
+
+        // Initialize Datadog Core SDK
+        val configuration = Configuration.Builder(
+            clientToken = clientToken,
+            env = environmentName,
+            variant = appVariantName
+        )
+            .useSite(DatadogSite.US1)
+            .setUseDeveloperModeWhenDebuggable(true)
+            .build()
+
+        Datadog.initialize(this, configuration, TrackingConsent.GRANTED)
+
+        // Configure RUM
+        val rumConfiguration = RumConfiguration.Builder(applicationId)
+            .trackUserInteractions()
+            .trackLongTasks()
+            .useViewTrackingStrategy(ActivityViewTrackingStrategy(true))
+            .setSessionSampleRate(100.0f)
+            .trackBackgroundEvents(true)
+            .build()
+
+        Rum.enable(rumConfiguration)
+    }
+}
+```
+
+**Verification**:
+- Custom RUM actions added
+- Click tracking implemented
+- No compilation errors
+
+
+GRADLE PLUGIN CONFIGURATION
+
+### Step 4.1: Configure Datadog Gradle Plugin
+**Objective**: Set up the Gradle plugin for mapping file uploads
+
+**Actions**:
+1. Open `android7__api24__helloworld/app/build.gradle.kts`
+2. Add after the dependencies block:
+
+```kotlin
+datadog {
+    site = "US1"
+    serviceName = "android-helloworld"
+    versionName = "1.0"
+    checkProjectDependencies = "warn"
+    mappingFilePath = "build/outputs/mapping/release/mapping.txt"
+}
+```
+
+**Verification**:
+- Datadog block added correctly
+- Configuration matches project settings
+- No syntax errors
+
+### Step 4.2: Configure Mapping File Upload
+**Objective**: Enable ProGuard/R8 mapping file uploads for crash deobfuscation
+
+**Actions**:
+1. In the same `build.gradle.kts`, update the `release` build type:
+
+```kotlin
+buildTypes {
+    release {
+        isMinifyEnabled = true  // Changed from false
+        isShrinkResources = true  // Add this
+        proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    }
+}
+```
+
+2. Create/update `app/proguard-rules.pro`:
+
+```proguard
+# Datadog SDK rules
+-keep class com.datadog.** { *; }
+-keep class datadog.** { *; }
+
+# Keep application class
+-keep class com.example.helloworld.MyApplication { *; }
+
+# Standard Android rules
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes LineNumberTable,SourceFile
+```
+
+**Verification**:
+- Release build type configured for obfuscation
+- ProGuard rules include Datadog exceptions
+- Build configuration updated
+
+### Step 4.3: Test Release Build and Upload
+**Objective**: Build release APK and test mapping file generation
+
+**Actions**:
+1. Build release APK:
+
+```bash
+./gradlew assembleRelease
+```
+
+2. Check for mapping file:
+
+```bash
+ls -la app/build/outputs/mapping/release/
+```
+
+3. Test upload task (will fail without upload token, which is expected):
+
+```bash
+./gradlew uploadMappingRelease --dry-run
+```
+
+**Expected Results**:
+- Release APK built successfully
+- Mapping file generated
+- Upload task recognizes configuration
+
+**Verification**:
+- Release build completes
+- mapping.txt file exists
+- No build configuration errors
+
+
+--- 
+
+Monitor Logcat for Datadog events:
+
+```bash
+adb logcat | grep -i datadog | head -20
+```
