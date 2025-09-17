@@ -133,4 +133,54 @@ Cheers.
 ---
 
 ## 8. Add Datadog Android SDK
-WIP
+In Datadog UI > Digital Experience > Manage Application > New Application > Android
+
+Approach 1: Add the following line to my app/build.gradle.kts file.
+```json
+// In app/build.gradle.kts
+
+plugins {
+    // Add the Datadog SDK Android Gradle Plugin dependency here
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.20.0"
+}
+
+dependencies {
+    // Add the Datadog SDK Android RUM dependency here
+    implementation("com.datadoghq:dd-sdk-android-rum:3.0.0") // Check for the latest version
+}
+```
+
+Approach 2: Add the following line to my app/build.gradle.kts file and also use lib version
+```json
+// In app/build.gradle.kts
+
+plugins {
+    // Add the Datadog SDK Android Gradle Plugin dependency here
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.20.0"
+}
+
+dependencies {
+    // Add the Datadog SDK Android RUM dependency here via libs.versions.toml
+    implementation(libs.dd.sdk.android.rum)
+}
+```
+
+```java
+// In gradle/libs.versions.toml
+
+[versions]
+ddSdkAndroidRum = "3.0.0"
+
+[libraries]
+dd-sdk-android-rum = { module = "com.datadoghq:dd-sdk-android-rum", version.ref = "ddSdkAndroidRum" }
+```
+
+The key difference is scope: the root build.gradle.kts configures settings for the entire project, while the app module's app/build.gradle.kts configures settings only for that specific app module.
+
+You almost always add dependencies to the app module's app/build.gradle.kts. The root file is for project-wide configurations that affect all modules. The Datadog plugin’s job is to upload your ProGuard/R8 mapping files so crashes are deobfuscated; it needs access to the module’s Android variants to do that.
+
+https://github.com/DataDog/dd-sdk-android-gradle-plugin is used to upload your Proguard/Dexguard/R8 mapping files and NDK symbol files to Datadog to get a complete RUM Error Tracking experience.
+
+After adding the code, IntelliJ or Android Studio will prompt you to sync your project. Click Sync Now. This action downloads the library and integrates it into your app.
+
+If the prompt doesn't appear, you can manually sync by going to View > Tool Windows > Gradle and clicking the refresh icon 🔄.
