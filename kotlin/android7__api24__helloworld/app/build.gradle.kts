@@ -21,7 +21,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true  // Changed from false
+            isShrinkResources = true  // Add this
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -55,4 +56,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+datadog {
+    site = "US1"
+    serviceName = "android-helloworld"
+    versionName = "1.0"
+    mappingFilePath = "build/outputs/mapping/release/mapping.txt"
 }

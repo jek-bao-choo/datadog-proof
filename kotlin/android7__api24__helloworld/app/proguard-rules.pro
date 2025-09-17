@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Datadog SDK rules
+-keep class com.datadog.** { *; }
+-keep class datadog.** { *; }
+
+# Keep application class
+-keep class com.example.helloworld.MyApplication { *; }
+
+# Standard Android rules
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes LineNumberTable,SourceFile

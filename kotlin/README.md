@@ -394,7 +394,6 @@ datadog {
     site = "US1"
     serviceName = "android-helloworld"
     versionName = "1.0"
-    checkProjectDependencies = "warn"
     mappingFilePath = "build/outputs/mapping/release/mapping.txt"
 }
 ```
