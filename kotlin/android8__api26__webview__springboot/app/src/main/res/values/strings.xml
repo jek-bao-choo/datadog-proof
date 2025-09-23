@@ -1,6 +1,113 @@
+<!--
+    strings.xml - The Central Text Repository for Your Android App
+
+    WHAT IS strings.xml?
+    - A resource file that stores all text strings used in your app
+    - Located at: app/src/main/res/values/strings.xml
+    - Part of Android's resource system for managing app content
+    - XML format that defines reusable text values with unique names
+
+    WHY USE strings.xml INSTEAD OF HARDCODED TEXT?
+
+    1. INTERNATIONALIZATION (i18n):
+       - Easy to translate your app into different languages
+       - Create language-specific folders: values-es/, values-fr/, values-zh/
+       - Android automatically picks the right language based on user's phone settings
+
+    2. CONSISTENCY:
+       - Same text used in multiple places stays consistent
+       - Change text once, updates everywhere it's used
+       - No typos from retyping the same text
+
+    3. MAINTAINABILITY:
+       - All text in one central location
+       - Easy to find and update UI text
+       - Non-technical people (translators, copywriters) can edit easily
+
+    4. COMPILE-TIME SAFETY:
+       - Android generates R.string constants for each entry
+       - Typos in string names cause build errors (caught early)
+       - Better than runtime crashes from wrong text
+
+    HOW ANDROID USES strings.xml:
+    - During build, Android scans this file
+    - Creates R.string.* constants in the generated R.java file
+    - These constants point to the actual string values
+    - Your code references strings via R.string.name instead of hardcoded text
+-->
 <resources>
+    <!--
+        App Name: Displayed in phone's app drawer and task switcher
+        Used in: AndroidManifest.xml android:label attribute
+        Referenced as: @string/app_name or R.string.app_name
+    -->
     <string name="app_name">android8__api26__webview__springboot</string>
+
+    <!--
+        Navigation Labels: Bottom navigation tab titles
+        Used in: mobile_navigation.xml android:label attributes
+        Referenced as: @string/title_home, R.string.title_home, etc.
+    -->
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+
+    <!--
+        Button Text: Custom buttons we added for our features
+        Used in: fragment_home.xml android:text attributes
+        Referenced as: @string/send_money, @string/book_car
+
+        TRACEABILITY IN YOUR PROJECT:
+        1. Defined here: <string name="send_money">Send Money</string>
+        2. Used in XML: app/src/main/res/layout/fragment_home.xml
+           <Button android:text="@string/send_money" ... />
+        3. Accessed in Kotlin: getString(R.string.send_money) if needed
+        4. Generated constant: R.string.send_money points to "Send Money"
+    -->
+    <string name="send_money">Send Money</string>
+    <string name="book_car">Book Car</string>
 </resources>
+
+<!--
+    HOW TO USE strings.xml IN YOUR PROJECT:
+
+    1. IN XML LAYOUTS (most common):
+       <Button android:text="@string/send_money" ... />
+       - The @ symbol means "reference a resource"
+       - string/ means look in string resources
+       - send_money is the name attribute from this file
+
+    2. IN KOTLIN CODE:
+       val buttonText = getString(R.string.send_money)
+       // Returns: "Send Money"
+
+    3. IN NAVIGATION.XML:
+       <fragment android:label="@string/title_home" ... />
+
+    NAMING CONVENTIONS:
+    - Use lowercase with underscores: send_money, not SendMoney or sendMoney
+    - Be descriptive: button_login, not btn1
+    - Group related strings: error_network, error_validation, etc.
+
+    ADDING NEW STRINGS:
+    1. Add entry here: <string name="new_feature_title">My New Feature</string>
+    2. Android generates: R.string.new_feature_title
+    3. Use in XML: android:text="@string/new_feature_title"
+    4. Use in Kotlin: getString(R.string.new_feature_title)
+
+    INTERNATIONALIZATION EXAMPLE:
+    Your current file (default language - English):
+    app/src/main/res/values/strings.xml
+
+    Spanish version would go in:
+    app/src/main/res/values-es/strings.xml
+    <string name="send_money">Enviar Dinero</string>
+    <string name="book_car">Reservar Auto</string>
+
+    French version would go in:
+    app/src/main/res/values-fr/strings.xml
+    <string name="send_money">Envoyer de l'argent</string>
+    <string name="book_car">Réserver une voiture</string>
+
+    Android automatically chooses the right language based on user's phone settings!
+-->
