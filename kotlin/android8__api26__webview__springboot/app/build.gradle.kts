@@ -56,6 +56,6 @@ dependencies {
 datadog {
     site = "US1"
     serviceName = "android-helloworld"
-    versionName = "1.0"
+    versionName = "1.1"
     mappingFilePath = "build/outputs/mapping/release/mapping.txt"
 }

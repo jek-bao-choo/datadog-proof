@@ -459,7 +459,7 @@ ls -la app/build/outputs/mapping/release/
 3. Test upload task (will fail without upload token, which is expected):
 
 ```bash
-./gradlew uploadMappingRelease --dry-run
+DATADOG_API_KEY=<REDACTED> ./gradlew uploadMappingRelease --dry-run
 ```
 
 **Expected Results**:
