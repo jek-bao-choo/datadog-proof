@@ -1,16 +1,26 @@
-# React + Vite
+# React + Vite for Send Money
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Get started using Vite to build a React JS app
 
-Currently, two official plugins are available:
+```
+npm create vite@latest
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Vite will now ask you a few questions. Answer them as follows:
 
-## React Compiler
+Project name: Enter a name for your app, like my-webview-app.
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Select a framework: Use the arrow keys to choose React.
 
-## Expanding the ESLint configuration
+Select a variant: Choose JavaScript.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+npm run build
+
+npm run dev
+```
+
+The terminal will now show you a message that the server is running and give you a local URL, usually http://localhost:5173/
+
+---
+
