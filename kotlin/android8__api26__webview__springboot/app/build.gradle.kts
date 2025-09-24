@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.20.0"
 }
 
 android {
@@ -19,7 +20,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true  // Changed from false
+            isShrinkResources = true  // Add this
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -49,4 +51,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+datadog {
+    site = "US1"
+    serviceName = "android-helloworld"
+    versionName = "1.0"
+    mappingFilePath = "build/outputs/mapping/release/mapping.txt"
 }

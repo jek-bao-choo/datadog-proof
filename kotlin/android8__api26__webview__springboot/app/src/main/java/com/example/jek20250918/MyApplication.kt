@@ -14,8 +14,8 @@ class MyApplication : Application() {
         super.onCreate()
 
         // Hard-coding for initial setup - will move to BuildConfig later
-        val clientToken = "<REDACTED>"
-        val applicationId = "<REDACTED>"
+        val clientToken = "REDACTED"
+        val applicationId = "REDACTED"
         val environmentName = "test"
         val appVariantName = "android8-api26-webview-springboot"
 
@@ -35,6 +35,7 @@ class MyApplication : Application() {
         val rumConfiguration = RumConfiguration.Builder(applicationId)
             .trackUserInteractions()
             .trackLongTasks()
+            .trackNonFatalAnrs(true) // Enable non-fatal ANR reporting
             .useViewTrackingStrategy(ActivityViewTrackingStrategy(true))
             .setSessionSampleRate(100.0f)
             .trackBackgroundEvents(true)

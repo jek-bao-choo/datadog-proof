@@ -2,5 +2,4 @@
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
-    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.20.0"
 }
