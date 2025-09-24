@@ -135,15 +135,15 @@ Cheers.
 ## 8. Add Datadog Android SDK
 In Datadog UI > Digital Experience > Manage Application > New Application > Android
 
-Approach 1: Add the following line to my app/build.gradle.kts file.
+Approach 1: Add the following line to my build.gradle.kts file.
 ```json
-// In app/build.gradle.kts
-
+// In build.gradle.kts
 plugins {
     // Add the Datadog SDK Android Gradle Plugin dependency here
     id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.20.0"
 }
 
+// In app/build.gradle.kts
 dependencies {
     // Add the Datadog SDK Android RUM dependency here
     implementation("com.datadoghq:dd-sdk-android-rum:3.0.0") // Check for the latest version
@@ -152,13 +152,13 @@ dependencies {
 
 Approach 2: Add the following line to my app/build.gradle.kts file and also use lib version
 ```json
-// In app/build.gradle.kts
-
+// In build.gradle.kts
 plugins {
     // Add the Datadog SDK Android Gradle Plugin dependency here
     id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.20.0"
 }
 
+// In app/build.gradle.kts
 dependencies {
     // Add the Datadog SDK Android RUM dependency here via libs.versions.toml
     implementation(libs.dd.sdk.android.rum)
