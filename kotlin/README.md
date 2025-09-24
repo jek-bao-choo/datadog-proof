@@ -471,3 +471,38 @@ DATADOG_API_KEY=<REDACTED> ./gradlew uploadMappingRelease --dry-run
 - Release build completes
 - mapping.txt file exists
 - No build configuration errors
+
+### Step 4.3: Monitor WebView
+Here is about the Datadog SDK Android Webview https://github.com/DataDog/dd-sdk-android/tree/develop/features/dd-sdk-android-webview and here is the doc
+
+
+Add the following to android8__api26__webview__springboot/app/build.gradle.kts
+```
+dependencies {
+    implementation(libs.dd.sdk.android.webview)
+}
+```
+
+Add the following to android8__api26__webview__springboot/gradle/libs.versions.toml
+```
+[libraries]
+dd-sdk-android-webview = { module = "com.datadoghq:dd-sdk-android-webview", version.ref = "ddSdkAndroidRum" }
+```
+
+Add to the WebView code like e.g. SendMoneyFragment.kt or BookCarFragment.kt 
+```java
+// Datadog WebView tracking
+import com.datadog.android.webview.WebViewTracking
+
+        // By default, JavaScript is disabled for security - we enable it here
+        // In order for instrumentation to work on the WebView component, it is very important that the JavaScript is enabled on the WebView. To enable it, you can use the following code snippet:
+        webView.settings.javaScriptEnabled = true
+
+        // Step 3.5: Enable Datadog WebView tracking
+        // This allows Datadog to track user interactions within the WebView
+        // For local HTML files, we allow all hosts (empty list)
+        val allowedHosts = listOf<String>() // Empty list allows all hosts for local content
+        WebViewTracking.enable(webView, allowedHosts)
+
+```
+

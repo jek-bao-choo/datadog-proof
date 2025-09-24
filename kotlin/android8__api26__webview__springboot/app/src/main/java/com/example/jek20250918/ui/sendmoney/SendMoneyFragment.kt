@@ -9,6 +9,8 @@ import android.webkit.WebView  // WebView class for displaying web content
 import androidx.fragment.app.Fragment
 // ViewBinding magic happens here - let me explain this generated class:
 import com.example.jek20250918.databinding.FragmentSendmoneyBinding
+// Datadog WebView tracking
+import com.datadog.android.webview.WebViewTracking
 /*
  * FragmentSendmoneyBinding Deep Dive:
  *
@@ -114,6 +116,12 @@ class SendMoneyFragment : Fragment() {
         // Enable JavaScript so our HTML form buttons and validation work
         // By default, JavaScript is disabled for security - we enable it here
         webView.settings.javaScriptEnabled = true
+
+        // Step 3.5: Enable Datadog WebView tracking
+        // This allows Datadog to track user interactions within the WebView
+        // For local HTML files, we allow all hosts (empty list)
+        val allowedHosts = listOf<String>() // Empty list allows all hosts for local content
+        WebViewTracking.enable(webView, allowedHosts)
 
         // Step 4: Load our HTML file from the assets folder
         // Let me explain this special URL in detail:

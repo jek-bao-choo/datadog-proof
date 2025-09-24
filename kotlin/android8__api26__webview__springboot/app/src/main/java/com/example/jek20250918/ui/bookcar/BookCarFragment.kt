@@ -9,6 +9,8 @@ import android.webkit.WebView  // For displaying web content in our app
 import androidx.fragment.app.Fragment
 // The ViewBinding system creates this class from your XML - here's the full story:
 import com.example.jek20250918.databinding.FragmentBookcarBinding
+// Datadog WebView tracking
+import com.datadog.android.webview.WebViewTracking
 /*
  * FragmentBookcarBinding - The Auto-Generated Connection to Your UI
  *
@@ -145,6 +147,12 @@ class BookCarFragment : Fragment() {
         // JavaScript is disabled by default for security reasons
         // Our HTML form needs it for the "Book Car" button to work
         webView.settings.javaScriptEnabled = true
+
+        // Step 3.5: Enable Datadog WebView tracking
+        // This allows Datadog to track user interactions within the WebView
+        // For local HTML files, we allow all hosts (empty list)
+        val allowedHosts = listOf<String>() // Empty list allows all hosts for local content
+        WebViewTracking.enable(webView, allowedHosts)
 
         // Step 4: Load our HTML file from the assets folder
         // Let me break down this mysterious URL for you:
