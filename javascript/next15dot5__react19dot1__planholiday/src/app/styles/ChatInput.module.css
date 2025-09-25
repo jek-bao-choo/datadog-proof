@@ -1,0 +1,128 @@
+.chatInput {
+  width: 100%;
+}
+
+.inputContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--background-cream);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  transition: border-color 0.2s ease;
+}
+
+.inputContainer:focus-within {
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
+}
+
+.textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  padding: var(--space-sm);
+  border: none;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--text-dark);
+  resize: none;
+  outline: none;
+}
+
+.textarea::placeholder {
+  color: var(--text-light);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--primary-orange);
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: var(--secondary-blue);
+  transform: scale(1.05);
+}
+
+.sendButton:active {
+  transform: scale(0.95);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sendIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingSpinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.characterCount {
+  margin-top: var(--space-xs);
+  text-align: right;
+  font-size: var(--font-size-sm);
+  color: var(--text-light);
+}
+
+/* Auto-expanding textarea */
+.textarea {
+  overflow: hidden;
+  resize: none;
+  min-height: 44px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .inputContainer {
+    padding: var(--space-xs);
+  }
+
+  .textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px;
+  }
+
+  .sendButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .characterCount {
+    font-size: 0.75rem;
+  }
+}
