@@ -1,19 +1,31 @@
 ## TASK:
-* Background: The react19dot1__vite7dot1__sendmoney project is a React JS version 19.1 using Vite version 7.1 and the dependencies used are in package.json
-* Update the project react19dot1__vite7dot1__sendmoney with the following requirements:
-    * This project is a PoC for sending money. 
+* Background: The vue3dot5__vite7dot1__tradestocks project is a Vue JS version 3.5.X using Vite version 7.1.X and the dependencies used are in package.json
+* Update the project vue3dot5__vite7dot1__tradestocks with the following requirements:
+    * This project is a PoC for trading stocks. 
     * The landing page of the project is a mobile-responsive page and it would show two fields and one button
-    * The first field is a phone number field with NO validation except allowing up to 8 digits.
-    * The second field is an amount field with NO validation except allowing up to 4 digits.
-    * The button shows "Send Money".
-    * Upon clicking the "Send Money" button, it will trigger a REST HTTP POST to a temporary mock endpoint until I setup a proper backend app with another project. This project will not setup a backend app. The mock endpoint will randomly return a hardcoded HTTP 2XX success status or a hardcoded HTTP 4XX failure status.
-    * The send money web app upon receiving the HTTP 200 success status will show a Success and a tick with a transaction id randomly generated. There will also be a button that shows "Return to home" which will take us back to the landing page.
-    * The send money web app upon receiving the HTTP 4XX failure status will show a Failed and a cross with a transaction id randomly generated. There will also be a button that shows "Return to home" which will take us back to the landing page.
+    * The first field is a dropdown list with these values:
+        * DDOG | NASDAQ.NMS | 136.44
+        * GOOG | NASDAQ.NMS | 248.50
+        * MSFT | NASDAQ.NMS | 510.63
+        * META | NASDAQ.NMS | 761.80
+        * CSPX | LSEETF     | 710.60
+        * VUAA | LSEETF     | 127.44
+        * VWRA | LSEETF     | 163.54
+        * FWRA | LSEETF     | 8.05
+        * AGED | LSEETF     | 33.10
+    * Below the first field it would have a small text says prices last updated on 25 Sep 2025
+    * The second field is a quantity field starting with 100 and can go up to 9000 only.
+    * The button shows "Buy Stocks / ETFs".
+    * Upon clicking the "Buy Stocks / ETFs" button, it will trigger a REST HTTP POST to a temporary mock endpoint until I setup a proper backend app with another project. This project will not setup a backend app. The mock endpoint will randomly return a hardcoded HTTP 2XX success status or a hardcoded HTTP 4XX failure status.
+    * The trade stocks web app upon receiving the HTTP 200 success status will show a Success and a tick with a transaction id randomly generated. There will also be a button that shows "Return to home" which will take us back to the landing page.
+    * The trade stocks web app upon receiving the HTTP 4XX failure status will show a Failed and a cross with a transaction id randomly generated. There will also be a button that shows "Return to home" which will take us back to the landing page.
+    * The colour theme of this web app will have some gold colour as it is trading stocks so giving a getting rich vibe.
 
 
 ## USE CONTEXT7
-- use library id /reactjs/react.dev?tokens=5000 to reference
-- use library id /vitejs/vite?tokens=3000 
+<!-- - use library id /reactjs/react.dev?tokens=5000 to reference -->
+- use library id /websites/vuejs_guide to reference for best practices
+- use library id /vitejs/vite?tokens=3000  to reference for best practices
 <!-- - use library id /vercel/next-learn
 - use library id /vercel/next.js 
 - use library id /skolaczk/next-starter
