@@ -174,16 +174,116 @@ The app uses a comprehensive design system with CSS custom properties:
 # Build for production
 npm run build
 
-# Preview the production build
+# Preview the production build locally (optional)
 npm run preview
 ```
 
 The production files will be in the `dist/` directory.
 
-### Deployment Options
-- **Static Hosting**: Netlify, Vercel, GitHub Pages
-- **Server Deployment**: Any web server (Apache, Nginx)
-- **CDN Deployment**: AWS CloudFront, Google Cloud CDN
+### 📱 Deploy to Cloudflare Pages (Recommended for WebView Apps)
+
+**Perfect for Android/iOS WebView integration with enterprise-grade performance and security.**
+
+#### Step 1: Build Your App
+```bash
+# Navigate to your project directory
+cd react19dot1__vite7dot1__sendmoney
+
+# Create production build
+npm run build
+```
+This creates a `dist/` folder with optimized files.
+
+#### Step 2: Deploy to Cloudflare Pages
+1. **Go to Cloudflare Pages**: Visit [pages.cloudflare.com](https://pages.cloudflare.com)
+
+2. **Create Free Account**: Sign up with email (no credit card required)
+
+3. **Upload Your App**:
+   - Click **"Upload assets"** button
+   - Drag and drop the entire `dist/` folder onto the upload area
+   - Wait for upload to complete (~30 seconds)
+
+4. **Configure Settings**:
+   - **Project name**: `send-money-app` (or your preferred name)
+   - **Production branch**: Leave default
+   - **Build settings**: Auto-detected (Vite)
+   - Click **"Save and Deploy"**
+
+5. **Get Your URL**: You'll receive a URL like:
+   ```
+   https://<REDACTED>.pages.dev
+   ```
+
+#### Step 3: Test Your Deployed App
+```bash
+# Test the live URL in your browser
+# Check mobile responsiveness (F12 → Device toolbar)
+# Verify all functionality works
+```
+
+### 🔧 WebView Integration Settings
+
+Your deployed app is automatically optimized for mobile WebView:
+
+#### ✅ **WebView-Ready Features**
+- **HTTPS**: Automatic SSL (required for iOS WKWebView)
+- **Mobile-optimized**: Touch-friendly design
+- **Fast loading**: Global CDN with 200+ locations
+- **No CORS issues**: Static files work in all WebViews
+- **Offline-friendly**: Cached assets for better performance
+
+#### 📱 **Android WebView Integration**
+```kotlin
+// In your Android app
+webView.loadUrl("https://your-app.pages.dev")
+webView.settings.javaScriptEnabled = true
+webView.settings.domStorageEnabled = true
+webView.settings.allowFileAccess = true
+```
+
+#### 🍎 **iOS WKWebView Integration**
+```swift
+// In your iOS app
+let url = URL(string: "https://your-app.pages.dev")!
+let request = URLRequest(url: url)
+webView.load(request)
+```
+
+### 🔄 **Updating Your Deployed App**
+
+When you make changes:
+```bash
+# 1. Build updated version
+npm run build
+
+# 2. Go to Cloudflare Pages dashboard
+# 3. Click your project → "Upload assets"
+# 4. Drag the new dist/ folder
+# 5. App updates automatically (~15 seconds)
+```
+
+### 🌐 **Custom Domain (Optional)**
+
+To use your own domain:
+1. **Buy domain** from any registrar
+2. **In Cloudflare Pages**: Go to project → Custom domains
+3. **Add domain**: Enter your domain name
+4. **Update DNS**: Add provided CNAME record to your domain
+5. **SSL**: Automatically provisioned
+
+### 📊 **Performance Benefits for PoC**
+- ⚡ **Fast loading**: ~200ms global response time
+- 🛡️ **DDoS protection**: Enterprise-grade security
+- 🌍 **Global CDN**: 200+ edge locations
+- 📱 **Mobile optimized**: Perfect for WebView apps
+- 🆓 **Completely free**: No limits for PoC usage
+
+### Alternative Deployment Options
+- **Vercel**: Great for React apps, similar setup
+- **Netlify**: Drag & drop deployment available
+- **GitHub Pages**: Git-based workflow
+- **Firebase Hosting**: Google ecosystem integration
 
 ## 🔒 Security Considerations
 
