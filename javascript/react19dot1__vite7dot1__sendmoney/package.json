@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@datadog/browser-rum": "^6.21.1",
+    "@datadog/browser-rum-react": "^6.21.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
