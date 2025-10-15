@@ -1,3 +1,5 @@
+![](proof1.png)
+
 # Holiday Planner - AI-Powered Chatbot
 
 A modern, mobile-responsive holiday planning chatbot built with **Next.js 15.5** and **React 19.1**. Features a Claude/ChatGPT-style interface with beautiful holiday-themed design.
@@ -41,6 +43,41 @@ A modern, mobile-responsive holiday planning chatbot built with **Next.js 15.5**
 
 4. **Open your browser:**
    Visit [http://localhost:3000](http://localhost:3000)
+
+### Datadog RUM Configuration (Optional)
+
+This application is instrumented with Datadog Real User Monitoring (RUM) for performance tracking and error monitoring.
+
+**Setup Instructions:**
+
+1. **Create RUM Application**:
+
+2. **Get Credentials**:
+   - Copy Application ID
+   - Copy Client Token
+   - `npm install @datadog/browser-rum @datadog/browser-rum-react --save`
+      - Note: This app doesn’t use React Router, so the Datadog React plugin is enabled without router tracking to ensure automatic view collection. So this is not required `@datadog/browser-rum-react`
+   - Entry: `src/app/components/DatadogInit.js` (imported by `src/app/layout.js`)
+
+3. **Configure Environment Variables**:
+   Create `.env.local` in project root:
+   ```env
+   NEXT_PUBLIC_DATADOG_APPLICATION_ID=your_app_id
+   NEXT_PUBLIC_DATADOG_CLIENT_TOKEN=your_client_token
+   NEXT_PUBLIC_DATADOG_SITE=datadoghq.com
+   NEXT_PUBLIC_DATADOG_SERVICE=planholiday
+   NEXT_PUBLIC_DATADOG_ENV=development
+   NEXT_PUBLIC_DATADOG_VERSION=0.1.0
+   ```
+
+5. **Start Development Server**:
+   ```bash
+   npm run dev
+   ```
+
+6. **Verify**: Check browser console for `[Datadog RUM] Initialized successfully`
+
+**Note**: RUM will not initialize if environment variables are missing. The application will function normally without them.
 
 ## 🛠️ Development Commands
 

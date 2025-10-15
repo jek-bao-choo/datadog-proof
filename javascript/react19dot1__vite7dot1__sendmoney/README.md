@@ -122,7 +122,7 @@ The app is configured for optimal development and mobile testing:
 - Proper input types for mobile keyboards
 - Responsive design with CSS custom properties
 
-## 📈 Observability (Datadog RUM)
+## 📈 Observability (Add Datadog RUM SDK)
 
 Real User Monitoring is initialized before the app mounts.
 
@@ -130,7 +130,7 @@ Real User Monitoring is initialized before the app mounts.
 - Entry: `src/datadog-rum.js` (imported by `src/main.jsx`)
 - Configuration is in-code with public values; no env vars required.
 
-Note: This app doesn’t use React Router, so the Datadog React plugin is enabled without router tracking to ensure automatic view collection.
+Note: This app doesn’t use React Router, so the Datadog React plugin is enabled without router tracking to ensure automatic view collection. So this is not required `@datadog/browser-rum-react`
 
 ## 🎨 Design System
 
