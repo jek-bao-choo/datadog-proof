@@ -20,6 +20,19 @@
     <fragment
             android:id="@+id/navigation_notifications"
             android:name="com.example.android8__api26__superapp.ui.notifications.NotificationsFragment"
-            android:label="@string/title_notifications"
+            android:label="@string/title_settings"
             tools:layout="@layout/fragment_notifications"/>
+
+    <fragment
+            android:id="@+id/webViewFragment"
+            android:name="com.example.android8__api26__superapp.ui.webview.WebViewFragment"
+            android:label="{serviceName}"
+            tools:layout="@layout/fragment_webview">
+        <argument
+                android:name="url"
+                app:argType="string"/>
+        <argument
+                android:name="serviceName"
+                app:argType="string"/>
+    </fragment>
 </navigation>

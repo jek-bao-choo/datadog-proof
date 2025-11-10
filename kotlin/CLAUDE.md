@@ -13,7 +13,8 @@ Multiple Kotlin applications which could also be Android native apps developed u
 
 ## My Tooling
 - I use SDKMAN! CLI for Gradle, Maven, and Java version control and installation
-- I use IntelliJ IDEA Community Edition to read the codes
+- I use IntelliJ IDEA Community Edition to build the Kotlin project
+- I use JAVA_HOME for building my gradle project
 
 ## My Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan

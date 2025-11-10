@@ -1,6 +1,39 @@
 <resources>
     <string name="app_name">android8__api26__superapp</string>
+    <string name="app_title">My Super App</string>
+
+    <!-- Bottom Navigation -->
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="title_settings">Settings</string>
+
+    <!-- Categories -->
+    <string name="category_finance">Finance</string>
+    <string name="category_telco">Telco</string>
+    <string name="category_utility">Utility</string>
+    <string name="category_travel">Travel</string>
+
+    <!-- Services -->
+    <string name="service_send_money">Send money</string>
+    <string name="service_trade_stock">Trade Stock</string>
+    <string name="service_view_data_usage">View Data Usage</string>
+    <string name="service_pay_bill">Pay Bill</string>
+    <string name="service_submit_meter">Submit Meter Reading</string>
+    <string name="service_plan_holiday">Plan Holiday</string>
+
+    <!-- WebView -->
+    <string name="webview_loading">Loading…</string>
+    <string name="webview_error">Unable to load page</string>
+    <string name="webview_error_retry">Retry</string>
+    <string name="webview_back">Back</string>
+    <string name="webview_forward">Forward</string>
+    <string name="webview_refresh">Refresh</string>
+
+    <!-- Placeholders -->
+    <string name="placeholder_dashboard">Dashboard - Coming Soon</string>
+    <string name="placeholder_settings">Settings - Coming Soon</string>
+
+    <!-- Menu -->
+    <string name="menu_profile">Profile</string>
 </resources>
