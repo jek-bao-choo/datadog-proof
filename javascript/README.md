@@ -1,3 +1,8 @@
+# Note
+* Always use terminal CLI with NPM to create a web app via Vite. Vite is a build tool like Webpack.
+
+## Setup steps below
+
 Setup a web app using Vite:
 ```
 npm create vite@latest
