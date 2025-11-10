@@ -6,13 +6,112 @@
 import { navigateTo } from '../router.js'
 import { submitMeterReading } from '../utils/api.js'
 
+// Previous reading from history (would normally come from API)
+const PREVIOUS_READING = '2833'
+const METER_UNIT = 'kWh'
+
 /**
- * Get today's date in YYYY-MM-DD format
- * @returns {string} Today's date
+ * Handle digit input - auto-focus next input
+ * @param {Event} e - Input event
  */
-function getTodayDate() {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
+function handleDigitInput(e) {
+  const input = e.target
+  const maxLength = 1
+
+  // Remove any non-numeric characters
+  input.value = input.value.replace(/[^0-9]/g, '')
+
+  // Only allow single digit
+  if (input.value.length > maxLength) {
+    input.value = input.value.slice(0, maxLength)
+  }
+
+  // Auto-focus next input if digit entered
+  if (input.value.length === maxLength) {
+    const nextInput = input.nextElementSibling
+    if (nextInput && nextInput.classList.contains('digit-input')) {
+      nextInput.focus()
+    }
+  }
+}
+
+/**
+ * Handle digit keydown - support backspace navigation and block non-numeric keys
+ * @param {Event} e - Keydown event
+ */
+function handleDigitKeydown(e) {
+  const input = e.target
+
+  // Allow: backspace, delete, tab, escape, enter, arrow keys
+  const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
+
+  // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X, Cmd+A, Cmd+C, Cmd+V, Cmd+X
+  if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) {
+    return
+  }
+
+  // If not a number key (0-9) and not an allowed key, prevent input
+  if (!allowedKeys.includes(e.key) && (e.key < '0' || e.key > '9')) {
+    e.preventDefault()
+    return
+  }
+
+  // If backspace and input is empty, focus previous
+  if (e.key === 'Backspace' && input.value === '') {
+    const prevInput = input.previousElementSibling
+    if (prevInput && prevInput.classList.contains('digit-input')) {
+      prevInput.focus()
+      e.preventDefault()
+    }
+  }
+}
+
+/**
+ * Handle paste event - only allow numeric characters
+ * @param {Event} e - Paste event
+ */
+function handleDigitPaste(e) {
+  e.preventDefault()
+
+  // Get pasted text
+  const pastedText = (e.clipboardData || window.clipboardData).getData('text')
+
+  // Remove non-numeric characters
+  const numericText = pastedText.replace(/[^0-9]/g, '')
+
+  if (numericText.length === 0) {
+    return
+  }
+
+  // Get all digit inputs
+  const inputs = document.querySelectorAll('.digit-input')
+  const currentIndex = Array.from(inputs).indexOf(e.target)
+
+  // Fill inputs with pasted digits
+  for (let i = 0; i < numericText.length && (currentIndex + i) < inputs.length; i++) {
+    inputs[currentIndex + i].value = numericText[i]
+  }
+
+  // Focus the next empty input or the last filled input
+  const nextEmptyIndex = currentIndex + numericText.length
+  if (nextEmptyIndex < inputs.length) {
+    inputs[nextEmptyIndex].focus()
+  } else {
+    inputs[inputs.length - 1].focus()
+  }
+}
+
+/**
+ * Get reading from digit inputs
+ * @returns {string} The reading value
+ */
+function getReadingValue() {
+  const inputs = document.querySelectorAll('.digit-input')
+  let reading = ''
+  inputs.forEach(input => {
+    reading += input.value || '0'
+  })
+  return reading
 }
 
 /**
@@ -22,19 +121,13 @@ function getTodayDate() {
 async function handleSubmit(e) {
   e.preventDefault()
 
-  // Get form elements
-  const meterNumber = document.querySelector('#meter-number').value.trim()
-  const currentReading = document.querySelector('#current-reading').value.trim()
-  const readingDate = document.querySelector('#reading-date').value
+  // Get reading from digit inputs
+  const currentReading = getReadingValue()
 
-  // Validate inputs
-  if (!meterNumber || !currentReading || !readingDate) {
-    showError('Please fill in all required fields.')
-    return
-  }
-
-  if (isNaN(currentReading) || Number(currentReading) < 0) {
-    showError('Current reading must be a valid positive number.')
+  // Validate reading
+  const readingNum = parseInt(currentReading)
+  if (isNaN(readingNum) || readingNum <= parseInt(PREVIOUS_READING)) {
+    showError(`Current reading must be greater than previous reading (${PREVIOUS_READING})`)
     return
   }
 
@@ -48,9 +141,10 @@ async function handleSubmit(e) {
   try {
     // Submit to API
     const meterData = {
-      meterNumber,
-      currentReading: Number(currentReading),
-      readingDate,
+      previousReading: parseInt(PREVIOUS_READING),
+      currentReading: readingNum,
+      unit: METER_UNIT,
+      readingDate: new Date().toISOString().split('T')[0],
     }
 
     await submitMeterReading(meterData)
@@ -84,71 +178,69 @@ function showError(message) {
  * @returns {string} HTML string for the enter meter page
  */
 export function renderEnterMeterPage() {
-  // Set up event listener after render
+  // Set up event listeners after render
   setTimeout(() => {
     const form = document.querySelector('#meter-form')
     if (form) {
       form.addEventListener('submit', handleSubmit)
     }
+
+    // Add digit input handlers
+    const digitInputs = document.querySelectorAll('.digit-input')
+    digitInputs.forEach(input => {
+      input.addEventListener('input', handleDigitInput)
+      input.addEventListener('keydown', handleDigitKeydown)
+      input.addEventListener('paste', handleDigitPaste)
+    })
+
+    // Focus first input
+    if (digitInputs.length > 0) {
+      digitInputs[0].focus()
+    }
   }, 0)
 
+  // Split previous reading into digits for display
+  const prevDigits = PREVIOUS_READING.split('')
+
   return `
-    <div class="form-container">
-      <div class="form-content">
-        <h1 class="form-title">Enter Meter Reading</h1>
-        <p class="form-description">
-          Please enter your meter details below
-        </p>
+    <div class="form-container-new">
+      <div class="form-content-new">
+        <form id="meter-form" class="meter-form-new">
 
-        <form id="meter-form" class="meter-form">
-          <div class="form-group">
-            <label for="meter-number" class="form-label">
-              Meter Number <span class="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="meter-number"
-              name="meter-number"
-              class="form-input"
-              required
-              placeholder="e.g., MTR-12345"
-            />
+          <!-- Previous Meter Reading Display -->
+          <div class="reading-section">
+            <label class="reading-label">Previous Meter Reading</label>
+            <div class="digit-display-container">
+              <div class="digit-display-row">
+                ${prevDigits.map(digit => `<div class="digit-display">${digit}</div>`).join('')}
+              </div>
+              <span class="unit-badge">${METER_UNIT}</span>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="current-reading" class="form-label">
-              Current Reading <span class="required">*</span>
-            </label>
-            <input
-              type="number"
-              id="current-reading"
-              name="current-reading"
-              class="form-input"
-              required
-              min="0"
-              step="0.01"
-              placeholder="e.g., 12345.67"
-            />
+          <!-- Current Meter Reading Input -->
+          <div class="reading-section">
+            <label class="reading-label">Current Meter Reading</label>
+            <div class="digit-display-container">
+              <div class="digit-input-row">
+                <input type="text" class="digit-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" />
+                <input type="text" class="digit-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" />
+                <input type="text" class="digit-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" />
+                <input type="text" class="digit-input" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="off" />
+              </div>
+              <span class="unit-badge">${METER_UNIT}</span>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="reading-date" class="form-label">
-              Reading Date <span class="required">*</span>
-            </label>
-            <input
-              type="date"
-              id="reading-date"
-              name="reading-date"
-              class="form-input"
-              required
-              value="${getTodayDate()}"
-              max="${getTodayDate()}"
-            />
-          </div>
+          <!-- Note -->
+          <p class="reading-note">
+            Note: Please round up the numbers if the reading values are showing decimal points on
+          </p>
 
           <div id="error-message" class="error-message" style="display: none;"></div>
 
-          <button type="submit" id="submit-btn" class="btn btn-primary">
+          <!-- Submit Button -->
+          <button type="submit" id="submit-btn" class="btn btn-submit-green btn-submit-bottom">
             Submit Reading
           </button>
         </form>
