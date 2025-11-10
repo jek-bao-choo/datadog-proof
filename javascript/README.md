@@ -18,15 +18,17 @@ Project name: Enter the name for your project's folder. For example: my-vue-app
 Select a framework: Use the arrow keys to navigate the list and press Enter. Choose vue.
 
 ✔ Select a framework: › - Use arrow keys. Return to submit.
-    vanilla
-❯   vue
-    react
-    preact
-    lit
-    svelte
-    solid
-    qwik
-    others
+│  ● Vanilla
+│  ○ Vue
+│  ○ React
+│  ○ Preact
+│  ○ Lit
+│  ○ Svelte
+│  ○ Solid
+│  ○ Qwik
+│  ○ Angular
+│  ○ Marko
+│  ○ Others
 Select a variant: This allows you to choose between standard JavaScript or TypeScript, and offers further customization.
 
 Vue: For a standard JavaScript setup.
