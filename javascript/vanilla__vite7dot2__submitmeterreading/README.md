@@ -1,3 +1,7 @@
+![](meter-reading-1.png)
+![](meter-reading-2.png)
+![](meter-reading-3.png)
+
 # Meter Reading Submission App
 
 A mobile-responsive web application for submitting utility meter readings, built with Vite 7.2.2 and vanilla JavaScript.
