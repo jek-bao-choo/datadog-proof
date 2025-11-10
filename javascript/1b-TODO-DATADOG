@@ -1,32 +1,9 @@
 ## TASK:
-* Instrument a Javascript app and the dependencies of the app is in package.json
-* After installing the `@datadog/browser-rum` and `@datadog/browser-rum-react` packages from npm.
-* Datadog provided a sample code and instruct that I initialize it as early as possible with the following to start tracking data with Datadog:
-```javascript
-import { datadogRum } from '@datadog/browser-rum';
-import { reactPlugin } from '@datadog/browser-rum-react';
-
-datadogRum.init({
-    applicationId: '<REDACTED>',
-    clientToken: '<REDACTED>',
-    site: 'datadoghq.com',
-    service:'react19dot1-vite7dot1-sendmoney',
-    env: 'test',
-    
-    // Specify a version number to identify the deployed version of your application in Datadog
-    version: '1.0.1',
-    sessionSampleRate:  100,
-    sessionReplaySampleRate: 100,
-    defaultPrivacyLevel: 'mask-user-input',
-    plugins: [reactPlugin({ router: true })],
-});
-```
-* Please take note that my application code is a React version 19.1.X written with Javascript, not Typescript.
-* Please research and write down a research plan on how to go about instrumenting and initiating my React application written in Javascript with Datadog Browser RUM SDK.
+* I want to add a Datadog 
 
 ## USE CONTEXT7
 * use library id /datadog/browser-sdk
-* use library id /datadog/dd-sdk-android-gradle-plugin
+<!-- * use library id /datadog/dd-sdk-android-gradle-plugin -->
 
 ## OTHER CONSIDERATIONS:
 * Run the project on MacOS bash terminal
