@@ -1,3 +1,5 @@
+* The super app is in this folder called android8__api26__superapp
+
 # Android App Setup
 I chose to keep this step here because setting an Android native app project would require me to repeat this process. 
 
