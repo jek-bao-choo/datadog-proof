@@ -222,18 +222,18 @@ git push origin main
        phases:
          preBuild:
            commands:
-             - cd /javascript/vanilla__vite7dot2__submitmeterreading
-             - npm install
+             - 'cd javascript/vanilla__vite7dot2__submitmeterreading'
+             - 'npm install'
          build:
            commands:
-             - npm run build
+             - 'npm run build'
        artifacts:
-         baseDirectory: javascript/vanilla__vite7dot2__submitmeterreading/dist
+         baseDirectory: 'javascript/vanilla__vite7dot2__submitmeterreading/dist'
          files:
            - '**/*'
        cache:
          paths:
-           - javascript/vanilla__vite7dot2__submitmeterreading/node_modules/**/*
+           - 'javascript/vanilla__vite7dot2__submitmeterreading/node_modules/**/*'
      ```
    - This configuration is entered directly in the web interface
    - Click **"Next"**
