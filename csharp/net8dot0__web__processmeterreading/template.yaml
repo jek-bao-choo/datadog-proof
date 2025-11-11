@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Meter Reading Processing API on Lambda with Native AOT
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        ASPNETCORE_ENVIRONMENT: Production
+
+Resources:
+  MeterReadingApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: meter-reading-api
+      PackageType: Image
+      ImageConfig:
+        Command: ["./net8dot0__web__processmeterreading"]
+      Architectures:
+        - x86_64
+      Events:
+        ApiGateway:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: "2.0"
+      Policies:
+        - CloudWatchLambdaInsightsExecutionRolePolicy
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt MeterReadingApi.Arn
