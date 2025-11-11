@@ -6,6 +6,7 @@
     * The second HTTP endpoint is to accept a HTTP GET request to get all past submitted meter reading history. It will return an array of submitted meter reading as a JSON response back to the frontend web app. Each item in the submitted meter reading array will contain the submitted meter reading and the date time stamp in ISO format. To being with it would have a dummy meter reading record item in the array.
         * A meter reading digit ranges from 1 to 999999. For the dummy meter reading record item keep the number to e.g., 1332 or some random number in the low thousand.
 * Think hard
+* Ask any questions you want to clarify before doing the research.
 
 
 <!-- ## USE CONTEXT7 -->
