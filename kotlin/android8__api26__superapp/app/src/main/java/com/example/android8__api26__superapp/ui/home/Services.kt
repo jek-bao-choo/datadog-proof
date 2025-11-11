@@ -53,7 +53,7 @@ object Services {
         id = "submit_meter_reading",
         title = "Submit Meter Reading",
         iconResId = R.drawable.ic_meter_reading,
-        url = "https://example.com/utility/meter",
+        url = "https://main.d26h2mys5it3o4.amplifyapp.com/",
         category = CATEGORY_UTILITY
     )
 
