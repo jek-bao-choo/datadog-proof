@@ -1876,7 +1876,20 @@ aws ssm put-parameter \
 
 ### Step 2: Update Dockerfile with Datadog Lambda Extension
 
-Modify your existing `Dockerfile` to include the Datadog Lambda Extension and .NET APM tracer:
+Modify your existing `Dockerfile` to include the Datadog Lambda Extension and .NET APM tracer.
+
+**Before you start:**
+1. **Check latest Datadog Lambda Extension version**: Visit [Datadog Lambda Extension ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension)
+   - As of this writing, the latest version is `88`
+   - Available architectures: `x86_64` (default), `arm64`, `alpine`, `alpine-fips`
+   - For ARM64: Use tags like `88` (works on both architectures) or architecture-specific builds
+
+2. **Check latest .NET APM Tracer version**: Visit [Datadog .NET Tracer GitHub Releases](https://github.com/DataDog/dd-trace-dotnet/releases)
+   - As of this writing, the latest version is `3.8.0`
+   - **Important**: Use the **MUSL variant** (`datadog-dotnet-apm-*-musl.tar.gz`) for Amazon Linux 2023
+   - GLIBC variant is for standard Linux distributions
+
+**Updated Dockerfile:**
 
 ```dockerfile
 # Build stage with Native AOT
@@ -1910,22 +1923,40 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt
 # DATADOG INSTRUMENTATION - START
 # ========================================
 
-# Install Datadog Lambda Extension (ARM64 version)
-# Replace 86 with desired version from: https://gallery.ecr.aws/datadog/lambda-extension
-COPY --from=public.ecr.aws/datadog/lambda-extension:86-arm64 /opt/extensions/ /opt/extensions/
+# Step 1: Install Datadog Lambda Extension
+# IMPORTANT: Check https://gallery.ecr.aws/datadog/lambda-extension for latest version
+# Current latest version: 88
+#
+# Architecture selection:
+# - For ARM64 Lambda: Use version tags that support arm64 (e.g., "88", "latest")
+# - The multi-arch tags automatically pull the correct architecture
+# - For explicit ARM64: Some versions have separate -arm64 tags (e.g., "86-arm64")
+#
+# We're using "88" which supports both x86_64 and arm64 architectures
+COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
 
-# Install dependencies for downloading and extracting Datadog .NET APM tracer
+# Step 2: Install dependencies for downloading Datadog .NET APM tracer
 RUN yum install -y tar gzip wget unzip
 
-# Download and install Datadog .NET APM tracer
-# Check latest version at: https://github.com/DataDog/dd-trace-dotnet/releases
+# Step 3: Download and install Datadog .NET APM tracer
+# IMPORTANT: Check https://github.com/DataDog/dd-trace-dotnet/releases for latest version
+# Current latest version: 3.8.0
+#
+# Variant selection:
+# - MUSL variant: For Alpine Linux, Amazon Linux 2023 (use this one)
+# - GLIBC variant: For standard Linux distributions (Ubuntu, Debian, etc.)
+#
+# File naming:
+# - datadog-dotnet-apm-<VERSION>-musl.tar.gz (for Amazon Linux 2023)
+# - datadog-dotnet-apm-<VERSION>.tar.gz (for standard Linux)
 RUN TRACER_VERSION=3.8.0 && \
     wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz && \
     mkdir -p /opt/datadog && \
     tar -C /opt/datadog -xzf datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz && \
     rm datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz
 
-# Set environment variables for Datadog .NET tracer
+# Step 4: Set environment variables for Datadog .NET tracer
+# These environment variables enable the CLR profiler for automatic instrumentation
 ENV CORECLR_ENABLE_PROFILING=1
 ENV CORECLR_PROFILER={846F5F1C-F9AE-4B07-969E-05C26BC060D8}
 ENV CORECLR_PROFILER_PATH=/opt/datadog/Datadog.Trace.ClrProfiler.Native.so
@@ -1950,23 +1981,112 @@ RUN echo '#!/bin/sh' > /var/runtime/bootstrap && \
     chmod +x /var/runtime/bootstrap
 ```
 
-**Key Changes Explained:**
+**Key Components Explained:**
 
-1. **Datadog Lambda Extension**: Copied from `public.ecr.aws/datadog/lambda-extension:86-arm64`
-   - Version `86` (replace with latest from [ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension))
-   - Architecture `arm64` to match our Lambda function architecture
+#### 1. Datadog Lambda Extension (Lines 1914-1924)
 
-2. **Datadog .NET APM Tracer**: Downloaded from GitHub releases
-   - Version `3.8.0` (check [latest releases](https://github.com/DataDog/dd-trace-dotnet/releases))
-   - **MUSL variant** (`datadog-dotnet-apm-*-musl.tar.gz`) required for Alpine/Amazon Linux 2023
-   - Installed to `/opt/datadog/`
+**What it does**: Installs the Datadog Lambda Extension that runs as a sidecar process alongside your Lambda function.
 
-3. **Environment Variables for .NET Profiler**:
-   - `CORECLR_ENABLE_PROFILING=1`: Enables CLR profiling for tracing
-   - `CORECLR_PROFILER`: GUID identifying the Datadog profiler
-   - `CORECLR_PROFILER_PATH`: Path to native profiler library
-   - `DD_DOTNET_TRACER_HOME`: Base directory for Datadog tracer
-   - `LD_PRELOAD`: Preload continuous profiler library
+**Version Selection**:
+```dockerfile
+COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
+```
+
+- **Version `88`**: Latest stable version (as of this writing)
+- **Multi-architecture support**: The `88` tag supports both x86_64 and ARM64
+  - When you build with `--platform linux/arm64`, Docker automatically pulls the ARM64 variant
+  - When you build with `--platform linux/amd64`, Docker automatically pulls the x86_64 variant
+- **Alternative tags**:
+  - `latest`: Always points to the newest version (may introduce breaking changes)
+  - `88-alpine`: Alpine Linux variant
+  - `88-fips`: FIPS-compliant variant
+  - For older explicit ARM64 tags: `86-arm64` (version 86 had separate ARM64 tags)
+
+**Where to check for updates**: [Datadog Lambda Extension ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension)
+
+**What gets installed**: The extension binary is copied to `/opt/extensions/` where Lambda automatically detects and runs it.
+
+#### 2. System Dependencies (Line 1927)
+
+**What it does**: Installs required tools for downloading and extracting the .NET tracer.
+
+```dockerfile
+RUN yum install -y tar gzip wget unzip
+```
+
+- `tar`, `gzip`: For extracting the tracer archive
+- `wget`: For downloading from GitHub
+- `unzip`: Additional archive support
+
+#### 3. Datadog .NET APM Tracer (Lines 1929-1945)
+
+**What it does**: Downloads and installs the Datadog .NET APM tracer for automatic instrumentation.
+
+**Version Selection**:
+```dockerfile
+RUN TRACER_VERSION=3.8.0 && \
+    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz
+```
+
+- **Version `3.8.0`**: Latest stable .NET tracer (as of this writing)
+- **MUSL variant**: Required for Amazon Linux 2023 (which uses musl libc)
+  - File: `datadog-dotnet-apm-3.8.0-musl.tar.gz`
+  - For standard Linux (GLIBC): Use `datadog-dotnet-apm-3.8.0.tar.gz`
+
+**Where to check for updates**: [Datadog .NET Tracer GitHub Releases](https://github.com/DataDog/dd-trace-dotnet/releases)
+
+**Installation path**: Extracted to `/opt/datadog/` directory
+
+#### 4. CLR Profiler Environment Variables (Lines 1948-1953)
+
+**What it does**: Configures the .NET CLR to load the Datadog profiler for automatic instrumentation.
+
+| Environment Variable | Purpose | Value |
+|---------------------|---------|-------|
+| `CORECLR_ENABLE_PROFILING=1` | Enables CLR profiling API | Required to activate profiler |
+| `CORECLR_PROFILER={...}` | Profiler GUID | Identifies the Datadog profiler to CLR |
+| `CORECLR_PROFILER_PATH` | Path to profiler library | Native library for CLR integration |
+| `DD_DOTNET_TRACER_HOME` | Tracer installation directory | Base path for tracer components |
+| `LD_PRELOAD` | Preload profiler library | Enables continuous profiling (optional) |
+
+**How automatic instrumentation works**:
+1. CLR starts your .NET application
+2. CLR sees `CORECLR_ENABLE_PROFILING=1` and loads the profiler
+3. Datadog profiler intercepts method calls and creates spans
+4. Traces are sent to the Datadog Lambda Extension
+5. Extension forwards traces to Datadog backend
+
+**Troubleshooting**: If traces aren't appearing, check Lambda logs for:
+```
+CORECLR_ENABLE_PROFILING: 1
+Datadog .NET Tracer loaded successfully
+```
+
+#### Version Update Checklist
+
+When updating to newer versions:
+
+**For Datadog Lambda Extension:**
+1. Visit [ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension)
+2. Find the latest version number (e.g., `88`, `89`, etc.)
+3. Update the COPY command:
+   ```dockerfile
+   COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
+   ```
+4. Verify architecture support (most versions now support multi-arch)
+
+**For .NET APM Tracer:**
+1. Visit [GitHub Releases](https://github.com/DataDog/dd-trace-dotnet/releases)
+2. Find the latest version number (e.g., `3.8.0`, `3.9.0`, etc.)
+3. Update the TRACER_VERSION variable:
+   ```dockerfile
+   RUN TRACER_VERSION=3.9.0 && \
+       wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz
+   ```
+4. Verify the MUSL variant is available for the version
+5. Test the new version in a non-production environment first
+
+**Compatibility Note**: The Lambda Extension and .NET Tracer versions are independent. You can update one without updating the other, but it's recommended to keep both reasonably up-to-date.
 
 ### Step 3: Update SAM Template with Datadog Configuration
 
