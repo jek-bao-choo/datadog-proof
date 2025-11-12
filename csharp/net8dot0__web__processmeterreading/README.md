@@ -1203,14 +1203,14 @@ A **Lambda Extension** is a separate process that runs **alongside** your Lambda
 ```
 ┌─────────────────────────────────────────┐
 │   AWS Lambda Execution Environment      │
-│                                          │
-│  ┌──────────────────┐  ┌──────────────┐│
-│  │  Your Function   │  │   Extension  ││
-│  │  (main process)  │  │   Process    ││
-│  │                  │  │              ││
-│  │  meter-reading   │  │   Datadog    ││
-│  │  API code        │  │   Extension  ││
-│  └──────────────────┘  └──────────────┘│
+│                                         │
+│  ┌──────────────────┐  ┌──────────────┐ │
+│  │  Your Function   │  │   Extension  │ │
+│  │  (main process)  │  │   Process    │ │
+│  │                  │  │              │ │
+│  │  meter-reading   │  │   Datadog    │ │
+│  │  API code        │  │   Extension  │ │
+│  └──────────────────┘  └──────────────┘ │
 │          ↓                     ↓        │
 │     Handles requests    Collects data   │
 │                         & sends to      │
