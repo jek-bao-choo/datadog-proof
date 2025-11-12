@@ -21,7 +21,21 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddSingleton<MeterReadingService>();
 builder.Services.AddSingleton<ResponseSimulator>();
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()  // Allows all origins - change to specific domains in production
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+// Enable CORS middleware
+app.UseCors();
 
 // Configure logging
 var logger = app.Logger;

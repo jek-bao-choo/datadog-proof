@@ -12,6 +12,21 @@ Globals:
     Tags:
       Environment: development
       Project: jek-meter-reading-api
+  Api:
+    Cors:
+      AllowOrigins:
+        - "*"  # Allows all origins - change to specific domain in production e.g. http://localhost:5173 and https://your-production-domain.com
+      AllowHeaders:
+        - "content-type"
+        - "x-amz-date"
+        - "authorization"
+        - "x-api-key"
+        - "x-amz-security-token"
+      AllowMethods:
+        - GET
+        - POST
+        - OPTIONS
+      MaxAge: 3600  # Cache preflight requests for 1 hour
 
 Resources:
   MeterReadingApi:
