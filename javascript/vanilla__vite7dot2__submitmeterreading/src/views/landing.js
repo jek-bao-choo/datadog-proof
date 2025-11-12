@@ -4,6 +4,7 @@
  */
 
 import { navigateTo } from '../router.js'
+import { getMeterReadings } from '../utils/api.js'
 
 /**
  * Get current month and year
@@ -16,11 +17,95 @@ function getCurrentMonthYear() {
 }
 
 /**
+ * Format date from ISO timestamp
+ * @param {string} timestamp - ISO timestamp string
+ * @returns {Object} Formatted date parts {day, month, year}
+ */
+function formatDate(timestamp) {
+  const date = new Date(timestamp)
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  return {
+    day: date.getDate().toString().padStart(2, '0'),
+    month: monthNames[date.getMonth()],
+    year: date.getFullYear()
+  }
+}
+
+/**
+ * Render history entries from readings data
+ * @param {Array} readings - Array of meter reading objects
+ * @returns {string} HTML string for history entries
+ */
+function renderHistoryEntries(readings) {
+  if (!readings || readings.length === 0) {
+    return `
+      <div class="history-empty">
+        <p>No meter readings submitted yet.</p>
+        <p>Submit your first reading above!</p>
+      </div>
+    `
+  }
+
+  // Sort readings by timestamp (newest first) and take the most recent ones
+  const sortedReadings = [...readings].sort((a, b) =>
+    new Date(b.Timestamp) - new Date(a.Timestamp)
+  )
+
+  return sortedReadings.map((reading, index) => {
+    const { day, month, year } = formatDate(reading.Timestamp)
+    const isLatest = index === 0
+
+    return `
+      <div class="history-entry">
+        <div class="history-date">
+          <span class="date-day">${day}</span>
+          <span class="date-month">${month} ${year}</span>
+          <span class="date-status">${isLatest ? 'Last Sent Reading' : 'Previous Reading'}</span>
+        </div>
+        <div class="history-reading">
+          <span class="reading-value">${reading.ReadingValue}</span>
+          <span class="reading-unit">kWh</span>
+        </div>
+      </div>
+    `
+  }).join('')
+}
+
+/**
+ * Load and display meter reading history
+ */
+async function loadMeterHistory() {
+  const historyContainer = document.querySelector('.meter-history-content')
+
+  if (!historyContainer) return
+
+  // Show loading state
+  historyContainer.innerHTML = '<div class="history-loading">Loading history...</div>'
+
+  try {
+    // Fetch readings from API
+    const readings = await getMeterReadings()
+
+    // Render the history entries
+    historyContainer.innerHTML = renderHistoryEntries(readings)
+  } catch (error) {
+    console.error('Error loading meter history:', error)
+    historyContainer.innerHTML = `
+      <div class="history-error">
+        <p>Unable to load reading history.</p>
+        <p style="font-size: 0.875rem; color: #666;">Please try refreshing the page.</p>
+      </div>
+    `
+  }
+}
+
+/**
  * Render the landing page
  * @returns {string} HTML string for the landing page
  */
 export function renderLandingPage() {
-  // Set up event listener after render
+  // Set up event listeners and load data after render
   setTimeout(() => {
     const submitBtn = document.querySelector('#submit-reading-btn')
     if (submitBtn) {
@@ -29,6 +114,9 @@ export function renderLandingPage() {
         navigateTo('/enter-meter')
       })
     }
+
+    // Load meter reading history from API
+    loadMeterHistory()
   }, 0)
 
   const currentMonthYear = getCurrentMonthYear()
@@ -98,16 +186,9 @@ export function renderLandingPage() {
         <!-- Meter Reading History -->
         <div class="meter-history">
           <h3 class="history-title">My Meter Reading History</h3>
-          <div class="history-entry">
-            <div class="history-date">
-              <span class="date-day">04</span>
-              <span class="date-month">Mar 2020</span>
-              <span class="date-status">Last Sent Reading</span>
-            </div>
-            <div class="history-reading">
-              <span class="reading-value">19647</span>
-              <span class="reading-unit">kWh</span>
-            </div>
+          <div class="meter-history-content">
+            <!-- History entries will be loaded dynamically from API -->
+            <div class="history-loading">Loading history...</div>
           </div>
         </div>
       </div>

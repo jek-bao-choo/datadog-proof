@@ -1,33 +1,29 @@
 /**
  * API service for meter reading submissions
- * Uses JSONPlaceholder as a mock backend endpoint
+ * Uses AWS Lambda API endpoint
  */
 
-// Mock API endpoint
-const API_ENDPOINT = 'https://jsonplaceholder.typicode.com/posts'
+// Get API URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL
+const API_ENDPOINT = `${API_BASE_URL}/api/meter-readings`
 
 /**
- * Submit meter reading data to the backend
- * @param {Object} meterData - The meter reading data to submit
- * @param {string} meterData.meterNumber - The meter number
- * @param {number} meterData.currentReading - The current meter reading
- * @param {string} meterData.readingDate - The date of the reading
- * @returns {Promise<Object>} The API response
- * @throws {Error} If the submission fails
+ * Get all meter readings from the backend
+ * @returns {Promise<Array>} Array of meter reading objects
+ * @throws {Error} If the fetch fails
  */
-export async function submitMeterReading(meterData) {
+export async function getMeterReadings() {
   try {
     const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(meterData),
     })
 
     // Check if response is successful (2xx status code)
     if (!response.ok) {
-      throw new Error(`Submission failed with status: ${response.status}`)
+      throw new Error(`Failed to fetch readings with status: ${response.status}`)
     }
 
     // Parse and return JSON response
@@ -35,7 +31,47 @@ export async function submitMeterReading(meterData) {
     return data
   } catch (error) {
     // Log error and re-throw for handling by caller
+    console.error('Error fetching meter readings:', error)
+    throw new Error('Failed to fetch meter readings. Please try again.')
+  }
+}
+
+/**
+ * Submit meter reading data to the backend
+ * @param {number} readingValue - The meter reading value
+ * @returns {Promise<Object>} The API response
+ * @throws {Error} If the submission fails
+ */
+export async function submitMeterReading(readingValue) {
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ readingValue }),
+    })
+
+    // Parse response body (may contain error message)
+    const data = await response.json()
+
+    // Check if response is successful (2xx status code)
+    if (!response.ok) {
+      // Server returned an error message in JSON format
+      const errorMessage = data.message || data.error || `Submission failed with status: ${response.status}`
+      throw new Error(errorMessage)
+    }
+
+    // Return success response
+    return data
+  } catch (error) {
+    // Log error and re-throw for handling by caller
     console.error('Error submitting meter reading:', error)
-    throw new Error('Failed to submit meter reading. Please try again.')
+
+    // If error already has a message, use it; otherwise provide generic message
+    if (error.message && !error.message.includes('fetch')) {
+      throw error
+    }
+    throw new Error('Failed to submit meter reading. Please check your connection and try again.')
   }
 }

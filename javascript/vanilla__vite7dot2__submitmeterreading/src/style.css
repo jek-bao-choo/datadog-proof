@@ -325,6 +325,38 @@ body {
   margin-top: 0.25rem;
 }
 
+/* History entry spacing - add margin between multiple entries */
+.history-entry + .history-entry {
+  margin-top: var(--spacing-md);
+}
+
+/* History loading, empty, and error states */
+.history-loading,
+.history-empty,
+.history-error {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-light);
+  background-color: var(--background-gray);
+  border-radius: var(--radius-md);
+}
+
+.history-loading {
+  font-style: italic;
+}
+
+.history-empty p {
+  margin: 0.5rem 0;
+}
+
+.history-error {
+  color: var(--error-red);
+}
+
+.history-error p {
+  margin: 0.5rem 0;
+}
+
 /* ===========================
    Form Page Styles (Enter Meter)
    =========================== */
