@@ -22,7 +22,7 @@ Resources:
       ImageConfig:
         Command: ["./net8dot0__web__processmeterreading"]
       Architectures:
-        - x86_64
+        - arm64
       Events:
         ApiGateway:
           Type: HttpApi

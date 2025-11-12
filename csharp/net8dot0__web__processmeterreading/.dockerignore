@@ -8,3 +8,4 @@ obj/
 .vscode/
 *.user
 *.suo
+global.json

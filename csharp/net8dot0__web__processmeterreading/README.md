@@ -31,6 +31,7 @@ net8dot0__web__processmeterreading/
 ├── Services/
 │   ├── MeterReadingService.cs    # In-memory storage service
 │   └── ResponseSimulator.cs      # Random response simulator
+├── AppJsonSerializerContext.cs   # JSON source generation for Native AOT
 ├── Program.cs                     # API endpoints and startup
 ├── appsettings.json              # Configuration
 └── net8dot0__web__processmeterreading.csproj
@@ -285,8 +286,6 @@ public class MeterReadingService
 If you need more advanced features, you can easily add:
 - **Serilog** - Rich structured logging with many sinks (files, databases, cloud)
 - **NLog** - Highly configurable with extensive documentation
-- **AWS CloudWatch** - Direct integration for Lambda deployments
-- **Datadog APM** - Application performance monitoring and tracing
 
 To add Serilog, for example:
 ```bash
@@ -440,7 +439,107 @@ Add the following to `net8dot0__web__processmeterreading.csproj`:
 </Project>
 ```
 
-### Step 2: Create Dockerfile for Lambda
+### Step 2: Configure global.json for Docker Build Compatibility
+
+Update or create `global.json` to allow SDK version flexibility in Docker containers:
+
+```json
+{
+  "sdk": {
+    "version": "8.0.0",
+    "rollForward": "latestMinor"
+  }
+}
+```
+
+**Why this is needed:**
+- The SAM build container may not have your exact local SDK version
+- `rollForward: "latestMinor"` allows any .NET 8.0.x version
+- Prevents SDK version mismatch errors during Docker builds
+
+**Alternative:** Add `global.json` to `.dockerignore` to skip SDK version checks entirely:
+
+```
+# .dockerignore
+bin/
+obj/
+*.md
+.git/
+.gitignore
+.vs/
+.vscode/
+*.user
+*.suo
+global.json
+```
+
+### Step 3: Add JSON Source Generation for Native AOT
+
+Native AOT doesn't support reflection-based JSON serialization. Create `AppJsonSerializerContext.cs`:
+
+```csharp
+using System.Text.Json.Serialization;
+using net8dot0__web__processmeterreading.Models;
+
+namespace net8dot0__web__processmeterreading;
+
+/// <summary>
+/// JSON serializer context for Native AOT support.
+/// This provides compile-time type information for JSON serialization.
+/// </summary>
+[JsonSerializable(typeof(MeterReading))]
+[JsonSerializable(typeof(MeterReadingRequest))]
+[JsonSerializable(typeof(SuccessResponse))]
+[JsonSerializable(typeof(ErrorResponse))]
+[JsonSerializable(typeof(List<MeterReading>))]
+public partial class AppJsonSerializerContext : JsonSerializerContext
+{
+}
+```
+
+Update `Program.cs` to configure Kestrel and JSON serialization:
+
+```csharp
+// Configure Kestrel to listen on PORT environment variable (for Lambda Web Adapter)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(int.Parse(port));
+});
+
+// Configure JSON serialization for Native AOT
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+});
+```
+
+**Why Kestrel configuration is needed:**
+- Lambda Web Adapter forwards requests to port 8080
+- Default Kestrel binds to `localhost` which is not accessible from Lambda
+- `ListenAnyIP()` binds to `0.0.0.0` making the app accessible to the adapter
+
+Update all API responses to use explicit JSON serialization:
+
+```csharp
+// Example: GET endpoint
+return Results.Json(readings, AppJsonSerializerContext.Default.ListMeterReading);
+
+// Example: Success response
+return Results.Json(
+    new SuccessResponse(Success: true, Message: message, Reading: reading),
+    AppJsonSerializerContext.Default.SuccessResponse
+);
+
+// Example: Error response
+return Results.Json(
+    new ErrorResponse(Success: false, Error: message, Code: 400),
+    AppJsonSerializerContext.Default.ErrorResponse,
+    statusCode: 400
+);
+```
+
+### Step 4: Create Dockerfile for Lambda
 
 Create `Dockerfile` in the project directory:
 
@@ -456,29 +555,44 @@ RUN dotnet restore
 # Copy source code
 COPY . ./
 
-# Publish with Native AOT
-RUN dotnet publish -c Release -r linux-x64 \
+# Publish with Native AOT for ARM64
+RUN dotnet publish -c Release -r linux-arm64 \
     --self-contained true \
     -o /app/publish \
     -p:PublishAot=true \
     -p:StripSymbols=true
 
-# Runtime stage with Lambda Web Adapter
-FROM public.ecr.aws/awsguru/aws-lambda-adapter:0.8.1
-WORKDIR /var/task
+# Set executable permissions in build stage
+RUN chmod +x /app/publish/net8dot0__web__processmeterreading
 
-# Copy published application
-COPY --from=build /app/publish .
+# Runtime stage - Use Amazon Linux 2023 with Lambda Web Adapter
+FROM public.ecr.aws/lambda/provided:al2023
+
+# Install Lambda Web Adapter extension
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+
+# Copy published application with permissions already set
+COPY --from=build /app/publish /var/task/
 
 # Lambda environment configuration
 ENV PORT=8080
-ENV AWS_LWA_INVOKE_MODE=response_stream
+ENV ASPNETCORE_URLS=http://+:8080
 
-# Run the application
-CMD ["./net8dot0__web__processmeterreading"]
+# Create bootstrap script that Lambda expects
+RUN echo '#!/bin/sh' > /var/runtime/bootstrap && \
+    echo 'cd /var/task' >> /var/runtime/bootstrap && \
+    echo 'exec ./net8dot0__web__processmeterreading' >> /var/runtime/bootstrap && \
+    chmod +x /var/runtime/bootstrap
 ```
 
-### Step 3: Create SAM Template
+**Key changes from basic Dockerfile:**
+- Uses `public.ecr.aws/lambda/provided:al2023` as runtime base
+- Lambda Web Adapter installed as extension layer
+- Creates bootstrap script for Lambda custom runtime
+- Permissions set in build stage (has shell available)
+- Removed `AWS_LWA_INVOKE_MODE=response_stream` (not needed with explicit JSON serialization)
+
+### Step 5: Create SAM Template
 
 Create `template.yaml` in the project directory:
 
@@ -507,7 +621,7 @@ Resources:
       ImageConfig:
         Command: ["./net8dot0__web__processmeterreading"]
       Architectures:
-        - x86_64
+        - arm64
       Events:
         ApiGateway:
           Type: HttpApi
@@ -542,6 +656,8 @@ AWS SAM can **automatically create and manage** S3 buckets and ECR repositories 
 
 **No manual S3 or ECR creation required!** SAM creates everything automatically.
 
+- Ensure I have Docker Desktop running on my Mac before running the command.
+
 ```bash
 # Set your AWS region
 export AWS_REGION="ap-southeast-1"
@@ -565,6 +681,48 @@ aws cloudformation describe-stacks \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
   --output text \
   --region ${AWS_REGION}
+  
+```
+
+#### Testing the Deployed Lambda API
+
+After deployment, get your API endpoint URL:
+```bash
+aws cloudformation describe-stacks \
+  --stack-name jek-meter-reading-api \
+  --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
+  --output text \
+  --region ap-southeast-1
+```
+
+Then test with curl (replace `$API_URL` with your actual endpoint):
+
+**1. Get Initial Meter Readings (with dummy data):**
+```bash
+export API_URL="https://xxxxx.execute-api.ap-southeast-1.amazonaws.com"
+curl $API_URL/api/meter-readings
+```
+
+**2. Submit a Valid Meter Reading:**
+```bash
+curl -X POST $API_URL/api/meter-readings \
+  -H "Content-Type: application/json" \
+  -d '{"readingValue": 12345}'
+```
+
+**3. Test Multiple Submissions (observe random responses):**
+```bash
+for i in {1..10}; do
+  curl -X POST $API_URL/api/meter-readings \
+    -H "Content-Type: application/json" \
+    -d "{\"readingValue\": $((10000 + i))}"
+  echo ""
+done
+```
+
+**4. Verify Successful Submissions:**
+```bash
+curl $API_URL/api/meter-readings
 ```
 
 **What SAM does automatically:**
@@ -822,15 +980,23 @@ aws cloudwatch get-metric-statistics \
 
 ### Performance Comparison
 
-**Without Native AOT:**
+**Without Native AOT (x86_64):**
 - Cold start: ~500-800ms
 - Memory usage: ~150MB
 - Package size: ~80MB
+- Cost: Standard Lambda pricing
 
-**With Native AOT:**
+**With Native AOT (ARM64):**
 - Cold start: ~100-150ms (5-8x faster)
 - Memory usage: ~50MB (70% reduction)
 - Package size: ~40MB (50% reduction)
+- Cost: **~20% cheaper** than x86_64 (AWS Graviton2 pricing)
+
+**Why ARM64?**
+- **Better performance**: AWS Graviton2 processors optimized for ARM64
+- **Lower cost**: AWS Lambda charges 20% less for ARM64 functions
+- **Faster builds**: Native compilation on M4 Mac (no cross-architecture emulation)
+- **Industry standard**: Apple Silicon, AWS Graviton, and most modern mobile devices use ARM
 
 ### Cleanup Commands
 
@@ -860,15 +1026,30 @@ aws ecr delete-repository \
 
 **Limitations:**
 - No runtime code generation (reflection-based scenarios limited)
+- **JSON serialization requires source generation** (cannot use reflection)
 - Longer build times (5-10 minutes for Native AOT vs <1 minute normal)
 - Larger build requirements (needs more CPU/memory during build)
 - Some NuGet packages may not be AOT-compatible
 
 **This project is AOT-compatible because:**
 - Uses minimal APIs (no MVC controllers)
+- **Implements JSON source generation** (`AppJsonSerializerContext`)
+- All responses use explicit `Results.Json()` with serializer context
 - No Entity Framework or reflection-heavy ORMs
 - Simple models with record types
 - No dynamic code generation
+
+**Critical for Native AOT:**
+```csharp
+// Must declare all serializable types in context
+[JsonSerializable(typeof(MeterReading))]
+[JsonSerializable(typeof(MeterReadingRequest))]
+[JsonSerializable(typeof(List<MeterReading>))]
+public partial class AppJsonSerializerContext : JsonSerializerContext { }
+
+// Must use explicit serialization in all endpoints
+return Results.Json(data, AppJsonSerializerContext.Default.TypeInfo);
+```
 
 **Cost Implications:**
 - **Build time**: Higher (but only in CI/CD, not runtime)
@@ -877,18 +1058,86 @@ aws ecr delete-repository \
 
 ### Troubleshooting Lambda Deployment
 
-**Build fails with AOT errors:**
+**Error: "Running AWS SAM projects locally requires a container runtime"**
 ```bash
-# Try building locally first to see detailed errors
-dotnet publish -c Release -r linux-x64 \
-  -p:PublishAot=true \
-  -p:StripSymbols=true
+# Docker is not running - start Docker Desktop
+open -a Docker
+
+# Wait for Docker to start, then verify
+docker info
+
+# Retry SAM build
+sam build --use-container
 ```
 
-**Docker build fails on M1/M2/M3/M4 Mac:**
+**Error: ".NET SDK was not found" or SDK version mismatch:**
 ```bash
-# Use platform flag for x86_64
-docker buildx build --platform linux/amd64 -t jek-meter-reading-api .
+# The Docker container doesn't have your exact SDK version
+# Solution 1: Update global.json to allow version flexibility
+{
+  "sdk": {
+    "version": "8.0.0",
+    "rollForward": "latestMinor"
+  }
+}
+
+# Solution 2: Add global.json to .dockerignore
+echo "global.json" >> .dockerignore
+
+# Then rebuild
+sam build --use-container
+```
+
+**Error: Internal Server Error (500) - JSON Serialization Issue:**
+
+**Symptom:** API returns HTTP 500, CloudWatch logs show:
+```
+System.NotSupportedException: JsonTypeInfo metadata for type 'MeterReadingRequest' was not provided
+```
+
+**Solution:** Native AOT requires explicit JSON source generation. You must:
+1. Create `AppJsonSerializerContext.cs` with all serializable types
+2. Configure JSON options in `Program.cs`
+3. Use `Results.Json()` with explicit serializer context (NOT `Results.Ok()`)
+
+```csharp
+// ❌ WRONG - Does not work with Native AOT
+return Results.Ok(readings);
+
+// ✅ CORRECT - Works with Native AOT
+return Results.Json(readings, AppJsonSerializerContext.Default.ListMeterReading);
+```
+
+**Error: "/var/runtime/bootstrap: No such file or directory"**
+
+**Solution:** Lambda's `provided:al2023` runtime requires a bootstrap script:
+```dockerfile
+# Add to Dockerfile
+RUN echo '#!/bin/sh' > /var/runtime/bootstrap && \
+    echo 'cd /var/task' >> /var/runtime/bootstrap && \
+    echo 'exec ./net8dot0__web__processmeterreading' >> /var/runtime/bootstrap && \
+    chmod +x /var/runtime/bootstrap
+```
+
+**Build fails with AOT errors:**
+```bash
+# Try building locally first to see detailed errors (for ARM64)
+dotnet publish -c Release -r linux-arm64 \
+  -p:PublishAot=true \
+  -p:StripSymbols=true
+
+# Note: Using linux-arm64 for native Apple Silicon M4 builds
+```
+
+**Cross-architecture build warning on M4 Mac:**
+```bash
+# This happens if template.yaml uses x86_64 instead of arm64
+# Update template.yaml:
+Architectures:
+  - arm64  # Change from x86_64
+
+# Update Dockerfile:
+RUN dotnet publish -c Release -r linux-arm64  # Change from linux-x64
 ```
 
 **Lambda cold start still slow:**
@@ -928,7 +1177,10 @@ For **1 million requests/month** with average 100ms duration:
 
 - [ASP.NET Core Minimal APIs](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis)
 - [.NET 8 Documentation](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8)
+- [.NET 8 Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
+- [JSON Source Generation](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/source-generation)
+- [Native AOT Deployment](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/native-aot)
 - [Logging in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging)
 - [AWS Lambda Web Adapter](https://github.com/awslabs/aws-lambda-web-adapter)
-- [.NET 8 Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
+- [AWS Lambda Container Images](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html)
