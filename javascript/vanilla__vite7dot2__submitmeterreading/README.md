@@ -45,6 +45,28 @@ cd vanilla__vite7dot2__submitmeterreading
 npm install
 ```
 
+3. **Set up environment variables:**
+
+   The app requires an API endpoint URL to function. This URL is kept in a `.env` file that is **not committed to the repository** for security reasons.
+
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   ```
+
+   Then open `.env` and replace the placeholder URL with your actual API endpoint:
+
+   ```bash
+   # .env file
+   VITE_API_URL=https://your-actual-api-endpoint.execute-api.region.amazonaws.com
+   ```
+
+   **Important Notes:**
+   - The `.env` file is ignored by Git and will not be committed to the repository
+   - Never commit real API endpoints to public repositories
+   - All team members need to create their own `.env` file locally
+   - Environment variables must be prefixed with `VITE_` to be accessible in Vite apps
+
 ### Development
 
 Start the development server with hot module replacement:
@@ -140,11 +162,24 @@ Modern browsers with ES6+ support:
 
 ## API Details
 
-The app uses JSONPlaceholder as a mock backend:
-- **Endpoint**: `https://jsonplaceholder.typicode.com/posts`
-- **Method**: POST
-- **Response**: JSON with 201 status
+The app connects to an AWS Lambda API backend:
+
+### Endpoints
+
+**GET `/api/meter-readings`**
+- Retrieves all meter readings
+- Returns JSON array: `[{"ReadingValue": 1332, "Timestamp": "2025-11-12T04:37:28.738425Z"}]`
+
+**POST `/api/meter-readings`**
+- Submits a new meter reading
+- Request body: `{"readingValue": 12345}` (number)
+- Success response: HTTP 200 with JSON data
+- Error response: HTTP 4XX or 5XX with error message in JSON format
 - **No authentication required**
+
+### Configuration
+
+The base API URL is configured via environment variable `VITE_API_URL` in the `.env` file.
 
 ## Development Commands
 
@@ -529,19 +564,30 @@ Both AWS Amplify and Azure Static Web Apps provide automatic deployments:
 - Other apps in `/javascript` folder have their own separate deployments
 - You can deploy as many apps as needed from the same repository
 
-### Environment Variables (If Needed)
+### Environment Variables
 
-If you need to add environment variables:
+**IMPORTANT:** This app requires the `VITE_API_URL` environment variable to function. You must configure this in your deployment platform.
 
 **AWS Amplify:**
 1. Go to Amplify Console → App Settings → Environment variables
-2. Add variables (e.g., `VITE_API_URL`)
-3. Rebuild the app
+2. Click "Add variable"
+3. Key: `VITE_API_URL`
+4. Value: Your API endpoint URL (e.g., `https://xxxxx.execute-api.ap-southeast-1.amazonaws.com`)
+5. Click "Save"
+6. Rebuild the app to apply changes
 
 **Azure Static Web Apps:**
 1. Go to Azure Portal → Your app → Configuration
-2. Add application settings
-3. Variables must start with `VITE_` to be accessible in Vite
+2. Click "Add" under Application settings
+3. Name: `VITE_API_URL`
+4. Value: Your API endpoint URL
+5. Click "OK" and "Save"
+6. Redeploy to apply changes
+
+**Other platforms (Netlify, Vercel, etc.):**
+- Add environment variable `VITE_API_URL` in your platform's settings
+- Ensure the variable name starts with `VITE_` for Vite to expose it to the client
+- Redeploy after adding environment variables
 
 ### Troubleshooting
 

@@ -1,0 +1,11 @@
+# Exclude build artifacts and unnecessary files from Docker build context
+bin/
+obj/
+*.md
+.git/
+.gitignore
+.vs/
+.vscode/
+*.user
+*.suo
+global.json

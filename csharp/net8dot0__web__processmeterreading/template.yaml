@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Meter Reading Processing API on Lambda with Native AOT
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        ASPNETCORE_ENVIRONMENT: Development
+    Tags:
+      Environment: development
+      Project: jek-meter-reading-api
+  Api:
+    Cors:
+      AllowOrigins:
+        - "*"  # Allows all origins - change to specific domain in production e.g. http://localhost:5173 and https://your-production-domain.com
+      AllowHeaders:
+        - "content-type"
+        - "x-amz-date"
+        - "authorization"
+        - "x-api-key"
+        - "x-amz-security-token"
+      AllowMethods:
+        - GET
+        - POST
+        - OPTIONS
+      MaxAge: 3600  # Cache preflight requests for 1 hour
+
+Resources:
+  MeterReadingApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: jek-meter-reading-api
+      PackageType: Image
+      ImageConfig:
+        Command: ["./net8dot0__web__processmeterreading"]
+      Architectures:
+        - arm64
+      Events:
+        ApiGateway:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: "2.0"
+      Policies:
+        - CloudWatchLambdaInsightsExecutionRolePolicy
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt MeterReadingApi.Arn

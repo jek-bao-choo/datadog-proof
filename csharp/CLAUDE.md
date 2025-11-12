@@ -1,12 +1,12 @@
-# Javascript App Development
+# .NET App Development
 
 ## About
 - This folder contains multiple standalone .NET applications such .NET Framework 4.6.1, .NET Core 2.1, .NET 5
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `<framework><version>__<targetIdentifier>`
-- Example: `net8-0-7__kestrel-linux`, `net9-0-1__maui-ios`, `netfw4-8-1__winforms`, `net8-0-7__wpf-win-x64`, `netstandard2-1__library`
+- Naming: `[framework and version]__[dotnet type]`
+- Example: `net8dot0__web`, `net9dot0__webapi`, `net9dot0__maui__ios`, `netfw4dot8dot1__winforms`, `netstandard2-1__library`
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan

@@ -4,10 +4,10 @@
  */
 
 import { navigateTo } from '../router.js'
-import { submitMeterReading } from '../utils/api.js'
+import { submitMeterReading, getMeterReadings } from '../utils/api.js'
 
-// Previous reading from history (would normally come from API)
-const PREVIOUS_READING = '2833'
+// Global state for previous reading (loaded from API)
+let previousReading = '0000'
 const METER_UNIT = 'kWh'
 
 /**
@@ -126,8 +126,8 @@ async function handleSubmit(e) {
 
   // Validate reading
   const readingNum = parseInt(currentReading)
-  if (isNaN(readingNum) || readingNum <= parseInt(PREVIOUS_READING)) {
-    showError(`Current reading must be greater than previous reading (${PREVIOUS_READING})`)
+  if (isNaN(readingNum) || readingNum <= parseInt(previousReading)) {
+    showError(`Current reading must be greater than previous reading (${previousReading})`)
     return
   }
 
@@ -139,15 +139,8 @@ async function handleSubmit(e) {
   errorMsg.style.display = 'none'
 
   try {
-    // Submit to API
-    const meterData = {
-      previousReading: parseInt(PREVIOUS_READING),
-      currentReading: readingNum,
-      unit: METER_UNIT,
-      readingDate: new Date().toISOString().split('T')[0],
-    }
-
-    await submitMeterReading(meterData)
+    // Submit to API (only send the reading value as a number)
+    await submitMeterReading(readingNum)
 
     // Success - navigate to confirmation page
     navigateTo('/reading-submitted')
@@ -174,6 +167,51 @@ function showError(message) {
 }
 
 /**
+ * Load previous reading from API
+ */
+async function loadPreviousReading() {
+  try {
+    const readings = await getMeterReadings()
+
+    if (readings && readings.length > 0) {
+      // Sort by timestamp to get the most recent reading
+      const sortedReadings = [...readings].sort((a, b) =>
+        new Date(b.Timestamp) - new Date(a.Timestamp)
+      )
+
+      // Get the latest reading value
+      const latestReading = sortedReadings[0].ReadingValue
+      previousReading = latestReading.toString().padStart(4, '0')
+    } else {
+      // No previous readings, use default
+      previousReading = '0000'
+    }
+
+    // Update the display with the loaded value
+    updatePreviousReadingDisplay()
+  } catch (error) {
+    console.error('Error loading previous reading:', error)
+    // Keep default value on error
+    previousReading = '0000'
+    updatePreviousReadingDisplay()
+  }
+}
+
+/**
+ * Update the previous reading display in the DOM
+ */
+function updatePreviousReadingDisplay() {
+  const prevDigits = previousReading.split('')
+  const digitDisplays = document.querySelectorAll('.digit-display')
+
+  digitDisplays.forEach((display, index) => {
+    if (prevDigits[index]) {
+      display.textContent = prevDigits[index]
+    }
+  })
+}
+
+/**
  * Render the enter meter page
  * @returns {string} HTML string for the enter meter page
  */
@@ -197,10 +235,13 @@ export function renderEnterMeterPage() {
     if (digitInputs.length > 0) {
       digitInputs[0].focus()
     }
+
+    // Load previous reading from API
+    loadPreviousReading()
   }, 0)
 
-  // Split previous reading into digits for display
-  const prevDigits = PREVIOUS_READING.split('')
+  // Split previous reading into digits for display (will be updated by loadPreviousReading)
+  const prevDigits = previousReading.split('')
 
   return `
     <div class="form-container-new">
