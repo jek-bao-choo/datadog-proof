@@ -566,30 +566,103 @@ Both AWS Amplify and Azure Static Web Apps provide automatic deployments:
 
 ### Environment Variables
 
-**IMPORTANT:** This app requires the `VITE_API_URL` environment variable to function. You must configure this in your deployment platform.
+**⚠️ CRITICAL:** This app **requires** the `VITE_API_URL` environment variable to function. Without it, the app will fail to load data.
+
+#### Why Environment Variables Are Needed
+
+The `.env` file containing your API endpoint URL is **not committed to Git** for security reasons. This means your deployment platform (AWS Amplify, Azure, Netlify, etc.) doesn't have access to the API URL during the build process.
+
+You **must** manually configure the environment variable in your deployment platform's settings.
+
+#### Configuration Steps by Platform
 
 **AWS Amplify:**
-1. Go to Amplify Console → App Settings → Environment variables
-2. Click "Add variable"
-3. Key: `VITE_API_URL`
-4. Value: Your API endpoint URL (e.g., `https://xxxxx.execute-api.ap-southeast-1.amazonaws.com`)
-5. Click "Save"
-6. Rebuild the app to apply changes
+1. Log in to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
+2. Select your deployed app
+3. In the left sidebar: **App settings** → **Environment variables**
+4. Click **Manage variables**
+5. Click **Add variable**
+6. Configure:
+   - **Variable name**: `VITE_API_URL`
+   - **Value**: Your backend API base URL (without the `/api/meter-readings` path)
+   - **Example**: `https://xxxxx.execute-api.region.amazonaws.com`
+7. Click **Save**
+8. **Important**: Redeploy your app to apply the changes
+   - Go to main dashboard and click **Redeploy this version**
+   - Or push a new commit to trigger automatic rebuild
 
 **Azure Static Web Apps:**
-1. Go to Azure Portal → Your app → Configuration
-2. Click "Add" under Application settings
-3. Name: `VITE_API_URL`
-4. Value: Your API endpoint URL
-5. Click "OK" and "Save"
-6. Redeploy to apply changes
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to your Static Web App resource
+3. In the left menu: **Configuration**
+4. Click **Add** under Application settings
+5. Configure:
+   - **Name**: `VITE_API_URL`
+   - **Value**: Your backend API base URL
+6. Click **OK** and **Save**
+7. Redeploy to apply changes
 
-**Other platforms (Netlify, Vercel, etc.):**
-- Add environment variable `VITE_API_URL` in your platform's settings
-- Ensure the variable name starts with `VITE_` for Vite to expose it to the client
-- Redeploy after adding environment variables
+**Netlify:**
+1. Go to your site in Netlify dashboard
+2. **Site settings** → **Environment variables**
+3. Click **Add a variable**
+4. Configure:
+   - **Key**: `VITE_API_URL`
+   - **Value**: Your backend API base URL
+5. Click **Create variable**
+6. Redeploy your site
+
+**Vercel:**
+1. Go to your project in Vercel dashboard
+2. **Settings** → **Environment Variables**
+3. Add new variable:
+   - **Name**: `VITE_API_URL`
+   - **Value**: Your backend API base URL
+4. Select environments (Production, Preview, Development)
+5. Click **Save**
+6. Redeploy your project
+
+#### Important Notes
+
+- ⚠️ The variable **must** be named `VITE_API_URL` (prefixed with `VITE_`)
+- ⚠️ Vite only exposes environment variables prefixed with `VITE_` to the browser
+- ⚠️ **Always redeploy** after adding/changing environment variables
+- 🔒 Never commit the actual API URL to your public repository
+- 📝 The value should be the **base URL only**, not including `/api/meter-readings`
+  - ✅ Correct: `https://xxxxx.execute-api.region.amazonaws.com`
+  - ❌ Wrong: `https://xxxxx.execute-api.region.amazonaws.com/api/meter-readings`
 
 ### Troubleshooting
+
+**API errors - "Failed to fetch" or URL shows `/undefined/api/meter-readings`:**
+
+This is the **most common deployment issue** and happens when the `VITE_API_URL` environment variable is missing.
+
+**Symptoms:**
+- Console shows errors like: `GET https://your-site.com/undefined/api/meter-readings 404 (Not Found)`
+- "Unable to load reading history" message appears
+- "Failed to submit meter reading" on form submission
+- Browser Network tab shows requests to `/undefined/...`
+
+**Cause:**
+- The `.env` file is not committed to Git (by design for security)
+- Your deployment platform doesn't have the `VITE_API_URL` environment variable configured
+- Without this variable, `import.meta.env.VITE_API_URL` returns `undefined`
+
+**Solution:**
+1. Go to your deployment platform (AWS Amplify, Azure, Netlify, etc.)
+2. Add environment variable `VITE_API_URL` with your API base URL
+3. **Important**: Redeploy your app after adding the variable
+4. Verify the variable is set correctly (check platform's environment variable dashboard)
+5. Clear browser cache and reload
+
+**Verification:**
+- Open browser console (F12) → Network tab
+- Look at the API request URLs
+- They should show your real API domain, not `/undefined/`
+- Example of correct URL: `https://xxxxx.execute-api.region.amazonaws.com/api/meter-readings`
+
+---
 
 **404 errors on page refresh:**
 - AWS Amplify: Add rewrite rule in Amplify Console
