@@ -8,13 +8,16 @@ Globals:
     MemorySize: 512
     Environment:
       Variables:
-        ASPNETCORE_ENVIRONMENT: Production
+        ASPNETCORE_ENVIRONMENT: Development
+    Tags:
+      Environment: development
+      Project: jek-meter-reading-api
 
 Resources:
   MeterReadingApi:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: meter-reading-api
+      FunctionName: jek-meter-reading-api
       PackageType: Image
       ImageConfig:
         Command: ["./net8dot0__web__processmeterreading"]

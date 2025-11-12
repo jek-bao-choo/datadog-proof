@@ -7,9 +7,9 @@
 
     <!-- Native AOT Configuration for AWS Lambda -->
     <!-- Uncomment the following lines to enable Native AOT -->
-    <!-- <PublishAot>true</PublishAot> -->
-    <!-- <InvariantGlobalization>true</InvariantGlobalization> -->
-    <!-- <StripSymbols>true</StripSymbols> -->
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
   </PropertyGroup>
 
 </Project>

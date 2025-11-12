@@ -17,7 +17,7 @@ This POC (Proof of Concept) project demonstrates a backend API for a utility com
 - **.NET 8.0** (SDK 8.0.416)
 - **ASP.NET Core Minimal APIs**
 - **Dependency Injection** for service management
-- **Built-in logging** with ILogger
+- **Logging**: Microsoft.Extensions.Logging (built-in .NET logging framework)
 
 ## Project Structure
 
@@ -211,20 +211,86 @@ curl http://localhost:5074/api/meter-readings
 
 ## Logging
 
-The application uses structured logging to track:
+### Logging Framework
 
+This project uses **Microsoft.Extensions.Logging**, the built-in .NET logging framework that comes with ASP.NET Core.
+
+**What it includes:**
+- Part of the .NET runtime (no additional packages required)
+- Uses the `ILogger<T>` interface for dependency injection
+- Configured via `appsettings.json`
+- Outputs to console/stdout by default
+- Supports structured logging with message templates
+
+**Why Microsoft.Extensions.Logging?**
+- Zero dependencies (built into .NET)
+- Native AOT compatible
+- Simple and lightweight for POC projects
+- Easy to extend with providers (Serilog, NLog, Application Insights, etc.)
+
+**Configuration:**
+
+Located in `appsettings.json`:
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
+```
+
+**Log Levels Used:**
 - **Information**: Successful operations, service initialization, meter reading submissions
 - **Warning**: Simulated failures (422, 503)
 - **Error**: Validation failures, actual exceptions
 
-Example log output:
+**Example log output:**
 ```
-info: MeterReadingService initialized with dummy reading: 1332
-info: Processing meter reading submission: 12001
-info: Simulation result: Success (200) - Random value: 36
-info: Meter reading submitted successfully: 12001
-warn: Simulation result: Unprocessable Entity (422) - Random value: 74
-warn: Meter reading submission failed with 422: 12002
+info: net8dot0__web__processmeterreading.Services.MeterReadingService[0]
+      MeterReadingService initialized with dummy reading: 1332
+info: Program[0]
+      Processing meter reading submission: 12001
+info: net8dot0__web__processmeterreading.Services.ResponseSimulator[0]
+      Simulation result: Success (200) - Random value: 36
+info: net8dot0__web__processmeterreading.Services.MeterReadingService[0]
+      Added meter reading: 12001 at 11/11/2025 16:28:39
+info: Program[0]
+      Meter reading submitted successfully: 12001
+warn: net8dot0__web__processmeterreading.Services.ResponseSimulator[0]
+      Simulation result: Unprocessable Entity (422) - Random value: 74
+warn: Program[0]
+      Meter reading submission failed with 422: 12002
+```
+
+**Usage in Code:**
+
+```csharp
+public class MeterReadingService
+{
+    private readonly ILogger<MeterReadingService> _logger;
+
+    public MeterReadingService(ILogger<MeterReadingService> logger)
+    {
+        _logger = logger;
+        _logger.LogInformation("Service initialized");
+    }
+}
+```
+
+**Alternative Logging Frameworks:**
+
+If you need more advanced features, you can easily add:
+- **Serilog** - Rich structured logging with many sinks (files, databases, cloud)
+- **NLog** - Highly configurable with extensive documentation
+- **AWS CloudWatch** - Direct integration for Lambda deployments
+- **Datadog APM** - Application performance monitoring and tracing
+
+To add Serilog, for example:
+```bash
+dotnet add package Serilog.AspNetCore
 ```
 
 ## Features & Behavior
@@ -427,13 +493,16 @@ Globals:
     MemorySize: 512
     Environment:
       Variables:
-        ASPNETCORE_ENVIRONMENT: Production
+        ASPNETCORE_ENVIRONMENT: Development
+    Tags:
+      Environment: development
+      Project: meter-reading-api
 
 Resources:
   MeterReadingApi:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: meter-reading-api
+      FunctionName: jek-meter-reading-api
       PackageType: Image
       ImageConfig:
         Command: ["./net8dot0__web__processmeterreading"]
@@ -467,58 +536,117 @@ Outputs:
 
 #### Option 1: Using AWS SAM (Recommended for CI/CD)
 
-**One-time Setup:**
-```bash
-# Create S3 bucket for SAM artifacts (replace with your bucket name)
-export SAM_BUCKET="your-sam-deployment-bucket"
-export AWS_REGION="us-east-1"
+AWS SAM can **automatically create and manage** S3 buckets and ECR repositories for you. You have three deployment approaches:
 
-aws s3 mb s3://${SAM_BUCKET} --region ${AWS_REGION}
-```
+##### Option 1A: Simplest - Fully Automated (Recommended)
 
-**Build and Deploy (CI/CD Pipeline):**
+**No manual S3 or ECR creation required!** SAM creates everything automatically.
+
 ```bash
+# Set your AWS region
+export AWS_REGION="ap-southeast-1"
+
 # Navigate to project directory
 cd net8dot0__web__processmeterreading
 
-# Build with SAM (builds Docker image)
-sam build \
-  --use-container \
-  --build-image public.ecr.aws/sam/build-dotnet8:latest
-
-# Package and upload to S3
-sam package \
-  --output-template-file packaged.yaml \
-  --s3-bucket ${SAM_BUCKET} \
-  --region ${AWS_REGION}
-
-# Deploy to Lambda
+# Build and deploy in one command
+sam build --use-container && \
 sam deploy \
-  --template-file packaged.yaml \
-  --stack-name meter-reading-api \
+  --stack-name jek-meter-reading-api \
   --capabilities CAPABILITY_IAM \
   --region ${AWS_REGION} \
-  --no-confirm-changeset \
-  --no-fail-on-empty-changeset
+  --resolve-s3 \
+  --resolve-image-repos \
+  --no-confirm-changeset
 
 # Get API endpoint URL
 aws cloudformation describe-stacks \
-  --stack-name meter-reading-api \
+  --stack-name jek-meter-reading-api \
   --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
   --output text \
   --region ${AWS_REGION}
 ```
 
-**Single Command for CI/CD:**
+**What SAM does automatically:**
+- ✅ Creates S3 bucket for CloudFormation templates (with `--resolve-s3`)
+- ✅ Creates ECR repository for Docker images (with `--resolve-image-repos`)
+- ✅ Builds Docker image with Native AOT
+- ✅ Pushes image to ECR
+- ✅ Deploys Lambda function
+- ✅ Creates API Gateway HTTP API
+- ✅ Configures IAM roles and permissions
+
+##### Option 1B: First-Time Interactive Setup
+
+If you prefer to review settings before deployment:
+
 ```bash
-sam build --use-container && \
+# First deployment (interactive - SAM will prompt for settings)
+cd net8dot0__web__processmeterreading
+
+sam build --use-container
+
 sam deploy \
-  --stack-name meter-reading-api \
+  --guided \
+  --capabilities CAPABILITY_IAM
+
+# SAM will ask:
+# - Stack Name: jek-meter-reading-api
+# - AWS Region: ap-southeast-1 (or your preferred region)
+# - Confirm changes: N (skip confirmation)
+# - Allow SAM CLI IAM role creation: Y
+# - Save arguments to configuration file: Y
+
+# Subsequent deployments (uses saved config)
+sam build --use-container && sam deploy
+```
+
+##### Option 1C: Manual S3 Bucket (For Reusable Infrastructure)
+
+If you want to reuse the same S3 bucket across multiple projects:
+
+```bash
+# One-time setup: Create S3 bucket
+export SAM_BUCKET="your-company-sam-deployments"
+export AWS_REGION="ap-southeast-1"
+
+aws s3 mb s3://${SAM_BUCKET} --region ${AWS_REGION}
+
+# Build and deploy
+cd net8dot0__web__processmeterreading
+
+sam build --use-container
+
+sam package \
+  --output-template-file packaged.yaml \
+  --s3-bucket ${SAM_BUCKET} \
+  --region ${AWS_REGION}
+
+sam deploy \
+  --template-file packaged.yaml \
+  --stack-name jek-meter-reading-api \
   --capabilities CAPABILITY_IAM \
   --region ${AWS_REGION} \
-  --resolve-s3 \
+  --resolve-image-repos \
   --no-confirm-changeset
+
+# Get API endpoint URL
+aws cloudformation describe-stacks \
+  --stack-name jek-meter-reading-api \
+  --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
+  --output text \
+  --region ${AWS_REGION}
 ```
+
+**Summary of SAM Flags:**
+
+| Flag | Purpose | Creates What |
+|------|---------|--------------|
+| `--resolve-s3` | Auto-create S3 bucket | Managed S3 bucket for templates |
+| `--resolve-image-repos` | Auto-create ECR repository | Managed ECR repo for container images |
+| `--guided` | Interactive setup | Saves config to `samconfig.toml` |
+| `--use-container` | Build in Docker | Consistent build environment |
+| `--no-confirm-changeset` | Skip confirmation | Useful for CI/CD automation |
 
 #### Option 2: Direct ECR + Lambda Deployment
 
@@ -527,7 +655,7 @@ sam deploy \
 # Set variables
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 export AWS_REGION="ap-southeast-1"
-export ECR_REPO="meter-reading-api"
+export ECR_REPO="jek-meter-reading-api"
 export IMAGE_TAG="latest"
 
 # Create ECR repository
@@ -557,7 +685,7 @@ docker push \
 
 # Create or update Lambda function
 aws lambda create-function \
-  --function-name meter-reading-api \
+  --function-name jek-meter-reading-api \
   --package-type Image \
   --code ImageUri=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG} \
   --role arn:aws:iam::${AWS_ACCOUNT_ID}:role/lambda-execution-role \
@@ -566,20 +694,20 @@ aws lambda create-function \
   --region ${AWS_REGION} \
   || \
 aws lambda update-function-code \
-  --function-name meter-reading-api \
+  --function-name jek-meter-reading-api \
   --image-uri ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG} \
   --region ${AWS_REGION}
 
 # Create Function URL (for direct HTTPS access)
 aws lambda create-function-url-config \
-  --function-name meter-reading-api \
+  --function-name jek-meter-reading-api \
   --auth-type NONE \
   --region ${AWS_REGION} \
   || true
 
 # Add permissions for Function URL
 aws lambda add-permission \
-  --function-name meter-reading-api \
+  --function-name jek-meter-reading-api \
   --statement-id FunctionURLAllowPublicAccess \
   --action lambda:InvokeFunctionUrl \
   --principal "*" \
@@ -589,7 +717,7 @@ aws lambda add-permission \
 
 # Get Function URL
 aws lambda get-function-url-config \
-  --function-name meter-reading-api \
+  --function-name jek-meter-reading-api \
   --query 'FunctionUrl' \
   --output text \
   --region ${AWS_REGION}
@@ -608,7 +736,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-southeast-1
   SAM_BUCKET: your-sam-deployment-bucket
 
 jobs:
@@ -639,7 +767,7 @@ jobs:
         working-directory: net8dot0__web__processmeterreading
         run: |
           sam deploy \
-            --stack-name meter-reading-api \
+            --stack-name jek-meter-reading-api \
             --capabilities CAPABILITY_IAM \
             --region ${{ env.AWS_REGION }} \
             --resolve-s3 \
@@ -649,7 +777,7 @@ jobs:
       - name: Get API URL
         run: |
           API_URL=$(aws cloudformation describe-stacks \
-            --stack-name meter-reading-api \
+            --stack-name jek-meter-reading-api \
             --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
             --output text \
             --region ${{ env.AWS_REGION }})
@@ -660,7 +788,7 @@ jobs:
 
 ```bash
 # Get your API URL from deployment output
-export API_URL="https://xxxxx.execute-api.us-east-1.amazonaws.com"
+export API_URL="https://xxxxx.execute-api.ap-southeast-1.amazonaws.com"
 
 # Test GET endpoint
 curl ${API_URL}/api/meter-readings
@@ -675,16 +803,16 @@ curl -X POST ${API_URL}/api/meter-readings \
 
 ```bash
 # View Lambda logs
-sam logs --stack-name meter-reading-api --tail
+sam logs --stack-name jek-meter-reading-api --tail
 
 # Or using AWS CLI
-aws logs tail /aws/lambda/meter-reading-api --follow
+aws logs tail /aws/lambda/jek-meter-reading-api --follow
 
 # Get function metrics
 aws cloudwatch get-metric-statistics \
   --namespace AWS/Lambda \
   --metric-name Duration \
-  --dimensions Name=FunctionName,Value=meter-reading-api \
+  --dimensions Name=FunctionName,Value=jek-meter-reading-api \
   --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
   --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
   --period 300 \
@@ -708,22 +836,22 @@ aws cloudwatch get-metric-statistics \
 
 ```bash
 # Delete SAM stack
-sam delete --stack-name meter-reading-api --region ${AWS_REGION}
+sam delete --stack-name jek-meter-reading-api --region ${AWS_REGION}
 
 # Or using CloudFormation
 aws cloudformation delete-stack \
-  --stack-name meter-reading-api \
+  --stack-name jek-meter-reading-api \
   --region ${AWS_REGION}
 
 # Delete ECR images (if using Option 2)
 aws ecr batch-delete-image \
-  --repository-name meter-reading-api \
+  --repository-name jek-meter-reading-api \
   --image-ids imageTag=latest \
   --region ${AWS_REGION}
 
 # Delete ECR repository
 aws ecr delete-repository \
-  --repository-name meter-reading-api \
+  --repository-name jek-meter-reading-api \
   --force \
   --region ${AWS_REGION}
 ```
@@ -760,7 +888,7 @@ dotnet publish -c Release -r linux-x64 \
 **Docker build fails on M1/M2/M3/M4 Mac:**
 ```bash
 # Use platform flag for x86_64
-docker buildx build --platform linux/amd64 -t meter-reading-api .
+docker buildx build --platform linux/amd64 -t jek-meter-reading-api .
 ```
 
 **Lambda cold start still slow:**
