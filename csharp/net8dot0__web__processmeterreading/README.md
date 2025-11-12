@@ -669,6 +669,7 @@ cd net8dot0__web__processmeterreading
 sam build --use-container && \
 sam deploy \
   --stack-name jek-meter-reading-api \
+  --parameter-overrides DatadogApiKey=YOUR_DATADOG_API_KEY_HERE \
   --capabilities CAPABILITY_IAM \
   --region ${AWS_REGION} \
   --resolve-s3 \
@@ -2124,40 +2125,44 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt
 # Architecture selection:
 # - For ARM64 Lambda: Use version tags that support arm64 (e.g., "88", "latest")
 # - The multi-arch tags automatically pull the correct architecture
-# - For explicit ARM64: Some versions have separate -arm64 tags (e.g., "86-arm64")
 #
 # We're using "88" which supports both x86_64 and arm64 architectures
 COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
 
-# Step 2: Install dependencies for downloading Datadog .NET APM tracer
-RUN yum install -y tar wget gzip unzip
+# Step 2: Install Lambda Web Adapter extension
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
 
-# Step 3: Download and install Datadog .NET APM tracer
-# IMPORTANT: Check https://github.com/DataDog/dd-trace-dotnet/releases for latest version
-# Current latest version: 3.30.0
-#
+# Step 3: Install system dependencies for .NET tracer
+RUN dnf install -y wget tar gzip && dnf clean all
+
+# Step 4: Download and install Datadog .NET APM tracer
+# Current latest version: 3.8.0
 # Variant selection:
 # - MUSL variant: For Alpine Linux, Amazon Linux 2023 (use this one)
-# - GLIBC variant: For standard Linux distributions (Ubuntu, Debian, etc.)
+# - GLIBC variant: For standard Linux distributions
 #
-# File naming:
-# - datadog-dotnet-apm-<VERSION>-musl.tar.gz (for Amazon Linux 2023)
-# - datadog-dotnet-apm-<VERSION>.tar.gz (for standard Linux)
+# Check https://github.com/DataDog/dd-trace-dotnet/releases for the latest version
 RUN TRACER_VERSION=3.30.0 && \
-    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}.tar.gz && \
-    mkdir /opt/datadog && \
-    tar -C /opt/datadog -xzf datadog-dotnet-apm-${TRACER_VERSION}.tar.gz && \
-    rm datadog-dotnet-apm-${TRACER_VERSION}.tar.gz
+    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz -O /tmp/datadog-apm.tar.gz && \
+    mkdir -p /opt/datadog && \
+    tar -xzf /tmp/datadog-apm.tar.gz -C /opt/datadog && \
+    rm /tmp/datadog-apm.tar.gz
 
 ENV AWS_LAMBDA_EXEC_WRAPPER /opt/datadog_wrapper
 
-# Step 4: Set environment variables for Datadog .NET tracer
-# OPTIONAL These environment variables enable the CLR profiler for automatic instrumentation
+# Step 5: Set up CLR profiling for automatic instrumentation
+# These environment variables enable the Datadog .NET APM tracer to automatically
+# instrument your .NET application using the CLR Profiling API
 ENV CORECLR_ENABLE_PROFILING=1
 ENV CORECLR_PROFILER={846F5F1C-F9AE-4B07-969E-05C26BC060D8}
 ENV CORECLR_PROFILER_PATH=/opt/datadog/Datadog.Trace.ClrProfiler.Native.so
 ENV DD_DOTNET_TRACER_HOME=/opt/datadog
-ENV LD_PRELOAD=/opt/datadog/continuousprofiler/Datadog.Linux.ApiWrapper.x64.so
+
+# Step 6: Configure Datadog service name and environment
+# Update these values to match your service
+ENV DD_SERVICE=jek-meter-reading-api
+ENV DD_ENV=development
+ENV DD_VERSION=1.0.0
 
 # ========================================
 # DATADOG INSTRUMENTATION - END
