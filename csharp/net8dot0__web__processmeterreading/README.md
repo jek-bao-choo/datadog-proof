@@ -1717,7 +1717,7 @@ datadog.addLambdaFunctions([myLambdaFunction]);
 **How it works:**
 ```dockerfile
 # Copy Datadog Lambda Extension into container
-COPY --from=public.ecr.aws/datadog/lambda-extension:86-arm64 /opt/extensions/ /opt/extensions/
+COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
 
 # Download and install .NET APM tracer
 RUN wget https://github.com/DataDog/dd-trace-dotnet/releases/download/v3.8.0/datadog-dotnet-apm-3.8.0-musl.tar.gz
@@ -1834,15 +1834,27 @@ Use this decision tree to select the appropriate instrumentation method:
 2. **Datadog API Key**: Get from Datadog UI → Organization Settings → API Keys
 3. **Datadog Site**: Know your site (e.g., `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com`)
 
-### Step 1: Store Datadog API Key in AWS Secrets Manager
+### Step 1: Store Datadog API Key
 
-**Why Secrets Manager?**
-- Secure storage (not hardcoded in code)
-- Automatic rotation support
-- IAM-controlled access
-- Free for Lambda (no cross-region data transfer charges)
+You have three options for storing your Datadog API key, listed from most secure to simplest:
 
-**Create the secret:**
+#### Option 1: AWS Secrets Manager (Recommended for Production)
+
+**Best for:** Production environments, compliance requirements, automatic rotation
+
+**Pros:**
+- ✅ Most secure (encrypted at rest and in transit)
+- ✅ Automatic rotation support
+- ✅ IAM-controlled access with fine-grained permissions
+- ✅ Audit logging via CloudTrail
+- ✅ Free for Lambda (no cross-region data transfer charges)
+
+**Cons:**
+- ⚠️ Additional setup complexity
+- ⚠️ Requires IAM policy configuration
+- ⚠️ Slight cold start impact (~10-20ms)
+
+**Setup:**
 
 ```bash
 # Set your Datadog API key
@@ -1862,9 +1874,42 @@ aws secretsmanager describe-secret \
   --region ${AWS_REGION}
 ```
 
-**Alternative: Using AWS Systems Manager Parameter Store (Free Tier):**
+**SAM Template configuration (see Step 3 for full template):**
+```yaml
+Environment:
+  Variables:
+    DD_API_KEY_SECRET_ARN: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog-api-key"
+
+Policies:
+  - Statement:
+      - Effect: Allow
+        Action:
+          - secretsmanager:GetSecretValue
+        Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog-api-key*"
+```
+
+#### Option 2: AWS Systems Manager Parameter Store (Free Alternative)
+
+**Best for:** Budget-conscious projects, non-production environments
+
+**Pros:**
+- ✅ Secure (encrypted at rest)
+- ✅ Completely free (no charges)
+- ✅ IAM-controlled access
+- ✅ Simpler than Secrets Manager
+
+**Cons:**
+- ⚠️ No automatic rotation
+- ⚠️ Requires IAM policy configuration
+- ⚠️ Slight cold start impact (~10-20ms)
+
+**Setup:**
 
 ```bash
+# Set your Datadog API key
+export DD_API_KEY="your-datadog-api-key-here"
+export AWS_REGION="ap-southeast-1"
+
 # Store as SecureString parameter
 aws ssm put-parameter \
   --name "/datadog/api-key" \
@@ -1872,7 +1917,156 @@ aws ssm put-parameter \
   --type "SecureString" \
   --description "Datadog API Key for Lambda" \
   --region ${AWS_REGION}
+
+# Verify it was created
+aws ssm get-parameter \
+  --name "/datadog/api-key" \
+  --region ${AWS_REGION}
 ```
+
+**SAM Template configuration (see Step 3 for full template):**
+```yaml
+Environment:
+  Variables:
+    DD_API_KEY_SSM_NAME: "/datadog/api-key"
+
+Policies:
+  - Statement:
+      - Effect: Allow
+        Action:
+          - ssm:GetParameter
+        Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/datadog/api-key"
+```
+
+#### Option 3: Lambda Environment Variable (Simplest - For Testing/POC Only) -> This would be my approach
+
+**Best for:** Quick testing, POC projects, local development, non-sensitive environments
+
+**Pros:**
+- ✅ Simplest setup (no additional AWS services)
+- ✅ No IAM policy configuration needed
+- ✅ No cold start overhead
+- ✅ Direct visibility in Lambda console
+- ✅ Perfect for quick prototyping
+
+**Cons:**
+- ❌ **API key stored in plaintext** in Lambda configuration
+- ❌ **Visible to anyone** with Lambda read permissions
+- ❌ **Visible in CloudFormation templates** (if checked into git)
+- ❌ **Logged in CloudTrail** during updates
+- ❌ No rotation support
+- ❌ Not recommended for production
+
+**⚠️ Security Warning:**
+This method stores your API key in plaintext. Only use this for:
+- Testing and proof-of-concept projects
+- Non-production environments
+- Situations where the API key has limited scope/permissions
+- **Never use for production or shared environments**
+
+**Setup (Quick Test - No AWS commands needed):**
+
+Simply add the API key directly to your SAM template:
+
+```yaml
+# template.yaml
+Resources:
+  MeterReadingApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          DD_API_KEY: "your-datadog-api-key-here"  # ⚠️ Use for testing only
+          DD_SITE: "datadoghq.com"
+          DD_SERVICE: "meter-reading-api"
+          # ... other DD variables
+```
+
+Then deploy directly:
+```bash
+sam build --use-container && sam deploy
+```
+
+**Alternative: Set via AWS CLI (for existing function):**
+
+```bash
+# Set your Datadog API key
+export DD_API_KEY="your-datadog-api-key-here"
+export AWS_REGION="ap-southeast-1"
+
+# Update Lambda environment variables directly
+aws lambda update-function-configuration \
+  --function-name jek-meter-reading-api \
+  --environment "Variables={
+    DD_API_KEY=${DD_API_KEY},
+    DD_SITE=datadoghq.com,
+    DD_SERVICE=jek-meter-reading-api,
+    DD_ENV=development,
+    DD_TRACE_ENABLED=true,
+    DD_LOGS_INJECTION=true
+  }" \
+  --region ${AWS_REGION}
+```
+
+**Best Practice for Option 3:**
+If using this method, consider:
+1. **Use a separate Datadog API key** with limited scope (just for this test environment)
+2. **Don't commit the template** with the API key to git (use `.gitignore`)
+3. **Use environment variables** in your CI/CD instead of hardcoding
+4. **Migrate to Secrets Manager** before going to production
+
+```yaml
+# Better: Use CloudFormation parameter
+Parameters:
+  DatadogApiKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog API Key (will not be displayed)
+
+Resources:
+  MeterReadingApi:
+    Environment:
+      Variables:
+        DD_API_KEY: !Ref DatadogApiKey
+```
+
+Then deploy with:
+```bash
+sam deploy --parameter-overrides DatadogApiKey=$DD_API_KEY
+```
+
+### Comparison: Which Option to Choose?
+
+| Criteria | Secrets Manager | Parameter Store | Environment Variable |
+|----------|-----------------|-----------------|---------------------|
+| **Security** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐⭐⭐ Very Good | ⭐ Poor (plaintext) |
+| **Setup Complexity** | 🔧🔧🔧 Moderate | 🔧🔧 Easy | 🔧 Very Easy |
+| **Cost** | Free for Lambda | Free | Free |
+| **Rotation** | ✅ Automatic | ❌ Manual | ❌ Manual |
+| **Cold Start Impact** | +10-20ms | +10-20ms | None |
+| **Production Ready** | ✅ Yes | ✅ Yes | ❌ No |
+| **Best For** | Production | Budget-conscious prod | Testing/POC only |
+
+### Recommendation by Use Case
+
+**Choose Option 1 (Secrets Manager) if:**
+- Deploying to production
+- Need compliance (SOC2, ISO, PCI-DSS)
+- Want automatic key rotation
+- Have sensitive data requirements
+
+**Choose Option 2 (Parameter Store) if:**
+- Want secure storage but simpler than Secrets Manager
+- On a tight budget (completely free)
+- Don't need automatic rotation
+- Non-critical production workloads
+
+**Choose Option 3 (Environment Variable) if:**
+- Quick testing or POC
+- Local development
+- Non-production environment only
+- Need fastest setup time
+- API key has limited scope/permissions
 
 ### Step 2: Update Dockerfile with Datadog Lambda Extension
 
@@ -1936,11 +2130,11 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt
 COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
 
 # Step 2: Install dependencies for downloading Datadog .NET APM tracer
-RUN yum install -y tar gzip wget unzip
+RUN yum install -y tar wget gzip unzip
 
 # Step 3: Download and install Datadog .NET APM tracer
 # IMPORTANT: Check https://github.com/DataDog/dd-trace-dotnet/releases for latest version
-# Current latest version: 3.8.0
+# Current latest version: 3.30.0
 #
 # Variant selection:
 # - MUSL variant: For Alpine Linux, Amazon Linux 2023 (use this one)
@@ -1949,14 +2143,16 @@ RUN yum install -y tar gzip wget unzip
 # File naming:
 # - datadog-dotnet-apm-<VERSION>-musl.tar.gz (for Amazon Linux 2023)
 # - datadog-dotnet-apm-<VERSION>.tar.gz (for standard Linux)
-RUN TRACER_VERSION=3.8.0 && \
-    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz && \
-    mkdir -p /opt/datadog && \
-    tar -C /opt/datadog -xzf datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz && \
-    rm datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz
+RUN TRACER_VERSION=3.30.0 && \
+    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}.tar.gz && \
+    mkdir /opt/datadog && \
+    tar -C /opt/datadog -xzf datadog-dotnet-apm-${TRACER_VERSION}.tar.gz && \
+    rm datadog-dotnet-apm-${TRACER_VERSION}.tar.gz
+
+ENV AWS_LAMBDA_EXEC_WRAPPER /opt/datadog_wrapper
 
 # Step 4: Set environment variables for Datadog .NET tracer
-# These environment variables enable the CLR profiler for automatic instrumentation
+# OPTIONAL These environment variables enable the CLR profiler for automatic instrumentation
 ENV CORECLR_ENABLE_PROFILING=1
 ENV CORECLR_PROFILER={846F5F1C-F9AE-4B07-969E-05C26BC060D8}
 ENV CORECLR_PROFILER_PATH=/opt/datadog/Datadog.Trace.ClrProfiler.Native.so
@@ -1981,7 +2177,7 @@ RUN echo '#!/bin/sh' > /var/runtime/bootstrap && \
     chmod +x /var/runtime/bootstrap
 ```
 
-**Key Components Explained:**
+**OPTIONAL: Key Components Explained:**
 
 #### 1. Datadog Lambda Extension (Lines 1914-1924)
 
