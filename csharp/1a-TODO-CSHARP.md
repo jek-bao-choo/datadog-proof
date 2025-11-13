@@ -2,16 +2,16 @@
 * Background: The lambda__globalcli__net8dot0__processmeterreading project is a .net lambda empty function (for .NET 8+). This project is a PoC for Processing Meter Reading of a Utility company.
 * Update the project lambda__globalcli__net8dot0__processmeterreading with the following requirements:
     * This is a backend web api project lambda__globalcli__net8dot0__processmeterreading which has two HTTP API endpoints
-    * The first HTTP endpoint is to accept a HTTP POST request and process the submitted meter reading number and stamp it with the current date and time in datetime ISO format. This HTTP endpoint method will have a random chance of 50% successful and 50% unsuccessful. If the submitted meter reading is successful, this HTTP POST endpoint will return a HTTP status code 200. If the submitted meter reading is unsuccessful, this HTTP POST endpoint will return a HTTP status of 4XX.  For the unsuccessful, you will decide what 4XX status accordingly, simulate the error message in the response body when it is unsuccessful.
-    * The second HTTP endpoint is to accept a HTTP GET request to get all past submitted meter reading history. It will return an array of submitted meter reading as a JSON response back to the frontend web app. Each item in the submitted meter reading array will contain the submitted meter reading and the date time stamp in ISO format. To being with it would have a dummy meter reading record item in the array.
-        * A meter reading digit ranges from 1 to 999999. For the dummy meter reading record item keep the number to e.g., 1332 or some random number in the low thousand.
+    * The first HTTP endpoint is to accept a HTTP POST request and process the submitted meter reading number and stamp it with the current date and time in datetime ISO format. This HTTP endpoint method will have a random chance of 50% successful and 25% unsuccessful with 4XX error and 25% unsuccessful with 5XX error. If the submitted meter reading is successful, this HTTP POST endpoint will return a HTTP status code 200 together with a JSON array of all the meter reading records. If the submitted meter reading is unsuccessful, this HTTP POST endpoint will return a HTTP status of 4XX or 5XX. For the unsuccessful, you will decide what 4XX status or 5XX status accordingly, simulate the error message in the response body when it is unsuccessful.
+    * The second HTTP endpoint is to accept a HTTP GET request to get all past submitted meter reading history. It will return an array of submitted meter reading as a JSON response back to the frontend web app. Each item in the submitted meter reading array will contain the submitted meter reading and the date time stamp in ISO format. To begin it would have a dummy meter reading record item in the array.
+        * A meter reading digit ranges from 1 to 999999. For the dummy meter reading record item keep the number to for example randomly generate random number in 4 digits of low thousand.
 * Think hard
 * Ask any questions you want to clarify before doing the research.
 * It should past these tests
 **1. Get Initial Meter Readings (with dummy data):**
-The API endpoint is https://h39nfbh82k.execute-api.ap-southeast-1.amazonaws.com/default/lambda__globalcli__net8dot0__processmeterreading
+
 ```bash
-export API_URL="https://h39nfbh82k.execute-api.ap-southeast-1.amazonaws.com/default/lambda__globalcli__net8dot0__processmeterreading"
+export API_URL="< THE LAMBDA ENDPOINT >"
 curl $API_URL
 ```
 
@@ -30,11 +30,6 @@ for i in {1..10}; do
     -d "{\"readingValue\": $((10000 + i))}"
   echo ""
 done
-```
-
-**4. Verify Successful Submissions:**
-```bash
-curl $API_URL
 ```
 
 ## USE CONTEXT7

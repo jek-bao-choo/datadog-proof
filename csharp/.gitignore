@@ -52,3 +52,8 @@ artifacts/
 # User settings
 appsettings.local.json
 *.user.json
+
+# AWS Lambda
+*.zip
+.aws-sam/
+samconfig.toml
