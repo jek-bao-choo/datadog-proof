@@ -260,7 +260,7 @@ dotnet new list
 E.g. using NET Lambda Global CLI to create
 
 ```
-dotnet new lambda.EmptyFunction --name lambda__globalcli__net8dot0__processmeterreading
+dotnet new lambda.EmptyFunction --name lambda__globalcli__net8dot0__processmeterreading --region ap-southeast-1 --profile default
 ```
 
 To deploy your code to Lambda as a .zip deployment package, run the following command. Choose your own function name.
