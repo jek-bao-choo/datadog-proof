@@ -49,11 +49,11 @@ function renderHistoryEntries(readings) {
 
   // Sort readings by timestamp (newest first) and take the most recent ones
   const sortedReadings = [...readings].sort((a, b) =>
-    new Date(b.Timestamp) - new Date(a.Timestamp)
+    new Date(b.timestamp) - new Date(a.timestamp)
   )
 
   return sortedReadings.map((reading, index) => {
-    const { day, month, year } = formatDate(reading.Timestamp)
+    const { day, month, year } = formatDate(reading.timestamp)
     const isLatest = index === 0
 
     return `
@@ -64,7 +64,7 @@ function renderHistoryEntries(readings) {
           <span class="date-status">${isLatest ? 'Last Sent Reading' : 'Previous Reading'}</span>
         </div>
         <div class="history-reading">
-          <span class="reading-value">${reading.ReadingValue}</span>
+          <span class="reading-value">${reading.value}</span>
           <span class="reading-unit">kWh</span>
         </div>
       </div>

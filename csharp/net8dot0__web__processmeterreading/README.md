@@ -669,6 +669,7 @@ cd net8dot0__web__processmeterreading
 sam build --use-container && \
 sam deploy \
   --stack-name jek-meter-reading-api \
+  --parameter-overrides DatadogApiKey=YOUR_DATADOG_API_KEY_HERE \
   --capabilities CAPABILITY_IAM \
   --region ${AWS_REGION} \
   --resolve-s3 \
@@ -1172,6 +1173,1513 @@ For **1 million requests/month** with average 100ms duration:
 - Compute: ~$0.35
 - Requests: ~$0.20
 - **Total: ~$0.55/month (76% savings)**
+
+---
+
+# IMPORTANT FOR DATADOG INSTRUMENTATION
+
+
+## Instrumenting .NET Serverless Applications on AWS Lambda with Datadog
+
+This section describes how to add **Datadog observability** to your Lambda function for monitoring metrics, traces, and logs.
+
+### Understanding Lambda Layers vs Lambda Extensions
+
+Before we dive into instrumentation, it's important to understand two key AWS Lambda concepts:
+
+#### What is a Lambda Extension?
+
+A **Lambda Extension** is a separate process that runs **alongside** your Lambda function in the same execution environment. Think of it as a "sidecar" process.
+
+**Key characteristics:**
+- Runs in the Lambda execution environment (inside `/opt/extensions/`)
+- Has its own lifecycle (starts before your function, can run after)
+- Can perform tasks like:
+  - Collecting telemetry data (logs, metrics, traces)
+  - Sending data to external services
+  - Caching, secrets management, monitoring
+- **Datadog Lambda Extension** is one example - it collects traces/logs/metrics and sends them to Datadog
+
+**How Lambda Extensions work:**
+```
+┌─────────────────────────────────────────┐
+│   AWS Lambda Execution Environment      │
+│                                         │
+│  ┌──────────────────┐  ┌──────────────┐ │
+│  │  Your Function   │  │   Extension  │ │
+│  │  (main process)  │  │   Process    │ │
+│  │                  │  │              │ │
+│  │  meter-reading   │  │   Datadog    │ │
+│  │  API code        │  │   Extension  │ │
+│  └──────────────────┘  └──────────────┘ │
+│          ↓                     ↓        │
+│     Handles requests    Collects data   │
+│                         & sends to      │
+│                         Datadog         │
+└─────────────────────────────────────────┘
+```
+
+#### What is a Lambda Layer?
+
+A **Lambda Layer** is a **distribution mechanism** (like a zip file) that contains:
+- Libraries
+- Dependencies
+- Runtime components
+- **Even Lambda Extensions!**
+
+**Key characteristics:**
+- A packaging and deployment method
+- Contents are extracted to `/opt/` in Lambda execution environment
+- Can contain anything: Python packages, Node modules, binaries, extensions
+- Reusable across multiple functions
+
+**Lambda Layer structure:**
+```
+layer.zip
+└── opt/
+    ├── lib/              # Libraries
+    ├── bin/              # Binaries
+    └── extensions/       # Lambda Extensions (executable files)
+        └── datadog-extension  # The Datadog Lambda Extension binary
+```
+
+#### The Key Relationship: Layers Can Deliver Extensions
+
+**This is the crucial point:** A Lambda Layer can **contain and deliver** a Lambda Extension.
+
+When you add a Lambda Layer to your function:
+1. AWS extracts the layer's contents to `/opt/`
+2. If the layer contains an extension in `/opt/extensions/`, AWS automatically detects and runs it
+3. The extension becomes active in your Lambda execution environment
+
+**Example: Datadog Lambda Layer**
+```
+Datadog Lambda Layer (zip file)
+└── opt/
+    └── extensions/
+        └── datadog-agent  ← This is the Datadog Lambda Extension
+```
+
+When you attach this layer to your Lambda function:
+- Layer is extracted to `/opt/`
+- Lambda runtime finds `/opt/extensions/datadog-agent`
+- Lambda runtime automatically starts the Datadog Extension
+- Your function now has Datadog monitoring
+
+#### Two Ways to Deliver the Datadog Lambda Extension
+
+Now we can understand the two methods:
+
+**Method 1: Lambda Layer (for zip-based deployments)**
+
+```
+┌──────────────────────────────────────────────────┐
+│  Deploy using Lambda Layer                       │
+│                                                   │
+│  1. AWS SAM CloudFormation macro adds layer      │
+│  2. Layer contains Datadog Extension binary      │
+│  3. Lambda extracts layer to /opt/extensions/    │
+│  4. Extension runs alongside your function       │
+│                                                   │
+│  Package Type: Zip                               │
+└──────────────────────────────────────────────────┘
+```
+
+**Method 2: Container Image (for container deployments)**
+
+```
+┌──────────────────────────────────────────────────┐
+│  Deploy using Container Image                    │
+│                                                   │
+│  1. Dockerfile copies extension to /opt/         │
+│  2. Extension is baked into container image      │
+│  3. Lambda runs container with extension inside  │
+│  4. Extension runs alongside your function       │
+│                                                   │
+│  Package Type: Image                             │
+└──────────────────────────────────────────────────┘
+```
+
+**The Result: Same Extension, Different Delivery**
+
+| Aspect | Lambda Layer Method | Container Image Method |
+|--------|-------------------|------------------------|
+| **What gets installed** | Datadog Lambda Extension | Datadog Lambda Extension |
+| **Where it's installed** | `/opt/extensions/` | `/opt/extensions/` |
+| **How it's delivered** | Via Lambda Layer (zip) | Via Docker `COPY` command |
+| **When it's added** | At deployment (CloudFormation) | At build time (Dockerfile) |
+| **Works with** | Zip-based packages | Container images |
+| **Datadog component** | Same extension binary | Same extension binary |
+
+### Why Container Image Instrumentation?
+
+Since this application is deployed as a **container image** (not a zip package), we must use the **Container Image instrumentation method**. Here's why:
+
+**Two Datadog Installation Methods:**
+
+| Method | Extension Delivery Mechanism | Works With | Our Choice |
+|--------|-------------------|------------|------------|
+| **AWS SAM** | Lambda Layer | Zip-based packages | ❌ Not compatible |
+| **Container Image** | Embedded in Docker image | Container images | ✅ Use this method |
+
+**Key Distinction:**
+- Both methods install the **same Datadog Lambda Extension**
+- The difference is **HOW** it's delivered:
+  - **Lambda Layers**: Extension delivered via layer attachment (zip packages only)
+  - **Container Image**: Extension embedded directly in Docker image (container packages only)
+
+**Why can't we use Lambda Layers with container images?**
+- Lambda Layers only work with **zip-based function deployments**
+- Container images use a different packaging model (Docker)
+- Container images can't have layers attached - everything must be in the image
+- AWS limitation, not Datadog limitation
+
+### Complete Comparison: All Datadog Instrumentation Methods
+
+Datadog provides **six different ways** to instrument AWS Lambda functions. Here's when to use each method:
+
+#### Method Overview Table
+
+| Method | Package Type | Use Case | Automation Level | Best For |
+|--------|--------------|----------|------------------|----------|
+| **Custom** | Zip | Manual layer ARN configuration | Manual | Full control, learning purposes |
+| **Datadog CLI** | Zip | Quick setup, existing functions | Semi-automated | Fast prototyping, one-off setups |
+| **Serverless Framework** | Zip | Serverless Framework users | Automated | Serverless Framework projects |
+| **AWS SAM** | Zip | SAM template users | Automated | SAM/CloudFormation projects |
+| **AWS CDK** | Zip | CDK infrastructure | Automated | CDK projects (TypeScript/Python/Go) |
+| **Container Image** | Container | Container deployments | Manual | Container-based Lambda functions |
+
+#### Method 1: Custom (Manual Layer ARNs)
+
+**What it is:**
+- Manually add Datadog Lambda Layer ARNs to your Lambda function configuration
+- Two layers required:
+  1. **Datadog Tracer Layer**: Language-specific APM tracer (e.g., `dd-trace-dotnet`)
+  2. **Datadog Extension Layer**: The Lambda Extension for sending data to Datadog
+
+**How it works:**
+```yaml
+# Example: Adding layers manually in SAM template
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Layers:
+        # .NET Tracer Layer (x86_64)
+        - arn:aws:lambda:<AWS_REGION>:464622532012:layer:dd-trace-dotnet:20
+        # Datadog Extension Layer (x86_64)
+        - arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Extension:86
+      Environment:
+        Variables:
+          DD_SITE: datadoghq.com
+          DD_API_KEY_SECRET_ARN: arn:aws:secretsmanager:...
+```
+
+**Architecture-specific ARNs:**
+- **x86_64 (Intel)**: `arn:aws:lambda:<REGION>:464622532012:layer:dd-trace-dotnet:20`
+- **ARM64 (Graviton)**: `arn:aws:lambda:<REGION>:464622532012:layer:dd-trace-dotnet-ARM:20`
+
+**When to use:**
+- ✅ You want full control over layer versions
+- ✅ Learning how Datadog instrumentation works
+- ✅ Infrastructure not using frameworks (raw CloudFormation)
+- ✅ Testing specific layer versions
+
+**Pros:**
+- Complete control over versions
+- No additional tools required
+- Easy to understand what's happening
+- Works with any deployment method
+
+**Cons:**
+- Manual version management (need to update ARNs)
+- Must configure all environment variables manually
+- More verbose configuration
+- Error-prone (easy to use wrong ARN for wrong architecture)
+
+**Example: .NET Lambda with manual layers**
+```bash
+# Update existing function
+aws lambda update-function-configuration \
+  --function-name my-function \
+  --layers \
+    arn:aws:lambda:us-east-1:464622532012:layer:dd-trace-dotnet:20 \
+    arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Extension:86 \
+  --environment Variables="{
+    DD_SITE=datadoghq.com,
+    DD_API_KEY_SECRET_ARN=arn:aws:secretsmanager:us-east-1:123456789012:secret:datadog-api-key,
+    DD_SERVICE=my-service,
+    DD_ENV=production,
+    DD_TRACE_ENABLED=true
+  }"
+```
+
+#### Method 2: Datadog CLI
+
+**What it is:**
+- Command-line tool that **modifies existing Lambda functions** to add Datadog instrumentation
+- Automatically adds layers and configures environment variables
+- No redeployment of application code required
+
+**How it works:**
+```bash
+# Install Datadog CLI
+npm install -g @datadog/datadog-ci
+
+# Instrument existing function
+datadog-ci lambda instrument \
+  --function my-function-name \
+  --region us-east-1 \
+  --environment production \
+  --service my-service
+```
+
+**What it does automatically:**
+1. Detects Lambda runtime and architecture
+2. Adds appropriate Datadog Tracer layer
+3. Adds Datadog Extension layer
+4. Configures environment variables (DD_SITE, DD_SERVICE, DD_ENV, etc.)
+5. Updates Lambda function configuration
+
+**When to use:**
+- ✅ Quick instrumentation of **existing** Lambda functions
+- ✅ Prototyping and testing Datadog
+- ✅ One-off instrumentations
+- ✅ Functions deployed through various methods
+- ✅ CI/CD pipelines (as a post-deployment step)
+
+**Pros:**
+- Fastest way to get started
+- No code changes required
+- Works with any deployment method
+- Automatically selects correct layer versions
+- Interactive mode for first-time users
+
+**Cons:**
+- Modifies existing function (not infrastructure-as-code)
+- Requires AWS credentials with Lambda update permissions
+- Not repeatable (manual process)
+- Configuration drift (function state vs IaC)
+- Need to re-run after each deployment
+
+**Example workflow:**
+```bash
+# Step 1: Deploy your function normally
+sam deploy
+
+# Step 2: Instrument with Datadog CLI (interactive mode)
+datadog-ci lambda instrument -i
+
+# CLI prompts:
+# → Select AWS region: us-east-1
+# → Enter function name: my-function
+# → Enter Datadog site: datadoghq.com
+# → Enter service name: my-service
+# → Enter environment: production
+```
+
+**Best practice:**
+- Use for **testing/exploration** only
+- For production, use infrastructure-as-code methods (SAM/CDK/Serverless)
+
+#### Method 3: Serverless Framework Plugin
+
+**What it is:**
+- Plugin for the **Serverless Framework** that automatically configures Datadog
+- Adds layers and environment variables during deployment
+- Integrated into `serverless.yml` configuration
+
+**How it works:**
+```bash
+# Install plugin
+serverless plugin install --name serverless-plugin-datadog
+```
+
+```yaml
+# serverless.yml
+service: my-service
+
+provider:
+  name: aws
+  runtime: dotnet8
+  region: us-east-1
+
+functions:
+  myFunction:
+    handler: MyHandler
+
+plugins:
+  - serverless-plugin-datadog
+
+custom:
+  datadog:
+    site: datadoghq.com                    # Your Datadog site
+    apiKeySecretArn: <DATADOG_API_KEY_SECRET_ARN>  # Secrets Manager ARN
+    # Automatically adds layers and configures environment variables
+```
+
+**What it does automatically:**
+1. Adds Datadog Tracer layer (runtime-specific)
+2. Adds Datadog Extension layer
+3. Sets DD_SITE, DD_SERVICE, DD_ENV environment variables
+4. Configures log forwarding
+5. Grants IAM permissions for Secrets Manager
+
+**When to use:**
+- ✅ You're using **Serverless Framework** for deployment
+- ✅ Managing multiple functions with unified configuration
+- ✅ CI/CD with Serverless Framework
+- ✅ Need automatic version management
+
+**Pros:**
+- Seamlessly integrates with Serverless Framework
+- Infrastructure-as-code (declared in serverless.yml)
+- Automatic layer version updates
+- Single source of truth
+- Repeatable deployments
+- Plugin handles all complexity
+
+**Cons:**
+- **Only works with Serverless Framework**
+- Another dependency to manage
+- Plugin version updates may introduce changes
+- Less control over layer versions
+
+**Example: .NET function with Serverless Framework**
+```yaml
+# serverless.yml
+service: meter-reading-api
+
+provider:
+  name: aws
+  runtime: dotnet8
+  region: us-east-1
+  architecture: arm64
+
+functions:
+  processMeterReading:
+    handler: MeterReadingApi::MeterReadingApi.Function::ProcessReading
+    events:
+      - httpApi:
+          path: /api/meter-readings
+          method: POST
+
+plugins:
+  - serverless-plugin-datadog
+
+custom:
+  datadog:
+    site: datadoghq.com
+    apiKeySecretArn: ${env:DD_API_KEY_SECRET_ARN}
+    service: meter-reading-api
+    env: ${opt:stage, 'dev'}
+    version: 1.0.0
+    enableDDTracing: true
+    enableDDLogs: true
+```
+
+**Deployment:**
+```bash
+serverless deploy --stage production
+```
+
+#### Method 4: AWS SAM (CloudFormation Macro)
+
+**What it is:**
+- AWS SAM CloudFormation **macro** that transforms your SAM template
+- Automatically adds Datadog layers during stack deployment
+- Works with SAM templates (YAML/JSON)
+
+**How it works:**
+```bash
+# Step 1: Install Datadog CloudFormation macro (one-time per AWS account/region)
+aws cloudformation create-stack \
+  --stack-name datadog-serverless-macro \
+  --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml \
+  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+```
+
+```yaml
+# Step 2: Add transform to SAM template
+Transform:
+  - AWS::Serverless-2016-10-31
+  - DatadogServerless  # ← Datadog macro
+
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bootstrap
+      Runtime: provided.al2023
+      Environment:
+        Variables:
+          DD_SITE: datadoghq.com
+          DD_API_KEY_SECRET_ARN: arn:aws:secretsmanager:...
+```
+
+**What the macro does:**
+1. Scans your SAM template for Lambda functions
+2. Adds Datadog Tracer and Extension layers
+3. Configures required environment variables
+4. Adds IAM permissions for Secrets Manager
+
+**When to use:**
+- ✅ You're using **AWS SAM** for deployment
+- ✅ **Zip-based Lambda functions** (not containers)
+- ✅ CloudFormation-based infrastructure
+- ✅ Need automatic instrumentation across many functions
+
+**Pros:**
+- Infrastructure-as-code (SAM template)
+- Automatic layer management
+- Works seamlessly with SAM CLI
+- Single source of truth
+- Minimal template changes required
+
+**Cons:**
+- **Does NOT work with container images** (layers only)
+- Requires macro installation in each AWS region
+- Less explicit (magic happens via macro)
+- Harder to debug transformation issues
+
+**Why we can't use this for our project:**
+```yaml
+# ❌ This configuration won't work with AWS SAM macro
+Resources:
+  MeterReadingApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image  # ← Container image = no layers allowed
+      # SAM macro can't add layers to container images
+```
+
+**Container images vs Zip packages:**
+- **Zip packages**: Macro adds layers ✅
+- **Container images**: Layers not supported, must use Container Image method ❌
+
+#### Method 5: AWS CDK Construct
+
+**What it is:**
+- AWS CDK construct library that adds Datadog instrumentation
+- Available for **TypeScript, Python, and Go** CDK projects
+- **NOT available for .NET/C# CDK projects** (as of now)
+
+**How it works:**
+```typescript
+// TypeScript CDK example
+import { Datadog } from "datadog-cdk-constructs-v2";
+
+const datadog = new Datadog(this, "Datadog", {
+  dotnetLayerVersion: 20,
+  extensionLayerVersion: 86,
+  site: "datadoghq.com",
+});
+
+// Instrument Lambda function
+datadog.addLambdaFunctions([myLambdaFunction]);
+```
+
+**What it does:**
+1. Adds Datadog Tracer and Extension layers to functions
+2. Configures environment variables
+3. Sets up IAM permissions
+4. Handles architecture-specific layer ARNs
+
+**When to use:**
+- ✅ Using **AWS CDK** for infrastructure
+- ✅ Writing CDK in **TypeScript, Python, or Go**
+- ✅ Zip-based Lambda functions
+- ✅ Want type-safe configuration
+
+**Pros:**
+- Native CDK integration
+- Type-safe configuration (in TypeScript)
+- Infrastructure-as-code
+- Automatic layer management
+- Reusable across multiple functions
+
+**Cons:**
+- **Only available for TypeScript, Python, Go** (not .NET/C#)
+- **Does NOT work with container images**
+- Requires CDK knowledge
+- Another dependency to manage
+
+**Why we can't use this for our project:**
+1. ❌ Our project is **.NET/C#** (CDK construct not available for .NET)
+2. ❌ Our deployment is **container-based** (construct only works with layers)
+
+#### Method 6: Container Image (Our method for this project)
+
+**What it is:**
+- Manually embed Datadog Lambda Extension and .NET Tracer **into Docker image**
+- Extension and tracer become part of the container image
+- No layers used - everything is self-contained
+
+**How it works:**
+```dockerfile
+# Copy Datadog Lambda Extension into container
+COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
+
+# Download and install .NET APM tracer
+RUN wget https://github.com/DataDog/dd-trace-dotnet/releases/download/v3.8.0/datadog-dotnet-apm-3.8.0-musl.tar.gz
+RUN tar -C /opt/datadog -xzf datadog-dotnet-apm-3.8.0-musl.tar.gz
+```
+
+**When to use:**
+- ✅ Lambda function deployed as **container image**
+- ✅ Need full control over dependencies
+- ✅ Using Native AOT or custom runtimes
+- ✅ Want self-contained deployments
+
+**Pros:**
+- Works with container images
+- Complete control over versions
+- Self-contained (no external dependencies)
+- Architecture-specific optimization (ARM64 native)
+- No layer limits (Lambda has 5 layer maximum)
+
+**Cons:**
+- More complex setup (Dockerfile changes)
+- Manual version management
+- Larger image size
+- Longer build times
+- Must rebuild image for updates
+
+**This is our method** because:
+- ✅ We deploy as **PackageType: Image**
+- ✅ We use **Native AOT** compilation
+- ✅ We're on **ARM64 architecture** (Apple Silicon M4)
+
+### Choosing the Right Method: Decision Tree
+
+Use this decision tree to select the appropriate instrumentation method:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Is your Lambda function deployed as a container image? │
+└─────────────────────────────────────────────────────────┘
+                    │
+        ┌───────────┴────────────┐
+       YES                       NO
+        │                         │
+        ▼                         ▼
+  ┌──────────────┐    ┌─────────────────────────────┐
+  │ Container    │    │ Are you using a framework?  │
+  │ Image Method │    └─────────────────────────────┘
+  │              │                 │
+  │ (This guide) │     ┌───────────┼───────────┐
+  └──────────────┘     │           │           │
+                       │           │           │
+                  Serverless    AWS SAM    AWS CDK    None
+                  Framework                 (TS/Py/Go)
+                       │           │           │        │
+                       ▼           ▼           ▼        ▼
+               ┌───────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+               │ Use       │ │ Use SAM │ │ Use CDK │ │ Custom  │
+               │ Serverless│ │ Macro   │ │ Construct│ │ or      │
+               │ Plugin    │ │         │ │         │ │ Datadog │
+               │           │ │         │ │         │ │ CLI     │
+               └───────────┘ └─────────┘ └─────────┘ └─────────┘
+```
+
+### Summary: When to Use Each Method
+
+**Use Container Image when:**
+- Deploying as container image (PackageType: Image)
+- Using Native AOT, custom runtimes, or large dependencies
+- Need complete control over versions
+
+**Use AWS SAM macro when:**
+- Using SAM templates for zip-based functions
+- Want automatic instrumentation with minimal config
+- Managing multiple functions in CloudFormation
+
+**Use Serverless Framework plugin when:**
+- Using Serverless Framework for infrastructure
+- Want unified configuration in serverless.yml
+- Need automatic version management
+
+**Use AWS CDK construct when:**
+- Using CDK (TypeScript, Python, or Go)
+- Want type-safe infrastructure code
+- Deploying zip-based functions
+
+**Use Datadog CLI when:**
+- Testing Datadog quickly
+- Instrumenting existing functions
+- Don't want to modify infrastructure code
+- One-off setups or experimentation
+
+**Use Custom (manual layers) when:**
+- Learning how instrumentation works
+- Need specific layer versions
+- Using raw CloudFormation without frameworks
+- Want explicit control
+
+### Compatibility Matrix
+
+| Method | .NET Support | Container Image | Zip Package | Architecture |
+|--------|--------------|-----------------|-------------|--------------|
+| **Custom** | ✅ | ❌ | ✅ | x86_64, ARM64 |
+| **Datadog CLI** | ✅ | ❌ | ✅ | x86_64, ARM64 |
+| **Serverless Framework** | ✅ | ❌ | ✅ | x86_64, ARM64 |
+| **AWS SAM** | ✅ | ❌ | ✅ | x86_64, ARM64 |
+| **AWS CDK** | ❌* | ❌ | ✅ | x86_64, ARM64 |
+| **Container Image** | ✅ | ✅ | ❌ | x86_64, ARM64 |
+
+*CDK construct only available for TypeScript, Python, Go (not .NET)
+
+### Prerequisites
+
+1. **Datadog Account**: Sign up at [https://www.datadoghq.com](https://www.datadoghq.com)
+2. **Datadog API Key**: Get from Datadog UI → Organization Settings → API Keys
+3. **Datadog Site**: Know your site (e.g., `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com`)
+
+### Step 1: Store Datadog API Key
+
+You have three options for storing your Datadog API key, listed from most secure to simplest:
+
+#### Option 1: AWS Secrets Manager (Recommended for Production)
+
+**Best for:** Production environments, compliance requirements, automatic rotation
+
+**Pros:**
+- ✅ Most secure (encrypted at rest and in transit)
+- ✅ Automatic rotation support
+- ✅ IAM-controlled access with fine-grained permissions
+- ✅ Audit logging via CloudTrail
+- ✅ Free for Lambda (no cross-region data transfer charges)
+
+**Cons:**
+- ⚠️ Additional setup complexity
+- ⚠️ Requires IAM policy configuration
+- ⚠️ Slight cold start impact (~10-20ms)
+
+**Setup:**
+
+```bash
+# Set your Datadog API key
+export DD_API_KEY="your-datadog-api-key-here"
+export AWS_REGION="ap-southeast-1"
+
+# Store in Secrets Manager
+aws secretsmanager create-secret \
+  --name datadog-api-key \
+  --description "Datadog API Key for Lambda instrumentation" \
+  --secret-string "{\"api_key\":\"${DD_API_KEY}\"}" \
+  --region ${AWS_REGION}
+
+# Verify it was created
+aws secretsmanager describe-secret \
+  --secret-id datadog-api-key \
+  --region ${AWS_REGION}
+```
+
+**SAM Template configuration (see Step 3 for full template):**
+```yaml
+Environment:
+  Variables:
+    DD_API_KEY_SECRET_ARN: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog-api-key"
+
+Policies:
+  - Statement:
+      - Effect: Allow
+        Action:
+          - secretsmanager:GetSecretValue
+        Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog-api-key*"
+```
+
+#### Option 2: AWS Systems Manager Parameter Store (Free Alternative)
+
+**Best for:** Budget-conscious projects, non-production environments
+
+**Pros:**
+- ✅ Secure (encrypted at rest)
+- ✅ Completely free (no charges)
+- ✅ IAM-controlled access
+- ✅ Simpler than Secrets Manager
+
+**Cons:**
+- ⚠️ No automatic rotation
+- ⚠️ Requires IAM policy configuration
+- ⚠️ Slight cold start impact (~10-20ms)
+
+**Setup:**
+
+```bash
+# Set your Datadog API key
+export DD_API_KEY="your-datadog-api-key-here"
+export AWS_REGION="ap-southeast-1"
+
+# Store as SecureString parameter
+aws ssm put-parameter \
+  --name "/datadog/api-key" \
+  --value "${DD_API_KEY}" \
+  --type "SecureString" \
+  --description "Datadog API Key for Lambda" \
+  --region ${AWS_REGION}
+
+# Verify it was created
+aws ssm get-parameter \
+  --name "/datadog/api-key" \
+  --region ${AWS_REGION}
+```
+
+**SAM Template configuration (see Step 3 for full template):**
+```yaml
+Environment:
+  Variables:
+    DD_API_KEY_SSM_NAME: "/datadog/api-key"
+
+Policies:
+  - Statement:
+      - Effect: Allow
+        Action:
+          - ssm:GetParameter
+        Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/datadog/api-key"
+```
+
+#### Option 3: Lambda Environment Variable (Simplest - For Testing/POC Only) -> This would be my approach
+
+**Best for:** Quick testing, POC projects, local development, non-sensitive environments
+
+**Pros:**
+- ✅ Simplest setup (no additional AWS services)
+- ✅ No IAM policy configuration needed
+- ✅ No cold start overhead
+- ✅ Direct visibility in Lambda console
+- ✅ Perfect for quick prototyping
+
+**Cons:**
+- ❌ **API key stored in plaintext** in Lambda configuration
+- ❌ **Visible to anyone** with Lambda read permissions
+- ❌ **Visible in CloudFormation templates** (if checked into git)
+- ❌ **Logged in CloudTrail** during updates
+- ❌ No rotation support
+- ❌ Not recommended for production
+
+**⚠️ Security Warning:**
+This method stores your API key in plaintext. Only use this for:
+- Testing and proof-of-concept projects
+- Non-production environments
+- Situations where the API key has limited scope/permissions
+- **Never use for production or shared environments**
+
+**Setup (Quick Test - No AWS commands needed):**
+
+Simply add the API key directly to your SAM template:
+
+```yaml
+# template.yaml
+Resources:
+  MeterReadingApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          DD_API_KEY: "your-datadog-api-key-here"  # ⚠️ Use for testing only
+          DD_SITE: "datadoghq.com"
+          DD_SERVICE: "meter-reading-api"
+          # ... other DD variables
+```
+
+Then deploy directly:
+```bash
+sam build --use-container && sam deploy
+```
+
+**Alternative: Set via AWS CLI (for existing function):**
+
+```bash
+# Set your Datadog API key
+export DD_API_KEY="your-datadog-api-key-here"
+export AWS_REGION="ap-southeast-1"
+
+# Update Lambda environment variables directly
+aws lambda update-function-configuration \
+  --function-name jek-meter-reading-api \
+  --environment "Variables={
+    DD_API_KEY=${DD_API_KEY},
+    DD_SITE=datadoghq.com,
+    DD_SERVICE=jek-meter-reading-api,
+    DD_ENV=development,
+    DD_TRACE_ENABLED=true,
+    DD_LOGS_INJECTION=true
+  }" \
+  --region ${AWS_REGION}
+```
+
+**Best Practice for Option 3:**
+If using this method, consider:
+1. **Use a separate Datadog API key** with limited scope (just for this test environment)
+2. **Don't commit the template** with the API key to git (use `.gitignore`)
+3. **Use environment variables** in your CI/CD instead of hardcoding
+4. **Migrate to Secrets Manager** before going to production
+
+```yaml
+# Better: Use CloudFormation parameter
+Parameters:
+  DatadogApiKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog API Key (will not be displayed)
+
+Resources:
+  MeterReadingApi:
+    Environment:
+      Variables:
+        DD_API_KEY: !Ref DatadogApiKey
+```
+
+Then deploy with:
+```bash
+sam deploy --parameter-overrides DatadogApiKey=$DD_API_KEY
+```
+
+### Comparison: Which Option to Choose?
+
+| Criteria | Secrets Manager | Parameter Store | Environment Variable |
+|----------|-----------------|-----------------|---------------------|
+| **Security** | ⭐⭐⭐⭐⭐ Excellent | ⭐⭐⭐⭐ Very Good | ⭐ Poor (plaintext) |
+| **Setup Complexity** | 🔧🔧🔧 Moderate | 🔧🔧 Easy | 🔧 Very Easy |
+| **Cost** | Free for Lambda | Free | Free |
+| **Rotation** | ✅ Automatic | ❌ Manual | ❌ Manual |
+| **Cold Start Impact** | +10-20ms | +10-20ms | None |
+| **Production Ready** | ✅ Yes | ✅ Yes | ❌ No |
+| **Best For** | Production | Budget-conscious prod | Testing/POC only |
+
+### Recommendation by Use Case
+
+**Choose Option 1 (Secrets Manager) if:**
+- Deploying to production
+- Need compliance (SOC2, ISO, PCI-DSS)
+- Want automatic key rotation
+- Have sensitive data requirements
+
+**Choose Option 2 (Parameter Store) if:**
+- Want secure storage but simpler than Secrets Manager
+- On a tight budget (completely free)
+- Don't need automatic rotation
+- Non-critical production workloads
+
+**Choose Option 3 (Environment Variable) if:**
+- Quick testing or POC
+- Local development
+- Non-production environment only
+- Need fastest setup time
+- API key has limited scope/permissions
+
+### Step 2: Update Dockerfile with Datadog Lambda Extension
+
+Modify your existing `Dockerfile` to include the Datadog Lambda Extension and .NET APM tracer.
+
+**Before you start:**
+1. **Check latest Datadog Lambda Extension version**: Visit [Datadog Lambda Extension ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension)
+   - As of this writing, the latest version is `88`
+   - Available architectures: `x86_64` (default), `arm64`, `alpine`, `alpine-fips`
+   - For ARM64: Use tags like `88` (works on both architectures) or architecture-specific builds
+
+2. **Check latest .NET APM Tracer version**: Visit [Datadog .NET Tracer GitHub Releases](https://github.com/DataDog/dd-trace-dotnet/releases)
+   - As of this writing, the latest version is `3.8.0`
+   - **Important**: Use the **MUSL variant** (`datadog-dotnet-apm-*-musl.tar.gz`) for Amazon Linux 2023
+   - GLIBC variant is for standard Linux distributions
+
+**Updated Dockerfile:**
+
+```dockerfile
+# Build stage with Native AOT
+FROM public.ecr.aws/sam/build-dotnet8:latest AS build
+WORKDIR /src
+
+# Copy project files
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy source code
+COPY . ./
+
+# Publish with Native AOT for ARM64
+RUN dotnet publish -c Release -r linux-arm64 \
+    --self-contained true \
+    -o /app/publish \
+    -p:PublishAot=true \
+    -p:StripSymbols=true
+
+# Set executable permissions in build stage
+RUN chmod +x /app/publish/net8dot0__web__processmeterreading
+
+# Runtime stage - Use Amazon Linux 2023 with Lambda Web Adapter
+FROM public.ecr.aws/lambda/provided:al2023
+
+# Install Lambda Web Adapter extension
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+
+# ========================================
+# DATADOG INSTRUMENTATION - START
+# ========================================
+
+# Step 1: Install Datadog Lambda Extension
+# IMPORTANT: Check https://gallery.ecr.aws/datadog/lambda-extension for latest version
+# Current latest version: 88
+#
+# Architecture selection:
+# - For ARM64 Lambda: Use version tags that support arm64 (e.g., "88", "latest")
+# - The multi-arch tags automatically pull the correct architecture
+#
+# We're using "88" which supports both x86_64 and arm64 architectures
+COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
+
+# Step 2: Install Lambda Web Adapter extension
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.4 /lambda-adapter /opt/extensions/lambda-adapter
+
+# Step 3: Install system dependencies for .NET tracer
+RUN dnf install -y wget tar gzip && dnf clean all
+
+# Step 4: Download and install Datadog .NET APM tracer
+# Current latest version: 3.8.0
+# Variant selection:
+# - MUSL variant: For Alpine Linux, Amazon Linux 2023 (use this one)
+# - GLIBC variant: For standard Linux distributions
+#
+# Check https://github.com/DataDog/dd-trace-dotnet/releases for the latest version
+RUN TRACER_VERSION=3.30.0 && \
+    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz -O /tmp/datadog-apm.tar.gz && \
+    mkdir -p /opt/datadog && \
+    tar -xzf /tmp/datadog-apm.tar.gz -C /opt/datadog && \
+    rm /tmp/datadog-apm.tar.gz
+
+ENV AWS_LAMBDA_EXEC_WRAPPER /opt/datadog_wrapper
+
+# Step 5: Set up CLR profiling for automatic instrumentation
+# These environment variables enable the Datadog .NET APM tracer to automatically
+# instrument your .NET application using the CLR Profiling API
+ENV CORECLR_ENABLE_PROFILING=1
+ENV CORECLR_PROFILER={846F5F1C-F9AE-4B07-969E-05C26BC060D8}
+ENV CORECLR_PROFILER_PATH=/opt/datadog/Datadog.Trace.ClrProfiler.Native.so
+ENV DD_DOTNET_TRACER_HOME=/opt/datadog
+
+# Step 6: Configure Datadog service name and environment
+# Update these values to match your service
+ENV DD_SERVICE=jek-meter-reading-api
+ENV DD_ENV=development
+ENV DD_VERSION=1.0.0
+
+# ========================================
+# DATADOG INSTRUMENTATION - END
+# ========================================
+
+# Copy published application with permissions already set
+COPY --from=build /app/publish /var/task/
+
+# Lambda environment configuration
+ENV PORT=8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Create bootstrap script that Lambda expects
+RUN echo '#!/bin/sh' > /var/runtime/bootstrap && \
+    echo 'cd /var/task' >> /var/runtime/bootstrap && \
+    echo 'exec ./net8dot0__web__processmeterreading' >> /var/runtime/bootstrap && \
+    chmod +x /var/runtime/bootstrap
+```
+
+**OPTIONAL: Key Components Explained:**
+
+#### 1. Datadog Lambda Extension (Lines 1914-1924)
+
+**What it does**: Installs the Datadog Lambda Extension that runs as a sidecar process alongside your Lambda function.
+
+**Version Selection**:
+```dockerfile
+COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
+```
+
+- **Version `88`**: Latest stable version (as of this writing)
+- **Multi-architecture support**: The `88` tag supports both x86_64 and ARM64
+  - When you build with `--platform linux/arm64`, Docker automatically pulls the ARM64 variant
+  - When you build with `--platform linux/amd64`, Docker automatically pulls the x86_64 variant
+- **Alternative tags**:
+  - `latest`: Always points to the newest version (may introduce breaking changes)
+  - `88-alpine`: Alpine Linux variant
+  - `88-fips`: FIPS-compliant variant
+  - For older explicit ARM64 tags: `86-arm64` (version 86 had separate ARM64 tags)
+
+**Where to check for updates**: [Datadog Lambda Extension ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension)
+
+**What gets installed**: The extension binary is copied to `/opt/extensions/` where Lambda automatically detects and runs it.
+
+#### 2. System Dependencies (Line 1927)
+
+**What it does**: Installs required tools for downloading and extracting the .NET tracer.
+
+```dockerfile
+RUN yum install -y tar gzip wget unzip
+```
+
+- `tar`, `gzip`: For extracting the tracer archive
+- `wget`: For downloading from GitHub
+- `unzip`: Additional archive support
+
+#### 3. Datadog .NET APM Tracer (Lines 1929-1945)
+
+**What it does**: Downloads and installs the Datadog .NET APM tracer for automatic instrumentation.
+
+**Version Selection**:
+```dockerfile
+RUN TRACER_VERSION=3.8.0 && \
+    wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz
+```
+
+- **Version `3.8.0`**: Latest stable .NET tracer (as of this writing)
+- **MUSL variant**: Required for Amazon Linux 2023 (which uses musl libc)
+  - File: `datadog-dotnet-apm-3.8.0-musl.tar.gz`
+  - For standard Linux (GLIBC): Use `datadog-dotnet-apm-3.8.0.tar.gz`
+
+**Where to check for updates**: [Datadog .NET Tracer GitHub Releases](https://github.com/DataDog/dd-trace-dotnet/releases)
+
+**Installation path**: Extracted to `/opt/datadog/` directory
+
+#### 4. CLR Profiler Environment Variables (Lines 1948-1953)
+
+**What it does**: Configures the .NET CLR to load the Datadog profiler for automatic instrumentation.
+
+| Environment Variable | Purpose | Value |
+|---------------------|---------|-------|
+| `CORECLR_ENABLE_PROFILING=1` | Enables CLR profiling API | Required to activate profiler |
+| `CORECLR_PROFILER={...}` | Profiler GUID | Identifies the Datadog profiler to CLR |
+| `CORECLR_PROFILER_PATH` | Path to profiler library | Native library for CLR integration |
+| `DD_DOTNET_TRACER_HOME` | Tracer installation directory | Base path for tracer components |
+| `LD_PRELOAD` | Preload profiler library | Enables continuous profiling (optional) |
+
+**How automatic instrumentation works**:
+1. CLR starts your .NET application
+2. CLR sees `CORECLR_ENABLE_PROFILING=1` and loads the profiler
+3. Datadog profiler intercepts method calls and creates spans
+4. Traces are sent to the Datadog Lambda Extension
+5. Extension forwards traces to Datadog backend
+
+**Troubleshooting**: If traces aren't appearing, check Lambda logs for:
+```
+CORECLR_ENABLE_PROFILING: 1
+Datadog .NET Tracer loaded successfully
+```
+
+#### Version Update Checklist
+
+When updating to newer versions:
+
+**For Datadog Lambda Extension:**
+1. Visit [ECR Gallery](https://gallery.ecr.aws/datadog/lambda-extension)
+2. Find the latest version number (e.g., `88`, `89`, etc.)
+3. Update the COPY command:
+   ```dockerfile
+   COPY --from=public.ecr.aws/datadog/lambda-extension:88 /opt/extensions/ /opt/extensions/
+   ```
+4. Verify architecture support (most versions now support multi-arch)
+
+**For .NET APM Tracer:**
+1. Visit [GitHub Releases](https://github.com/DataDog/dd-trace-dotnet/releases)
+2. Find the latest version number (e.g., `3.8.0`, `3.9.0`, etc.)
+3. Update the TRACER_VERSION variable:
+   ```dockerfile
+   RUN TRACER_VERSION=3.9.0 && \
+       wget -q https://github.com/DataDog/dd-trace-dotnet/releases/download/v${TRACER_VERSION}/datadog-dotnet-apm-${TRACER_VERSION}-musl.tar.gz
+   ```
+4. Verify the MUSL variant is available for the version
+5. Test the new version in a non-production environment first
+
+**Compatibility Note**: The Lambda Extension and .NET Tracer versions are independent. You can update one without updating the other, but it's recommended to keep both reasonably up-to-date.
+
+### Step 3: Update SAM Template with Datadog Configuration
+
+Update your `template.yaml` to configure Datadog environment variables and grant Secrets Manager access:
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Meter Reading Processing API on Lambda with Native AOT and Datadog
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        ASPNETCORE_ENVIRONMENT: Development
+    Tags:
+      Environment: development
+      Project: meter-reading-api
+
+Resources:
+  MeterReadingApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: jek-meter-reading-api
+      PackageType: Image
+      ImageConfig:
+        Command: ["./net8dot0__web__processmeterreading"]
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          # Datadog Configuration
+          DD_SITE: "datadoghq.com"                    # Change to your Datadog site
+          DD_API_KEY_SECRET_ARN: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog-api-key"
+          DD_SERVICE: "meter-reading-api"             # Service name in Datadog
+          DD_ENV: "development"                       # Environment tag
+          DD_VERSION: "1.0.0"                         # Version tag for tracking deployments
+          DD_LOGS_INJECTION: "true"                   # Inject trace IDs into logs
+          DD_TRACE_ENABLED: "true"                    # Enable APM tracing
+          DD_SERVERLESS_LOGS_ENABLED: "true"          # Enable log forwarding
+          DD_CAPTURE_LAMBDA_PAYLOAD: "true"           # Capture request/response payloads
+          DD_LAMBDA_HANDLER: "bootstrap"              # Lambda handler (for extension)
+
+          # Optional: Enhanced Metrics
+          DD_ENHANCED_METRICS: "true"                 # Enable enhanced Lambda metrics
+          DD_MERGE_XRAY_TRACES: "false"               # Set true if using AWS X-Ray
+
+          # .NET Specific Configuration
+          DD_TRACE_DEBUG: "false"                     # Set true for debugging tracer issues
+          DD_PROFILING_ENABLED: "false"               # Enable continuous profiler (optional)
+
+      Events:
+        ApiGateway:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: "2.0"
+      Policies:
+        - CloudWatchLambdaInsightsExecutionRolePolicy
+        # Grant permission to read Datadog API key from Secrets Manager
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog-api-key*"
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt MeterReadingApi.Arn
+```
+
+**Environment Variables Explained:**
+
+| Variable | Purpose | Example Value |
+|----------|---------|---------------|
+| `DD_SITE` | Your Datadog site domain | `datadoghq.com` (US1), `datadoghq.eu` (EU), `us3.datadoghq.com` (US3) |
+| `DD_API_KEY_SECRET_ARN` | ARN of secret containing API key | Auto-generated by CloudFormation |
+| `DD_SERVICE` | Service name in Datadog APM | `meter-reading-api` |
+| `DD_ENV` | Environment tag | `development`, `staging`, `production` |
+| `DD_VERSION` | Version for deployment tracking | `1.0.0`, `2.1.3`, git SHA |
+| `DD_LOGS_INJECTION` | Inject trace IDs into logs | `true` (recommended) |
+| `DD_TRACE_ENABLED` | Enable distributed tracing | `true` |
+| `DD_SERVERLESS_LOGS_ENABLED` | Forward logs to Datadog | `true` |
+| `DD_CAPTURE_LAMBDA_PAYLOAD` | Capture request/response data | `true` (caution: sensitive data) |
+| `DD_ENHANCED_METRICS` | Enhanced Lambda metrics | `true` (recommended) |
+
+**Alternative: Using Parameter Store instead of Secrets Manager**
+
+If you stored the API key in Parameter Store, update the template:
+
+```yaml
+Environment:
+  Variables:
+    DD_SITE: "datadoghq.com"
+    DD_API_KEY_SSM_NAME: "/datadog/api-key"  # Use this instead of DD_API_KEY_SECRET_ARN
+    # ... rest of variables
+
+Policies:
+  # Grant permission to read from Parameter Store
+  - Version: '2012-10-17'
+    Statement:
+      - Effect: Allow
+        Action:
+          - ssm:GetParameter
+        Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/datadog/api-key"
+```
+
+### Step 4: Deploy with Datadog Instrumentation
+
+Now deploy the updated application with Datadog instrumentation:
+
+```bash
+# Set your AWS region
+export AWS_REGION="ap-southeast-1"
+
+# Navigate to project directory
+cd net8dot0__web__processmeterreading
+
+# Ensure Docker Desktop is running
+docker info
+
+# Build and deploy
+sam build --use-container && \
+sam deploy \
+  --stack-name jek-meter-reading-api \
+  --capabilities CAPABILITY_IAM \
+  --region ${AWS_REGION} \
+  --resolve-s3 \
+  --resolve-image-repos \
+  --no-confirm-changeset
+
+# Get API endpoint URL
+export API_URL=$(aws cloudformation describe-stacks \
+  --stack-name jek-meter-reading-api \
+  --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
+  --output text \
+  --region ${AWS_REGION})
+
+echo "API URL: ${API_URL}"
+```
+
+### Step 5: Test and Generate Traces
+
+Generate some traffic to create traces in Datadog:
+
+```bash
+# Submit multiple meter readings to generate traces
+for i in {1..20}; do
+  echo "Request $i:"
+  curl -X POST ${API_URL}/api/meter-readings \
+    -H "Content-Type: application/json" \
+    -d "{\"readingValue\": $((10000 + i))}"
+  echo -e "\n---"
+  sleep 1
+done
+
+# Retrieve all readings
+curl ${API_URL}/api/meter-readings
+```
+
+### Step 6: View Data in Datadog
+
+After generating traffic, you should see data in Datadog within 1-2 minutes:
+
+#### 1. **APM (Application Performance Monitoring)**
+   - Navigate to: **APM → Services** in Datadog UI
+   - Find service: `meter-reading-api`
+   - View:
+     - Request traces with full distributed tracing
+     - Latency metrics (p50, p75, p95, p99)
+     - Error rates and status codes
+     - Individual request traces with span details
+
+#### 2. **Serverless View**
+   - Navigate to: **Serverless → AWS Lambda**
+   - Find function: `jek-meter-reading-api`
+   - View:
+     - Cold starts vs warm starts
+     - Duration and memory usage
+     - Invocation counts and error rates
+     - Cost estimation
+
+#### 3. **Logs**
+   - Navigate to: **Logs → Search**
+   - Filter by: `service:meter-reading-api`
+   - View:
+     - All Lambda logs (stdout/stderr)
+     - Logs correlated with traces (trace ID injection)
+     - Structured log parsing
+     - Log patterns and anomalies
+
+#### 4. **Infrastructure**
+   - Navigate to: **Infrastructure → Serverless**
+   - View:
+     - Lambda function metrics
+     - API Gateway metrics
+     - CloudWatch metrics integration
+
+#### 5. **Dashboards & Alerts**
+   - Create custom dashboards combining:
+     - Lambda invocation metrics
+     - API Gateway request counts
+     - Application-specific metrics (meter reading submissions)
+     - Error rates and latency percentiles
+   - Set up alerts for:
+     - High error rates
+     - Increased latency
+     - Cold start frequency
+     - Memory usage spikes
+
+### Trace Correlation Example
+
+With `DD_LOGS_INJECTION=true`, your logs will automatically include trace IDs:
+
+**Before (without Datadog):**
+```
+info: Program[0] Processing meter reading submission: 12345
+```
+
+**After (with Datadog):**
+```
+info: Program[0] Processing meter reading submission: 12345 dd.trace_id=1234567890 dd.span_id=9876543210
+```
+
+This allows you to:
+- Click a log line → jump to its trace
+- Click a trace → see all related logs
+- Full request context across distributed services
+
+### Troubleshooting Datadog Integration
+
+#### No Data in Datadog
+
+**Check 1: Verify extension is loaded**
+```bash
+# Check Lambda logs for Datadog extension startup
+aws logs tail /aws/lambda/jek-meter-reading-api --follow | grep -i datadog
+
+# Look for:
+# "DATADOG TRACER CONFIGURATION"
+# "Datadog Lambda Extension started"
+```
+
+**Check 2: Verify API key access**
+```bash
+# Check if Lambda can read from Secrets Manager
+aws lambda get-function-configuration \
+  --function-name jek-meter-reading-api \
+  --query 'Environment.Variables' \
+  --region ${AWS_REGION}
+
+# Ensure DD_API_KEY_SECRET_ARN is set correctly
+```
+
+**Check 3: Test secret access manually**
+```bash
+# Verify secret exists and is readable
+aws secretsmanager get-secret-value \
+  --secret-id datadog-api-key \
+  --region ${AWS_REGION}
+```
+
+**Check 4: Verify Datadog site**
+- Ensure `DD_SITE` matches your Datadog account region
+- Common mistake: Using `datadoghq.com` when you're on `datadoghq.eu`
+
+#### Traces Not Appearing
+
+**Check tracer configuration:**
+```bash
+# Enable debug logging temporarily
+aws lambda update-function-configuration \
+  --function-name jek-meter-reading-api \
+  --environment Variables="{DD_TRACE_DEBUG=true,...other vars...}" \
+  --region ${AWS_REGION}
+
+# Check logs for tracer debug output
+aws logs tail /aws/lambda/jek-meter-reading-api --follow
+```
+
+**Verify .NET tracer is loaded:**
+```bash
+# Lambda logs should show:
+# "CORECLR_ENABLE_PROFILING: 1"
+# "Datadog .NET Tracer loaded successfully"
+```
+
+#### High Memory Usage
+
+The Datadog extension adds ~30-50MB memory overhead:
+
+```bash
+# Increase memory if needed
+aws lambda update-function-configuration \
+  --function-name jek-meter-reading-api \
+  --memory-size 768 \
+  --region ${AWS_REGION}
+```
+
+#### Cold Start Impact
+
+Datadog extension adds ~50-100ms to cold starts:
+- **Without Datadog**: ~100-150ms cold start
+- **With Datadog**: ~150-250ms cold start
+- **Mitigation**: Use Lambda provisioned concurrency or SnapStart
+
+### Cost Implications
+
+**Lambda Costs:**
+- Memory overhead: ~30-50MB additional memory
+- Cold start overhead: ~50-100ms additional duration
+- **Estimated additional cost**: $0.10-0.20 per 1M requests
+
+**Datadog Costs:**
+- **APM**: Charged per APM host (serverless = billed by invocations)
+- **Logs**: Charged per GB ingested and indexed
+- **Metrics**: Included with APM
+- **Estimated cost**: ~$15-30/month for 1M requests (varies by retention)
+
+**Free Tier:**
+- Datadog offers a 14-day free trial
+- Some usage included in base subscription
+
+### Unified Service Tagging Best Practices
+
+Datadog uses three key tags for service organization:
+
+```yaml
+DD_ENV: "production"           # Environment: production, staging, development
+DD_SERVICE: "meter-reading-api" # Service name (use kebab-case)
+DD_VERSION: "1.0.5"            # Version (use semantic versioning or git SHA)
+```
+
+**Benefits:**
+- Correlate traces, logs, and metrics across services
+- Compare versions side-by-side (before/after deployments)
+- Filter by environment in Datadog UI
+- Automated deployment tracking
+
+**Version Tracking Strategy:**
+
+Option 1: Semantic versioning
+```bash
+DD_VERSION: "1.2.3"
+```
+
+Option 2: Git commit SHA
+```bash
+DD_VERSION: $(git rev-parse --short HEAD)
+```
+
+Option 3: Build timestamp
+```bash
+DD_VERSION: "1.0.0-$(date +%Y%m%d-%H%M%S)"
+```
+
+### Alternative: Direct API Key (Not Recommended)
+
+For testing only, you can pass the API key directly (not production-safe):
+
+```yaml
+Environment:
+  Variables:
+    DD_API_KEY: "your-api-key-here"  # ⚠️ NOT RECOMMENDED - exposes key
+```
+
+**Why this is bad:**
+- API key visible in CloudFormation templates
+- Stored in Lambda environment variables (plaintext)
+- Visible to anyone with Lambda read permissions
+- Cannot rotate without redeployment
+
+### Next Steps
+
+1. **Set Up Alerts**: Create monitors in Datadog for error rates, latency spikes
+2. **Create Dashboards**: Build custom dashboards for business metrics
+3. **Enable RUM (Real User Monitoring)**: If you have a frontend
+4. **Continuous Profiler**: Enable `DD_PROFILING_ENABLED=true` for CPU/memory profiling
+5. **Custom Metrics**: Add application-specific metrics using DogStatsD
 
 ## References
 

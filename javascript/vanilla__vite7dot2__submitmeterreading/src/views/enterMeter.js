@@ -176,11 +176,11 @@ async function loadPreviousReading() {
     if (readings && readings.length > 0) {
       // Sort by timestamp to get the most recent reading
       const sortedReadings = [...readings].sort((a, b) =>
-        new Date(b.Timestamp) - new Date(a.Timestamp)
+        new Date(b.timestamp) - new Date(a.timestamp)
       )
 
       // Get the latest reading value
-      const latestReading = sortedReadings[0].ReadingValue
+      const latestReading = sortedReadings[0].value
       previousReading = latestReading.toString().padStart(4, '0')
     } else {
       // No previous readings, use default

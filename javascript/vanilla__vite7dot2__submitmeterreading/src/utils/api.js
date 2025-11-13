@@ -4,8 +4,8 @@
  */
 
 // Get API URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL
-const API_ENDPOINT = `${API_BASE_URL}/api/meter-readings`
+// The Lambda URL already points to the specific function, so we use it directly
+const API_ENDPOINT = import.meta.env.VITE_API_URL
 
 /**
  * Get all meter readings from the backend

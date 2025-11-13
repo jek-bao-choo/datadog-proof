@@ -1,6 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Meter Reading Processing API on Lambda with Native AOT
+Description: Meter Reading Processing API on Lambda with Native AOT and Datadog
+
+# Parameters for Datadog API Key
+# OPTION 1: For quick POC/testing - pass API key as parameter (not recommended for production)
+# OPTION 2: For production - use Secrets Manager or Parameter Store (see README.md)
+Parameters:
+  DatadogApiKey:
+    Type: String
+    Description: Datadog API Key (for testing only - use Secrets Manager in production)
+    NoEcho: true
+    Default: ''
 
 Globals:
   Function:
@@ -38,6 +48,16 @@ Resources:
         Command: ["./net8dot0__web__processmeterreading"]
       Architectures:
         - arm64
+      Environment:
+        Variables:
+          # Datadog Configuration
+          # IMPORTANT: For production, use AWS Secrets Manager instead of environment variables
+          # See README.md section "Instrumenting .NET Serverless Applications on AWS Lambda"
+          DD_API_KEY: !Ref DatadogApiKey
+          DD_SITE: datadoghq.com  # Change to your Datadog site (e.g., datadoghq.eu, us3.datadoghq.com)
+          DD_CAPTURE_LAMBDA_PAYLOAD: true  # Captures request/response payloads for debugging
+          DD_LOGS_INJECTION: true  # Injects trace IDs into logs
+          DD_TRACE_ENABLED: true  # Enables APM tracing
       Events:
         ApiGateway:
           Type: HttpApi
@@ -47,6 +67,21 @@ Resources:
             PayloadFormatVersion: "2.0"
       Policies:
         - CloudWatchLambdaInsightsExecutionRolePolicy
+        # Uncomment below if using AWS Secrets Manager for DD_API_KEY
+        # - Version: '2012-10-17'
+        #   Statement:
+        #     - Effect: Allow
+        #       Action:
+        #         - secretsmanager:GetSecretValue
+        #       Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:datadog/api_key-*'
+        #
+        # Uncomment below if using AWS Systems Manager Parameter Store for DD_API_KEY
+        # - Version: '2012-10-17'
+        #   Statement:
+        #     - Effect: Allow
+        #       Action:
+        #         - ssm:GetParameter
+        #       Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/datadog/api_key'
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: .
