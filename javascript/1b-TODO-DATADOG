@@ -1,12 +1,30 @@
 ## TASK:
-* I want to add a Datadog 
+* I want to add a Datadog Browser SDK to vanilla__vite7dot2__submitmeterreading here is the code snippet
+```
+import { datadogRum } from '@datadog/browser-rum';
+
+datadogRum.init({
+    applicationId: 'XXXXXX',
+    clientToken: 'YYYYYYY',
+    // `site` refers to the Datadog site parameter of your organization
+    // see https://docs.datadoghq.com/getting_started/site/
+    site: 'datadoghq.com',
+    service: 'vanilla__vite7dot2__submitmeterreading',
+    env: 'testv4',
+    version: '1.2.3',
+    sessionSampleRate: 100,
+    sessionReplaySampleRate: 100,
+    trackBfcacheViews: true,
+    // allowedTracingUrls: [],
+    defaultPrivacyLevel: 'mask-user-input',
+});
+```
 
 ## USE CONTEXT7
 * use library id /datadog/browser-sdk
 <!-- * use library id /datadog/dd-sdk-android-gradle-plugin -->
 
 ## OTHER CONSIDERATIONS:
-* Run the project on MacOS bash terminal
 * Append setup, deployment, verification, and cleanup steps in README.md
 * Explain the steps you would take in clear, beginner-friendly language
 * Write the research on performing the task

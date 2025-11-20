@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "vite": "^7.2.2"
+  },
+  "dependencies": {
+    "@datadog/browser-rum": "^6.24.1"
   }
 }

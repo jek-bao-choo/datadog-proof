@@ -1,3 +1,4 @@
+import './datadog-init.js'
 import './style.css'
 import { initRouter } from './router.js'
 import { renderLandingPage } from './views/landing.js'

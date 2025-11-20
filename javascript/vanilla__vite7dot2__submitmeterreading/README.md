@@ -24,7 +24,8 @@ A mobile-responsive web application for submitting utility meter readings, built
 - **Styling**: Plain CSS with custom properties
 - **Routing**: History API (no framework)
 - **API Calls**: Native Fetch API
-- **No Dependencies**: Pure vanilla implementation
+- **Monitoring**: Datadog RUM (Real User Monitoring) - See [README-DATADOG.md](./README-DATADOG.md)
+- **Dependencies**: @datadog/browser-rum for user monitoring
 
 ## Prerequisites
 
