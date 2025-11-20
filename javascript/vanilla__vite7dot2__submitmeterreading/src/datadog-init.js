@@ -11,10 +11,10 @@ const allowedTracingUrls = [
 
 datadogRum.init({
   // Hardcoded values (safe for client tokens - they're public)
-  applicationId: 'c5c2b4e5-dd38-4619-af9e-40aa999eafa7',
-  clientToken: 'pubaad709db3d0245fdf0fbca24065386ec',
+  applicationId: 'a433721c-95aa-4fbe-b02e-db4219951de1',
+  clientToken: 'pub4ce5102a2c27653006ef2cbc2e9013c5',
   site: 'datadoghq.com',
-  service: 'vanilla__vite7dot2__submitmeterreading',
+  service: 'android8__api26__superapp',
   env: 'testv5',
   version: '1.2.4',
   sessionSampleRate: 100,
