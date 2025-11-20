@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.datadoghq.dd-sdk-android-gradle-plugin") version "1.21.0"
 }
 
 android {
@@ -48,4 +49,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.dd.sdk.android.rum)
+    implementation(libs.dd.sdk.android.webview)
 }

@@ -13,9 +13,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import com.example.android8__api26__superapp.R
 import com.example.android8__api26__superapp.databinding.FragmentWebviewBinding
+import com.datadog.android.webview.WebViewTracking
 
 /**
  * Fragment that displays a WebView for external content.
@@ -82,6 +82,14 @@ class WebViewFragment : Fragment() {
             displayZoomControls = false
             loadWithOverviewMode = true
             useWideViewPort = true
+        }
+
+        // Enable Datadog WebView tracking for Submit Meter Reading service only
+        if (serviceName == "Submit Meter Reading") {
+            // This allows Datadog to track user interactions within the WebView
+            // For local HTML files and external content, we allow all hosts (empty list)
+            val allowedHosts = listOf<String>() // Empty list allows all hosts for local content
+            WebViewTracking.enable(webView, allowedHosts)
         }
 
         // Setup WebViewClient for page loading
