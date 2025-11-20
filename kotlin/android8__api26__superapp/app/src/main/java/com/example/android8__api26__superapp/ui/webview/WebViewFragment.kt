@@ -87,8 +87,8 @@ class WebViewFragment : Fragment() {
         // Enable Datadog WebView tracking for Submit Meter Reading service only
         if (serviceName == "Submit Meter Reading") {
             // This allows Datadog to track user interactions within the WebView
-            // For local HTML files and external content, we allow all hosts (empty list)
-            val allowedHosts = listOf<String>() // Empty list allows all hosts for local content
+            // Restrict tracking to specific allowed host
+            val allowedHosts = listOf("main.d26h2mys5it3o4.amplifyapp.com")
             WebViewTracking.enable(webView, allowedHosts)
         }
 
