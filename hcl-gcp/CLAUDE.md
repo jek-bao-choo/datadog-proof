@@ -14,10 +14,10 @@ IaC Terraform .hcl script developments for Google Cloud Platform
 3. **Plan**: Create detailed `3-PLAN.md` with atomic steps
 4. **Implement**: Execute step-by-step, mark "(COMPLETED)"
 
-## Guidelines
-- Keep simple (Hello World level)
+## DO
+- Keep it simple like Hello World level
+- Keep the code short and concise
 - Assume no prior Terraform knowledge
-- Small, atomic steps
-- Individual tests only
+- Provide small, atomic steps
+- Provide individual tests
 - Wait for explicit approval between phases
-- Focus and independence per script segment
