@@ -254,14 +254,30 @@ resource "google_container_node_pool" "jek_primary_nodes" {
 }
 ```
 
-## Support
+## Add Datadog Helm Chart
+```bash
+helm repo add datadog https://helm.datadoghq.com
+helm repo update
+kubectl create secret generic datadog-secret --from-literal api-key=<REDACTED>
+```
 
-For issues with this Terraform configuration:
-1. Check the [troubleshooting section](#troubleshooting)
-2. Review [GKE documentation](https://cloud.google.com/kubernetes-engine/docs)
-3. Check [Terraform Google Provider docs](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+Update values.yaml accordingly
+```bash
+helm pull --untar datadog/datadog
 
----
+# e.g., in datadog-values.yaml
+```
 
-**Tags**: `owner=jek`, `env=test`  
-**Created**: For GKE 1.32 testing and learning purposes
+Deploy the helm chart
+```
+helm install datadog-agent -f datadog-values.yaml datadog/datadog
+```
+
+Update the helm chart if necessary
+```
+helm upgrade datadog-agent datadog/datadog -f datadog-values.yaml
+```
+![](helm-chart-proof.png)
+
+## Add Datadog Operator
+WIP
