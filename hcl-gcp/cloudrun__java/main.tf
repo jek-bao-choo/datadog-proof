@@ -78,6 +78,12 @@ resource "google_cloud_run_v2_service" "java_api" {
         container_port = var.container_port
       }
 
+      # Datadog environment variables
+      env {
+        name  = "DD_API_KEY"
+        value = var.dd_api_key
+      }
+
       resources {
         limits = {
           cpu    = var.container_cpu
@@ -85,15 +91,15 @@ resource "google_cloud_run_v2_service" "java_api" {
         }
       }
 
-      # Startup probe - gives the app time to initialize
+      # Startup probe - gives the app time to initialize (increased for Datadog agent startup)
       startup_probe {
         http_get {
           path = "/actuator/health"
         }
-        initial_delay_seconds = 10
-        timeout_seconds       = 3
+        initial_delay_seconds = 30
+        timeout_seconds       = 5
         period_seconds        = 10
-        failure_threshold     = 3
+        failure_threshold     = 6
       }
 
       # Liveness probe - checks if app is running

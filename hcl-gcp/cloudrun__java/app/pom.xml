@@ -39,6 +39,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- Add datadog tracing SDK and here is an example https://github.com/DataDog/serverless-gcp-sample-apps/tree/main/cloud-run/in-container/java -->
+        <dependency>
+			<groupId>com.datadoghq</groupId>
+			<artifactId>dd-trace-api</artifactId>
+			<version>1.56.0</version>
+		</dependency>
+
     </dependencies>
 
     <build>

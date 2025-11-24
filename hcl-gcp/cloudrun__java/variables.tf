@@ -67,3 +67,9 @@ variable "labels" {
     purpose    = "demo"
   }
 }
+
+variable "dd_api_key" {
+  description = "Datadog API Key for APM and monitoring"
+  type        = string
+  sensitive   = true
+}
