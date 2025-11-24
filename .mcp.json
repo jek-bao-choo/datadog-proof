@@ -1,4 +1,27 @@
 {
   "mcpServers": {
+    "workspace-mcp": {
+      "command": "uvx",
+      "args": [
+        "workspace-mcp",
+        "--single-user"
+      ],
+      "envFile": "${workspaceFolder}/.env",
+      "type": "stdio"
+    },
+    "atlassian-mcp": {
+      "command": "npx",
+      "args": [
+          "mcp-remote",
+          "https://mcp.atlassian.com/v1/sse"
+      ]
+    },
+    "datadog-mcp": {
+      "command": "npx",
+      "args": [
+          "mcp-remote",
+          "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp"
+      ]
+    }
   }
 }

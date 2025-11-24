@@ -16,6 +16,14 @@
         "chrome-devtools-mcp@latest"
       ],
       "env": {}
+    },
+    "playwright-mcp": {
+      "command": "npx",
+      "args": [
+          "@playwright/mcp@latest",
+          "--caps=vision",
+          "--browser=chrome"
+      ]
     }
   }
 }

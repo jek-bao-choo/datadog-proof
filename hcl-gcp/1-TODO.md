@@ -1,7 +1,7 @@
 ## TASK:
-- Create a terraform project in the folder gke1dot32__standard to setup a GKE version 1.32 cluster on standard mode.
-- set it up in Asia Southeast region
-- Create a Nginx deployment for testing that it works
+- Create a terraform project in the folder cloudrun__java to setup a Java spring boot app
+- Set it up in Asia Southeast region
+- Recommend a sample Java sample app for testing an API endpoint
 - Keep it simple
 - Think hard
 
@@ -17,28 +17,24 @@
 <!-- ## DOCUMENTATION: -->
 
 ## USE CONTEXT7
-- use library id /googlecloudplatform/terraformer
+- use library id /googlecloudplatform/terraform-google-cloud-run
+- use library id /googlecloudplatform/cloud-run-samples
 - use library id /hashicorp/terraform 
 - use library id /hashicorp/hcl
-- use library id /terraform-docs/terraform-docs 
-- use library id /hashicorp/terraform-mcp-server 
+<!-- - use library id /googlecloudplatform/terraformer
+- use library id /terraform-docs/terraform-docs   -->
 
 
-## Implementation should consider:
-- **Naming Convention**: All resources use "jek-" prefix with tags: owner="jek", env="test"
-- **Resource naming**: [prefix-resourcename, e.g., "jek-"]
-- **Tagging**: [required tags, e.g., owner="jek", env="test"]
-- **README.md**: Include setup, deployment, verification, and teardown steps
-- **Git Ignore**: Create a .gitignore to avoid committing sensitive terraform files or output to Git repo
-- **Simplicity**: Keep the terraform script really simple
-- **Teardown**: Document the steps to run the terraform script to README.md including tear down steps
-- **PII and Sensitive Data**: Do be mindful that I will be committing the script to a public Github repo
+## DO NOT
+- Reveal PII information because I am committing everything to a public Github repo.
 
-## OTHER CONSIDERATIONS:
-- My computer is a Macbook
-- I'm running Claude Code through the terminal
+## DO
+- Create a .gitignore to avoid committing sensitive terraform files or output to Git repo
+- Keep the terraform script really simple
+- Document the steps to run the terraform script to README.md including tear down steps
+- Consider that my terminal is Macbook M4
 - Explain the steps you would take in clear, beginner-friendly language
-- Write the research on performing the task
+- Create all GCP resources with "jek-" prefix and tags owner:jek,env=test
 - Save the research to `2-RESEARCH.md`
 
 
