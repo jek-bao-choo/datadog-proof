@@ -72,7 +72,7 @@ resource "google_cloud_run_v2_service" "java_api" {
 
     containers {
       # Image will be updated manually or via CI/CD
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_name}/cloudrun-java-demo:latest"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.artifact_registry_name}/jek-cloudrun-java-demo:latest"
 
       ports {
         container_port = var.container_port

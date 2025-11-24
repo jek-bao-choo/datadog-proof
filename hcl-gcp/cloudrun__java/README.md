@@ -30,7 +30,7 @@ A simple Java Spring Boot application deployed to Google Cloud Run using Terrafo
 ┌─────────────────────────────────────────────────────────┐
 │  Artifact Registry                                       │
 │  Repository: jek-java-apps                              │
-│  Image: cloudrun-java-demo:latest                       │
+│  Image: jek-cloudrun-java-demo:latest                       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -88,11 +88,11 @@ gcloud auth configure-docker asia-southeast1-docker.pkg.dev
 
 # Build the Docker image (use --platform for M1/M2 Macs)
 docker build --platform linux/amd64 \
-  -t asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/cloudrun-java-demo:latest \
+  -t asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/jek-cloudrun-java-demo:latest \
   app/
 
 # Push to Artifact Registry
-docker push asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/cloudrun-java-demo:latest
+docker push asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/jek-cloudrun-java-demo:latest
 ```
 
 ### 4. Deploy Infrastructure
@@ -264,7 +264,7 @@ terraform destroy
 
 # Optionally delete the Docker image from Artifact Registry
 gcloud artifacts docker images delete \
-  asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/cloudrun-java-demo:latest
+  asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/jek-cloudrun-java-demo:latest
 ```
 
 ## Cost Considerations
