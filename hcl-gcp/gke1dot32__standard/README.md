@@ -280,4 +280,47 @@ helm upgrade datadog-agent datadog/datadog -f datadog-values.yaml
 ![](helm-chart-proof.png)
 
 ## Add Datadog Operator
-WIP
+Follow the instructions at Datadog UI.
+
+```bash
+kubectl get pods --all-namespaces
+```
+
+Operator = Chef
+DatadogAgent Resource = Recipe
+DaemonSet = The actual meal
+
+```bash
+# Check Custom Resource Definitions (CRDs) installed
+kubectl get crd | grep datadog
+```
+
+```bash
+# 1. List all DatadogAgent resources:
+kubectl get datadogagent --all-namespaces
+
+# 2. View the full configuration in YAML format:
+kubectl get datadogagent datadog -o yaml
+# This shows you exactly what configuration is stored in Kubernetes
+```
+
+```bash
+# Quick view - see name, status
+kubectl get datadogagent
+
+# Full configuration - see everything you set
+kubectl get datadogagent datadog -o yaml > my-current-config.yaml
+
+# Compare with your original file
+diff datadog-operator-agent.yaml my-current-config.yaml
+
+# See your DatadogAgent and what it created
+kubectl get datadogagent,daemonset,deployment | grep datadog
+```
+
+
+```bash
+kubectl get daemonsets --all-namespaces
+
+kubectl get pods -n default | grep -i datadog
+```
