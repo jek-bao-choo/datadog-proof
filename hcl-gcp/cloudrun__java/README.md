@@ -88,11 +88,11 @@ gcloud auth configure-docker asia-southeast1-docker.pkg.dev
 
 # Build the Docker image (use --platform for M1/M2 Macs)
 docker build --platform linux/amd64 \
-  -t asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/jek-cloudrun-java-demo:latest \
+  -t asia-southeast1-docker.pkg.dev/<your-gcp-project-id>/jek-java-apps/jek-cloudrun-java-demo:latest \
   app/
 
 # Push to Artifact Registry
-docker push asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/jek-cloudrun-java-demo:latest
+docker push asia-southeast1-docker.pkg.dev/<your-gcp-project-id>/jek-java-apps/jek-cloudrun-java-demo:latest
 ```
 
 ### 4. Deploy Infrastructure
