@@ -65,7 +65,7 @@ cloudrun__java/
 └── README.md                            # This file
 ```
 
-## Quick Start
+## Deployment Guide
 
 ### 1. Update Configuration
 
@@ -88,16 +88,58 @@ terraform init
 # Configure Docker authentication
 gcloud auth configure-docker asia-southeast1-docker.pkg.dev
 
-# Build the Docker image (use --platform for M1/M2 Macs)
+# 1. Get your project ID
+export PROJECT_ID=$(gcloud config get-value project)
+
+# 2. Rebuild Docker image with Debian base
 docker build --platform linux/amd64 \
-  -t asia-southeast1-docker.pkg.dev/<your-gcp-project-id>/jek-java-apps/jek-cloudrun-java-demo:latest \
+  -t asia-southeast1-docker.pkg.dev/${PROJECT_ID}/jek-java-apps/jek-cloudrun-java-demo:latest \
   app/
 
-# Push to Artifact Registry
-docker push asia-southeast1-docker.pkg.dev/<your-gcp-project-id>/jek-java-apps/jek-cloudrun-java-demo:latest
+# 3. Push to Artifact Registry
+docker push asia-southeast1-docker.pkg.dev/${PROJECT_ID}/jek-java-apps/jek-cloudrun-java-demo:latest
+
+# 4. Apply Terraform (with your DD_API_KEY set)
+export OTEL_TRACES_EXPORTER=""
+export TF_VAR_dd_api_key="your-datadog-api-key"
+terraform apply
 ```
 
-### 4. Deploy Infrastructure
+But make sure that in variables.tf this is available
+```
+variable "dd_api_key" {
+  description = "Datadog API Key for APM and monitoring"
+  type        = string
+  sensitive   = true
+}
+```
+
+and also ensure that main.tf has this
+```
+      # Datadog environment variables
+      env {
+        name  = "DD_API_KEY"
+        value = var.dd_api_key
+      }
+```
+
+### 4. Configure Datadog
+
+Set your Datadog API key as an environment variable:
+
+```bash
+# Set your Datadog API Key (get this from Datadog UI > Organization Settings > API Keys)
+export TF_VAR_dd_api_key="your-datadog-api-key-here"
+
+# Verify DD_SITE is correct (already set in Dockerfile)
+# DD_SITE=datadoghq.com (default)
+# For EU: DD_SITE=datadoghq.eu
+# For other regions, update app/Dockerfile line 28
+```
+
+**Note**: `DD_SITE` and `DD_SERVICE` are already configured in the Dockerfile. Only `DD_API_KEY` needs to be provided at deployment time.
+
+### 5. Deploy Infrastructure
 
 ```bash
 # Deploy all resources
@@ -109,10 +151,10 @@ This will create:
 - Enable required GCP APIs (Cloud Run, Artifact Registry, Cloud Build)
 - Artifact Registry repository for Docker images
 - IAM service account with logging and metrics permissions
-- Cloud Run service with health probes
+- Cloud Run service with health probes and Datadog instrumentation
 - Public access policy (allUsers can invoke)
 
-### 5. Test the Application
+### 6. Test the Application
 
 After deployment, Terraform outputs the service URL. Test all endpoints:
 
