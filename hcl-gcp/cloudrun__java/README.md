@@ -1,3 +1,5 @@
+![](cloudrun.png)
+
 # Cloud Run Java Spring Boot Demo with JVM Metrics
 
 A simple Java Spring Boot application deployed to Google Cloud Run using Terraform. This demo exposes JVM metrics via Spring Boot Actuator endpoints for monitoring memory, garbage collection, threads, and class loading.
@@ -69,7 +71,7 @@ cloudrun__java/
 
 Edit `terraform.tfvars`:
 ```hcl
-project_id = "your-gcp-project-id"
+project_id = "<your-gcp-project-id>"
 region     = "asia-southeast1"
 ```
 
@@ -264,7 +266,7 @@ terraform destroy
 
 # Optionally delete the Docker image from Artifact Registry
 gcloud artifacts docker images delete \
-  asia-southeast1-docker.pkg.dev/your-gcp-project-id/jek-java-apps/jek-cloudrun-java-demo:latest
+  asia-southeast1-docker.pkg.dev/<your-gcp-project-id>/jek-java-apps/jek-cloudrun-java-demo:latest
 ```
 
 ## Cost Considerations
