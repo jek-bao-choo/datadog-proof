@@ -34,6 +34,8 @@ ENV DD_SITE=datadoghq.com \
   DD_LOGS_INJECTION=true \
   DD_TRACE_ENABLED=true
 
+# ENV JAVA_TOOL_OPTIONS="-javaagent:/app/dd-java-agent.jar"
+
 # Cloud Run sets PORT environment variable
 ENV PORT=8080
 
