@@ -1,3 +1,5 @@
+[Datadog GCP integration required permission](https://docs.datadoghq.com/integrations/google-cloud-platform/?tab=projectlevelmetriccollection#required-permissions)
+
 # GCP Service Account Creation for Datadog Integration
 
 ## Prerequisites
