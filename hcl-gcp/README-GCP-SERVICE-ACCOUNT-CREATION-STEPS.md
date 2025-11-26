@@ -2,8 +2,8 @@
 
 ## Prerequisites
 - gcloud CLI installed and authenticated
-- Access to GCP project: `datadog-ese-sandbox`
-- Project ID: `datadog-ese-sandbox`
+- Access to GCP project: `change-to-my-project-id`
+- Project ID: `change-to-my-project-id`
 
 ## Step 1: Create the Service Account
 
@@ -12,7 +12,7 @@ Create a new service account specifically for Datadog integration:
 ```bash
 gcloud iam service-accounts create jek-datadog-integration-sa \
     --display-name="Jek Datadog Integration Service Account" \
-    --project=datadog-ese-sandbox
+    --project=change-to-my-project-id
 ```
 
 **What this does:** Creates a new service account that Datadog will use to collect metrics and logs from your GCP project.
@@ -25,8 +25,8 @@ Grant the necessary permissions for Datadog to monitor your GCP resources:
 Allows Datadog to read metrics from Cloud Monitoring:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/monitoring.viewer"
 ```
 
@@ -34,8 +34,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows Datadog to see your compute resources (VMs, GKE, etc.):
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/compute.viewer"
 ```
 
@@ -43,8 +43,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows Datadog to discover and inventory your GCP resources:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/cloudasset.viewer"
 ```
 
@@ -52,8 +52,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows Datadog to discover and list accessible projects:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/browser"
 ```
 
@@ -61,8 +61,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Required for Datadog to create short-lived credentials for API calls:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/iam.serviceAccountTokenCreator"
 ```
 
@@ -72,22 +72,22 @@ Enable the necessary GCP APIs for Datadog integration:
 
 ```bash
 # Enable Cloud Monitoring API - Query Google Cloud metric data
-gcloud services enable monitoring.googleapis.com --project=datadog-ese-sandbox
+gcloud services enable monitoring.googleapis.com --project=change-to-my-project-id
 
 # Enable Compute Engine API - Discover compute instance data
-gcloud services enable compute.googleapis.com --project=datadog-ese-sandbox
+gcloud services enable compute.googleapis.com --project=change-to-my-project-id
 
 # Enable Cloud Asset API - Request GCP resources and link labels to metrics as tags
-gcloud services enable cloudasset.googleapis.com --project=datadog-ese-sandbox
+gcloud services enable cloudasset.googleapis.com --project=change-to-my-project-id
 
 # Enable Cloud Resource Manager API - Append metrics with correct resources and tags
-gcloud services enable cloudresourcemanager.googleapis.com --project=datadog-ese-sandbox
+gcloud services enable cloudresourcemanager.googleapis.com --project=change-to-my-project-id
 
 # Enable IAM API - Authenticate with Google Cloud
-gcloud services enable iam.googleapis.com --project=datadog-ese-sandbox
+gcloud services enable iam.googleapis.com --project=change-to-my-project-id
 
 # Enable Cloud Billing API - Manage billing data for Cloud Cost Management (CCM)
-gcloud services enable cloudbilling.googleapis.com --project=datadog-ese-sandbox
+gcloud services enable cloudbilling.googleapis.com --project=change-to-my-project-id
 ```
 
 **What this does:** These APIs allow Datadog to:
@@ -102,8 +102,8 @@ gcloud services enable cloudbilling.googleapis.com --project=datadog-ese-sandbox
 Datadog requires the **Unique ID** (numeric) of the service account:
 
 ```bash
-gcloud iam service-accounts describe jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com \
-    --project=datadog-ese-sandbox \
+gcloud iam service-accounts describe jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com \
+    --project=change-to-my-project-id \
     --format="value(uniqueId)"
 ```
 
@@ -117,8 +117,8 @@ Check that your service account was created successfully:
 
 ```bash
 gcloud iam service-accounts list \
-    --project=datadog-ese-sandbox \
-    --filter="email:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+    --project=change-to-my-project-id \
+    --filter="email:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --format="table(displayName,email,uniqueId)"
 ```
 
@@ -127,8 +127,8 @@ gcloud iam service-accounts list \
 Run this command to get all the information you need for Datadog:
 
 ```bash
-gcloud iam service-accounts describe jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com \
-    --project=datadog-ese-sandbox \
+gcloud iam service-accounts describe jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com \
+    --project=change-to-my-project-id \
     --format="json"
 ```
 
@@ -139,8 +139,8 @@ When filling out the Datadog GCP integration form, use these values:
 | Field | Value |
 |-------|-------|
 | **Service Account ID** | Copy the Unique ID from Step 4 (numeric) |
-| **Default Project** | `datadog-ese-sandbox` |
-| **Projects** | `datadog-ese-sandbox` |
+| **Default Project** | `change-to-my-project-id` |
+| **Projects** | `change-to-my-project-id` |
 | **Folders** | Leave empty (unless monitoring specific folders) |
 
 ## Optional: Create a Key for Alternative Setup Methods
@@ -149,8 +149,8 @@ If you need a JSON key file (for Terraform or manual setup):
 
 ```bash
 gcloud iam service-accounts keys create ~/jek-datadog-key.json \
-    --iam-account=jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com \
-    --project=datadog-ese-sandbox
+    --iam-account=jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com \
+    --project=change-to-my-project-id
 ```
 
 **Security Note:** Store this key file securely and never commit it to version control.
@@ -161,8 +161,8 @@ To delete the service account if no longer needed:
 
 ```bash
 # Delete the service account
-gcloud iam service-accounts delete jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com \
-    --project=datadog-ese-sandbox
+gcloud iam service-accounts delete jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com \
+    --project=change-to-my-project-id
 ```
 
 ## Troubleshooting
@@ -170,16 +170,16 @@ gcloud iam service-accounts delete jek-datadog-integration-sa@datadog-ese-sandbo
 ### Check Service Account Permissions
 
 ```bash
-gcloud projects get-iam-policy datadog-ese-sandbox \
+gcloud projects get-iam-policy change-to-my-project-id \
     --flatten="bindings[].members" \
-    --filter="bindings.members:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+    --filter="bindings.members:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --format="table(bindings.role)"
 ```
 
 ### List All Service Accounts
 
 ```bash
-gcloud iam service-accounts list --project=datadog-ese-sandbox
+gcloud iam service-accounts list --project=change-to-my-project-id
 ```
 
 ## Optional: Additional Permissions for Log Collection
@@ -190,8 +190,8 @@ If you want to collect **logs** (not just metrics) from GCP, you need to set up 
 Allows the service account to perform Dataflow administrative tasks:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/dataflow.admin"
 ```
 
@@ -199,8 +199,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows the service account to perform Dataflow job operations:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/dataflow.worker"
 ```
 
@@ -208,8 +208,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows the service account to view messages from the Pub/Sub subscription with your GCP logs:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/pubsub.viewer"
 ```
 
@@ -217,8 +217,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows the service account to consume messages from the Pub/Sub subscription:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/pubsub.subscriber"
 ```
 
@@ -226,8 +226,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows the service account to publish failed messages to a separate subscription for analysis or resending:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/pubsub.publisher"
 ```
 
@@ -235,8 +235,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows the service account to access the Datadog API key stored in Secret Manager:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"
 ```
 
@@ -244,8 +244,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows the service account to read and write to the Cloud Storage bucket for staging files:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/storage.objectAdmin"
 ```
 
@@ -257,15 +257,15 @@ Depending on what GCP resources you want to monitor, you may need additional rol
 
 ### For GKE Monitoring
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/container.viewer"
 ```
 
 ### For Cloud SQL Monitoring
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/cloudsql.viewer"
 ```
 
@@ -273,8 +273,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 Allows Datadog to monitor the performance of your BigQuery jobs:
 
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/bigquery.resourceViewer"
 ```
 
@@ -282,8 +282,8 @@ gcloud projects add-iam-policy-binding datadog-ese-sandbox \
 
 ### For Cloud Storage Monitoring
 ```bash
-gcloud projects add-iam-policy-binding datadog-ese-sandbox \
-    --member="serviceAccount:jek-datadog-integration-sa@datadog-ese-sandbox.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/storage.objectViewer"
 ```
 
