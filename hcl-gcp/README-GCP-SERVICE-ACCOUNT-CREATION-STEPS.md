@@ -167,13 +167,16 @@ gcloud iam service-accounts delete jek-datadog-integration-sa@change-to-my-proje
 
 ## Troubleshooting
 
-### Check Service Account Permissions
+### Verify All Granted Permissions
+
+To see a complete list of all roles granted to your service account at the project level, run this command. It's the best way to confirm you haven't missed any steps.
 
 ```bash
 gcloud projects get-iam-policy change-to-my-project-id \
     --flatten="bindings[].members" \
     --filter="bindings.members:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
-    --format="table(bindings.role)"
+    --format="table(bindings.role)" \
+    --sort-by="bindings.role"
 ```
 
 ### List All Service Accounts
@@ -182,7 +185,41 @@ gcloud projects get-iam-policy change-to-my-project-id \
 gcloud iam service-accounts list --project=change-to-my-project-id
 ```
 
-## Optional: Additional Permissions for Log Collection
+---
+
+## Optional: Additional IAM Roles
+
+Grant these roles only if you are using specific Datadog features like Cloud Cost Management or Log Collection.
+
+### For Cloud Cost Management
+
+These roles allow Datadog to collect billing data and provide cost-saving recommendations.
+
+```bash
+# Allows viewing billing account and usage data
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
+    --role="roles/billing.viewer"
+
+# Allows viewing CloudSQL recommendations
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
+    --role="roles/recommender.cloudsqlViewer"
+
+# Allows viewing Compute Engine recommendations
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
+    --role="roles/recommender.computeViewer"
+
+# Allows viewing project utilization recommendations
+gcloud projects add-iam-policy-binding change-to-my-project-id \
+    --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
+    --role="roles/recommender.projectUtilViewer"
+```
+
+**Note:** The `compute.viewer` role, granted in the core setup, is also required for Cloud Cost Management.
+
+### For Log Collection
 
 If you want to collect **logs** (not just metrics) from GCP, you need to set up a Dataflow pipeline with Pub/Sub. This requires the following additional IAM roles:
 
@@ -251,7 +288,7 @@ gcloud projects add-iam-policy-binding change-to-my-project-id \
 
 **Note:** Log collection requires additional setup including Pub/Sub topics, subscriptions, log sinks, and a Dataflow pipeline. See the [Datadog GCP Log Collection documentation](https://docs.datadoghq.com/logs/guide/collect-google-cloud-logs-with-push/) for complete setup instructions.
 
-## Additional IAM Roles for Resource Monitoring (Optional)
+### For Resource Monitoring (Optional)
 
 Depending on what GCP resources you want to monitor, you may need additional roles:
 
@@ -277,6 +314,8 @@ gcloud projects add-iam-policy-binding change-to-my-project-id \
     --member="serviceAccount:jek-datadog-integration-sa@change-to-my-project-id.iam.gserviceaccount.com" \
     --role="roles/bigquery.resourceViewer"
 ```
+> **Relevance:** Enables Datadog to collect performance metrics and metadata about your BigQuery datasets, jobs, and tables.
+
 
 **Note:** Enable Resource Collection in the Resource Collection tab of the Google Cloud integration page in Datadog. This allows you to receive resource events when Google's Cloud Asset Inventory detects changes in your cloud resources.
 
