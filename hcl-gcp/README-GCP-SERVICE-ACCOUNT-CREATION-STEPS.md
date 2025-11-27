@@ -9,6 +9,18 @@
 
 ## Step 1: Create the Service Account
 
+Authenticate with Google Cloud:
+   ```bash
+   gcloud auth login
+   gcloud auth application-default login
+   ```
+
+Set your project ID:
+   ```bash
+   gcloud config set project change-to-my-project-id
+   gcloud config set project change-to-my-project-id
+   ```
+
 Create a new service account specifically for Datadog integration:
 
 ```bash

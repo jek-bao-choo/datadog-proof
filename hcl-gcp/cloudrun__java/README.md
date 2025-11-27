@@ -365,18 +365,8 @@ variable "min_instances" {
 }
 ```
 
-## Next Steps
+## BEFORE GCP MONITORING INTEGRATION
+![](before-gcp-monitoring-integration.png)
 
-- Add custom business logic to `DemoApplication.java`
-- Integrate with Datadog APM for distributed tracing
-- Add database connectivity (Cloud SQL)
-- Set up CI/CD pipeline (Cloud Build)
-- Add authentication (Cloud Identity-Aware Proxy)
-- Monitor metrics in Cloud Monitoring
-
-## Resources
-
-- [Spring Boot Actuator Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html)
-- [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
-- [Terraform Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
-- [Spring Boot Metrics](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics)
+## AFTER GCP MONITORING INTEGRATION
+WIP
