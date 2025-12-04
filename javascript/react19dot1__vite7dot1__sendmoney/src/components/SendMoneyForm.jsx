@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ScamAlertModal from './ScamAlertModal'
 
 function SendMoneyForm({ onSubmit }) {
   // Form state
@@ -8,6 +9,10 @@ function SendMoneyForm({ onSubmit }) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
+  // Modal state for scam alert
+  const [showScamAlert, setShowScamAlert] = useState(false)
+  // Blacklisted numbers list
+  const BLACKLISTED_NUMBERS = ['88888888']
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -62,14 +67,13 @@ function SendMoneyForm({ onSubmit }) {
     return Object.keys(newErrors).length === 0
   }
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  // Check if phone number is blacklisted
+  const isBlacklisted = (phoneNumber) => {
+    return BLACKLISTED_NUMBERS.includes(phoneNumber)
+  }
 
-    if (!validateForm()) {
-      return
-    }
-
+  // Process the actual transaction
+  const processTransaction = async () => {
     setIsLoading(true)
 
     try {
@@ -81,6 +85,39 @@ function SendMoneyForm({ onSubmit }) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
+    // Check if phone number is blacklisted
+    if (isBlacklisted(formData.phone)) {
+      // Show scam alert modal
+      setShowScamAlert(true)
+      return
+    }
+
+    // If not blacklisted, proceed with transaction
+    await processTransaction()
+  }
+
+  // Handle Accept button in modal
+  const handleAcceptRisk = async () => {
+    // Close modal
+    setShowScamAlert(false)
+    // Proceed with transaction even though number is blacklisted
+    await processTransaction()
+  }
+
+  // Handle Reject button in modal
+  const handleRejectRisk = () => {
+    // Close modal and do nothing
+    setShowScamAlert(false)
   }
 
   return (
@@ -146,6 +183,15 @@ function SendMoneyForm({ onSubmit }) {
           <div className="loading-spinner"></div>
           <span>Processing your payment...</span>
         </div>
+      )}
+
+      {/* Scam Alert Modal */}
+      {showScamAlert && (
+        <ScamAlertModal
+          phoneNumber={formData.phone}
+          onAccept={handleAcceptRisk}
+          onReject={handleRejectRisk}
+        />
       )}
     </form>
   )

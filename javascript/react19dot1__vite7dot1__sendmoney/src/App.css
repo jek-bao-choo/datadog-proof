@@ -345,3 +345,129 @@
     border-color: var(--gray-300);
   }
 }
+
+/* Scam Alert Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.modal-content {
+  background: var(--white);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-8);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.modal-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-4);
+}
+
+.modal-icon.warning-icon {
+  filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3));
+}
+
+.modal-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: #f59e0b; /* Warning orange color */
+  margin: 0 0 var(--space-4) 0;
+}
+
+.modal-description {
+  font-size: var(--font-size-base);
+  color: var(--gray-700);
+  line-height: 1.6;
+  margin: 0 0 var(--space-6) 0;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.modal-button {
+  flex: 1;
+  min-width: 120px;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-height: 44px;
+}
+
+.reject-button {
+  background-color: var(--gray-200);
+  color: var(--gray-900);
+}
+
+.reject-button:hover {
+  background-color: var(--gray-300);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.reject-button:active {
+  transform: translateY(0);
+}
+
+.accept-button {
+  background-color: #f59e0b; /* Warning orange color */
+  color: var(--white);
+}
+
+.accept-button:hover {
+  background-color: #d97706; /* Darker orange on hover */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.accept-button:active {
+  transform: translateY(0);
+}
+
+/* Tablet Responsive Styles for Modal */
+@media (min-width: 768px) {
+  .modal-content {
+    padding: var(--space-10);
+    max-width: 480px;
+  }
+
+  .modal-icon {
+    font-size: 80px;
+  }
+
+  .modal-title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .modal-description {
+    font-size: var(--font-size-lg);
+  }
+
+  .modal-button {
+    min-height: 48px;
+    font-size: var(--font-size-lg);
+  }
+}
