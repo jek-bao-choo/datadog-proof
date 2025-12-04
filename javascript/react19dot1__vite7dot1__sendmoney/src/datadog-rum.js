@@ -4,12 +4,12 @@ import { datadogRum } from '@datadog/browser-rum'
 // Avoid multiple inits during Vite HMR
 if (typeof window !== 'undefined' && !window.__DATADOG_RUM_INSTALLED__) {
   datadogRum.init({
-    applicationId: '<REDACTED>',
-    clientToken: '<REDACTED>',
+    applicationId: 'fe7cf0b0-6e91-4317-a068-17e870e0cc20',
+    clientToken: 'pub20a017f260010c0da83a1c19c16e43d6',
     site: 'datadoghq.com',
     service: 'jek-sendmoney-app',
     env: 'test',
-    version: '1.0.1',
+    version: '1.0.2',
     sessionSampleRate: 100,
     sessionReplaySampleRate: 100,
     defaultPrivacyLevel: 'mask-user-input',

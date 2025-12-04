@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import ScamAlertModal from './ScamAlertModal'
+import { datadogRum } from '../datadog-rum' // Import Datadog RUM for adding custom actions
 
 function SendMoneyForm({ onSubmit }) {
   // Form state
@@ -108,6 +109,13 @@ function SendMoneyForm({ onSubmit }) {
 
   // Handle Accept button in modal
   const handleAcceptRisk = async () => {
+    // Track Accept action in Datadog RUM as Custom Action in Datadog RUM
+    datadogRum.addAction('acceptScamRisk', {
+      phoneNumber: formData.phone,
+      scamAmount: parseFloat(formData.amount),
+      scamBlacklistedNumber: true
+    })
+
     // Close modal
     setShowScamAlert(false)
     // Proceed with transaction even though number is blacklisted
@@ -116,6 +124,13 @@ function SendMoneyForm({ onSubmit }) {
 
   // Handle Reject button in modal
   const handleRejectRisk = () => {
+    // Track Reject action in Datadog RUM as Custom Action in Datadog RUM
+    datadogRum.addAction('rejectScamRisk', {
+      phoneNumber: formData.phone,
+      scamAmount: parseFloat(formData.amount),
+      scamBlacklistedNumber: true
+    })
+
     // Close modal and do nothing
     setShowScamAlert(false)
   }

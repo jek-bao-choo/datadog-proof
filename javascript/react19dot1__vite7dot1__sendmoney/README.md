@@ -147,3 +147,41 @@ The production files will be in the `dist/` directory.
 - CSS custom properties for efficient styling
 - Lazy loading ready architecture
 - Minimal external dependencies
+
+
+## Datadog Custom Actions
+
+![](proof.png)
+![](proof2.png)
+
+Datadog RUM Custom Actions --> https://docs.datadoghq.com/real_user_monitoring/guide/send-rum-custom-actions
+
+```js
+  // Handle Accept button in modal
+  const handleAcceptRisk = async () => {
+    // Track Accept action in Datadog RUM as Custom Action in Datadog RUM
+    datadogRum.addAction('acceptScamRisk', {
+      phoneNumber: formData.phone,
+      scamAmount: parseFloat(formData.amount),
+      scamBlacklistedNumber: true
+    })
+
+    // Close modal
+    setShowScamAlert(false)
+    // Proceed with transaction even though number is blacklisted
+    await processTransaction()
+  }
+
+  // Handle Reject button in modal
+  const handleRejectRisk = () => {
+    // Track Reject action in Datadog RUM as Custom Action in Datadog RUM
+    datadogRum.addAction('rejectScamRisk', {
+      phoneNumber: formData.phone,
+      scamAmount: parseFloat(formData.amount),
+      scamBlacklistedNumber: true
+    })
+
+    // Close modal and do nothing
+    setShowScamAlert(false)
+  }
+```
