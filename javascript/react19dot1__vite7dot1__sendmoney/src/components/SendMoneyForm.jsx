@@ -189,6 +189,7 @@ function SendMoneyForm({ onSubmit }) {
         type="submit"
         disabled={isLoading || !formData.phone || !formData.amount}
         className="submit-button"
+        data-dd-action-name="Jek defined action name called Send Money haha"
       >
         {isLoading ? 'Processing...' : 'Send Money'}
       </button>

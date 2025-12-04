@@ -156,6 +156,8 @@ The production files will be in the `dist/` directory.
 
 Datadog RUM Custom Actions --> https://docs.datadoghq.com/real_user_monitoring/guide/send-rum-custom-actions
 
+
+In SendMoneyForm.jsx
 ```js
   // Handle Accept button in modal
   const handleAcceptRisk = async () => {
@@ -185,3 +187,26 @@ Datadog RUM Custom Actions --> https://docs.datadoghq.com/real_user_monitoring/g
     setShowScamAlert(false)
   }
 ```
+
+## Datadog RUM Defined Action Name 
+Instead of default name, we can define the default action name
+
+Doc URL: https://docs.datadoghq.com/real_user_monitoring/application_monitoring/browser/tracking_user_actions/#declare-a-name-for-click-actions 
+
+In SendMoneyForm.jsx
+```js
+      <button
+        type="submit"
+        disabled={isLoading || !formData.phone || !formData.amount}
+        className="submit-button"
+        data-dd-action-name="Jek defined action name called Send Money haha"
+      >
+        {isLoading ? 'Processing...' : 'Send Money'}
+      </button>
+```
+
+Before
+![](proof3.png)
+
+After
+![](proof4.png)
