@@ -6,6 +6,8 @@ import PayeesList from './components/PayeesList'
 import AddPayeeModal from './components/AddPayeeModal'
 import { mockSendMoney } from './services/mockApi'
 import { datadogRum } from './datadog-rum'
+// Datadog Feature Flags: Import custom hook to check feature flags
+import { useFeatureFlag } from './hooks/useFeatureFlag'
 
 function App() {
   // App state management
@@ -20,6 +22,10 @@ function App() {
   const [payees, setPayees] = useState([])
   const [showAddPayeeModal, setShowAddPayeeModal] = useState(false)
   const [selectedPayee, setSelectedPayee] = useState(null)
+
+  // Datadog Feature Flags: Check if Payee feature is enabled
+  // Default is false (feature hidden) if flag cannot be checked
+  const { isEnabled: isPayeeFeatureEnabled, isLoading: isPayeeFlagLoading } = useFeatureFlag('enable-payee-feature', false)
 
   // Load payees from localStorage on mount
   useEffect(() => {
@@ -163,12 +169,21 @@ function App() {
               onSubmit={handleSendMoney}
               selectedPayee={selectedPayee}
             />
-            <PayeesList
-              payees={payees}
-              onAddPayee={handleAddPayee}
-              onSelectPayee={handleSelectPayee}
-              onDeletePayee={handleDeletePayee}
-            />
+            {/* Datadog Feature Flags: Show loading state while checking flag */}
+            {isPayeeFlagLoading && (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                Loading features...
+              </div>
+            )}
+            {/* Datadog Feature Flags: Only show Payee section if flag is enabled */}
+            {isPayeeFeatureEnabled && (
+              <PayeesList
+                payees={payees}
+                onAddPayee={handleAddPayee}
+                onSelectPayee={handleSelectPayee}
+                onDeletePayee={handleDeletePayee}
+              />
+            )}
           </div>
         )}
 
