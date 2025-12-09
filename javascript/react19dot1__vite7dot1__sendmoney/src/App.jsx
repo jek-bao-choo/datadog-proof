@@ -3,6 +3,7 @@ import './App.css'
 import SendMoneyForm from './components/SendMoneyForm'
 import ResultPage from './components/ResultPage'
 import { mockSendMoney } from './services/mockApi'
+import { datadogRum } from './datadog-rum'
 
 function App() {
   // App state management
@@ -30,11 +31,53 @@ function App() {
         message: result.message
       })
 
+      // Stop operation based on result
+      if (result.status === 200) {
+        // Transaction succeeded
+        datadogRum.succeedFeatureOperation('send-money-transaction', {
+          operationKey: 'send-money-transaction-main',
+          context: {
+            transactionId: result.transactionId,
+            amount: amount,
+            phone: phone,
+            endTime: new Date().toISOString()
+          },
+          description: 'Transaction completed successfully'
+        })
+        console.log('Operation succeeded: send-money-transaction')
+      } else {
+        // Transaction failed
+        datadogRum.failFeatureOperation('send-money-transaction', 'error', {
+          operationKey: 'send-money-transaction-main',
+          context: {
+            transactionId: result.transactionId,
+            errorMessage: result.message,
+            amount: amount,
+            phone: phone,
+            endTime: new Date().toISOString()
+          },
+          description: 'Transaction failed'
+        })
+        console.log('Operation failed: send-money-transaction')
+      }
+
       // Navigate to appropriate result page
       setCurrentPage(result.status === 200 ? 'success' : 'failure')
 
     } catch (error) {
       console.error('App: Error processing transaction', error)
+
+      // Stop operation with error
+      datadogRum.failFeatureOperation('send-money-transaction', 'error', {
+        operationKey: 'send-money-transaction-main',
+        context: {
+          errorType: 'system-error',
+          errorMessage: error.message || 'Unknown error',
+          endTime: new Date().toISOString()
+        },
+        description: 'Transaction failed due to system error'
+      })
+      console.log('Operation failed (system error): send-money-transaction')
 
       // Handle unexpected errors
       setTransactionData({

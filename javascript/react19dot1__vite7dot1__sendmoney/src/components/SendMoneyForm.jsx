@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ScamAlertModal from './ScamAlertModal'
 import { datadogRum } from '../datadog-rum' // Import Datadog RUM for adding custom actions
 
@@ -14,6 +14,22 @@ function SendMoneyForm({ onSubmit }) {
   const [showScamAlert, setShowScamAlert] = useState(false)
   // Blacklisted numbers list
   const BLACKLISTED_NUMBERS = ['88888888']
+
+  // Start operation when landing page loads
+  useEffect(() => {
+    const operationKey = 'send-money-transaction-main'
+
+    datadogRum.startFeatureOperation('send-money-transaction', {
+      operationKey: operationKey,
+      context: {
+        startTime: new Date().toISOString(),
+        page: 'landing'
+      },
+      description: 'User journey from landing page to transaction result'
+    })
+
+    console.log('Started operation: send-money-transaction')
+  }, [])
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -98,6 +114,22 @@ function SendMoneyForm({ onSubmit }) {
 
     // Check if phone number is blacklisted
     if (isBlacklisted(formData.phone)) {
+      // Start nested operation for scam alert decision
+      const parentOperationKey = 'send-money-transaction-main'
+      const scamAlertOperationKey = 'send-money-transaction-main:scam-alert'
+
+      datadogRum.startFeatureOperation('scam-alert-decision', {
+        operationKey: scamAlertOperationKey,
+        context: {
+          parentOperationKey: parentOperationKey,
+          phoneNumber: formData.phone,
+          amount: formData.amount,
+          startTime: new Date().toISOString()
+        },
+        description: 'User decision on scam alert warning'
+      })
+      console.log('Started nested operation: scam-alert-decision')
+
       // Show scam alert modal
       setShowScamAlert(true)
       return
@@ -109,12 +141,30 @@ function SendMoneyForm({ onSubmit }) {
 
   // Handle Accept button in modal
   const handleAcceptRisk = async () => {
+    // STATIC operation keys (same as when we started)
+    const parentOperationKey = 'send-money-transaction-main'
+    const scamAlertOperationKey = 'send-money-transaction-main:scam-alert'
+
     // Track Accept action in Datadog RUM as Custom Action in Datadog RUM
     datadogRum.addAction('acceptScamRisk', {
       phoneNumber: formData.phone,
       scamAmount: parseFloat(formData.amount),
       scamBlacklistedNumber: true
     })
+
+    // STOP nested operation with SUCCESS (user made a decision)
+    datadogRum.succeedFeatureOperation('scam-alert-decision', {
+      operationKey: scamAlertOperationKey,
+      context: {
+        parentOperationKey: parentOperationKey,
+        decision: 'accepted',
+        phoneNumber: formData.phone,
+        amount: formData.amount,
+        endTime: new Date().toISOString()
+      },
+      description: 'User accepted the scam risk'
+    })
+    console.log('Nested operation succeeded: scam-alert-decision (accepted)')
 
     // Close modal
     setShowScamAlert(false)
@@ -124,12 +174,43 @@ function SendMoneyForm({ onSubmit }) {
 
   // Handle Reject button in modal
   const handleRejectRisk = () => {
+    // STATIC operation keys (same as when we started)
+    const parentOperationKey = 'send-money-transaction-main'
+    const scamAlertOperationKey = 'send-money-transaction-main:scam-alert'
+
     // Track Reject action in Datadog RUM as Custom Action in Datadog RUM
     datadogRum.addAction('rejectScamRisk', {
       phoneNumber: formData.phone,
       scamAmount: parseFloat(formData.amount),
       scamBlacklistedNumber: true
     })
+
+    // STOP nested operation with SUCCESS (user made a decision)
+    datadogRum.succeedFeatureOperation('scam-alert-decision', {
+      operationKey: scamAlertOperationKey,
+      context: {
+        parentOperationKey: parentOperationKey,
+        decision: 'rejected',
+        phoneNumber: formData.phone,
+        amount: formData.amount,
+        endTime: new Date().toISOString()
+      },
+      description: 'User rejected the scam risk'
+    })
+    console.log('Nested operation succeeded: scam-alert-decision (rejected)')
+
+    // STOP main operation with FAILURE (transaction abandoned)
+    datadogRum.failFeatureOperation('send-money-transaction', 'abandoned', {
+      operationKey: parentOperationKey,
+      context: {
+        reason: 'user-rejected-scam-alert',
+        phoneNumber: formData.phone,
+        amount: formData.amount,
+        endTime: new Date().toISOString()
+      },
+      description: 'Transaction abandoned - user rejected scam alert'
+    })
+    console.log('Main operation failed: send-money-transaction (abandoned)')
 
     // Close modal and do nothing
     setShowScamAlert(false)

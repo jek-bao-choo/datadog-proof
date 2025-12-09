@@ -10,6 +10,7 @@ if (typeof window !== 'undefined' && !window.__DATADOG_RUM_INSTALLED__) {
     service: 'jek-sendmoney-app',
     env: 'test',
     version: '1.0.2',
+    enableExperimentalFeatures: ['feature_operation_vital'],
     sessionSampleRate: 100,
     sessionReplaySampleRate: 100,
     defaultPrivacyLevel: 'mask-user-input',
