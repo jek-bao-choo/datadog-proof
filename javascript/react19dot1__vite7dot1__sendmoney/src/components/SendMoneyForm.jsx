@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import ScamAlertModal from './ScamAlertModal'
 import { datadogRum } from '../datadog-rum' // Import Datadog RUM for adding custom actions
 
-function SendMoneyForm({ onSubmit }) {
+function SendMoneyForm({ onSubmit, selectedPayee }) {
   // Form state
   const [formData, setFormData] = useState({
     phone: '',
@@ -30,6 +30,16 @@ function SendMoneyForm({ onSubmit }) {
 
     console.log('Started operation: send-money-transaction')
   }, [])
+
+  // Auto-fill phone when payee is selected
+  useEffect(() => {
+    if (selectedPayee) {
+      setFormData(prev => ({
+        ...prev,
+        phone: selectedPayee.mobileNumber
+      }))
+    }
+  }, [selectedPayee])
 
   // Handle input changes
   const handleInputChange = (e) => {

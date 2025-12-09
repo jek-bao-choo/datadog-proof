@@ -447,6 +447,173 @@
   transform: translateY(0);
 }
 
+/* Payees Section Styles */
+.payees-section {
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--gray-200);
+  padding-top: var(--space-6);
+}
+
+.payees-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.payees-header h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
+}
+
+.add-payee-button {
+  background-color: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-height: 36px;
+}
+
+.add-payee-button:hover {
+  background-color: var(--primary-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.add-payee-button:active {
+  transform: translateY(0);
+}
+
+.empty-payees {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+.empty-payees p {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.payees-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.payee-item {
+  padding: var(--space-4);
+  background-color: var(--gray-50);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.payee-item:hover {
+  background-color: var(--gray-100);
+  border-color: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.payee-item:active {
+  transform: translateY(0);
+}
+
+.payee-info {
+  flex: 1;
+  min-width: 0; /* Allows text truncation if needed */
+}
+
+.payee-name {
+  font-weight: 600;
+  color: var(--gray-900);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-1);
+}
+
+.payee-mobile {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.delete-payee-button {
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  min-width: 32px; /* Prevent shrinking */
+  font-size: 16px; /* Optimized for emoji */
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+.delete-payee-button:hover {
+  background-color: var(--gray-200);
+  transform: scale(1.1);
+  box-shadow: var(--shadow);
+}
+
+.delete-payee-button:active {
+  transform: scale(0.95);
+  background-color: var(--gray-300);
+}
+
+/* Save Button (for Add Payee Modal) */
+.save-button {
+  background-color: var(--success-green);
+  color: var(--white);
+}
+
+.save-button:hover {
+  background-color: #198754;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.save-button:active {
+  transform: translateY(0);
+}
+
+/* Cancel Button (for Add Payee Modal) */
+.cancel-button {
+  background-color: var(--gray-200);
+  color: var(--gray-900);
+}
+
+.cancel-button:hover {
+  background-color: var(--gray-300);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.cancel-button:active {
+  transform: translateY(0);
+}
+
 /* Tablet Responsive Styles for Modal */
 @media (min-width: 768px) {
   .modal-content {
@@ -469,5 +636,26 @@
   .modal-button {
     min-height: 48px;
     font-size: var(--font-size-lg);
+  }
+
+  .payees-header h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .add-payee-button {
+    font-size: var(--font-size-base);
+    padding: var(--space-3) var(--space-5);
+    min-height: 40px;
+  }
+
+  .payee-item {
+    padding: var(--space-5);
+  }
+
+  .delete-payee-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 18px; /* Slightly larger emoji for tablet */
   }
 }

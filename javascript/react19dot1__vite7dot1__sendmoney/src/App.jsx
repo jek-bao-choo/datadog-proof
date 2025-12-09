@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import SendMoneyForm from './components/SendMoneyForm'
 import ResultPage from './components/ResultPage'
+import PayeesList from './components/PayeesList'
+import AddPayeeModal from './components/AddPayeeModal'
 import { mockSendMoney } from './services/mockApi'
 import { datadogRum } from './datadog-rum'
 
@@ -13,6 +15,30 @@ function App() {
     status: '',
     message: ''
   })
+
+  // Payees state
+  const [payees, setPayees] = useState([])
+  const [showAddPayeeModal, setShowAddPayeeModal] = useState(false)
+  const [selectedPayee, setSelectedPayee] = useState(null)
+
+  // Load payees from localStorage on mount
+  useEffect(() => {
+    const savedPayees = localStorage.getItem('payees')
+    if (savedPayees) {
+      try {
+        setPayees(JSON.parse(savedPayees))
+      } catch (error) {
+        console.error('Error loading payees:', error)
+      }
+    }
+  }, [])
+
+  // Save payees to localStorage whenever they change
+  useEffect(() => {
+    if (payees.length >= 0) {
+      localStorage.setItem('payees', JSON.stringify(payees))
+    }
+  }, [payees])
 
   // Handle form submission
   const handleSendMoney = async (phone, amount) => {
@@ -94,12 +120,34 @@ function App() {
   const returnToHome = () => {
     setCurrentPage('landing')
     setTransactionData({ id: '', status: '', message: '' })
+    setSelectedPayee(null) // Clear selected payee
   }
 
-  // Error boundary for development
-  const handleError = (error) => {
-    console.error('App Error:', error)
-    setCurrentPage('landing')
+  // Payees handlers
+  const handleAddPayee = () => {
+    setShowAddPayeeModal(true)
+  }
+
+  const handleSavePayee = (newPayee) => {
+    setPayees(prev => [...prev, newPayee])
+    setShowAddPayeeModal(false)
+  }
+
+  const handleCancelAddPayee = () => {
+    setShowAddPayeeModal(false)
+  }
+
+  const handleSelectPayee = (payee) => {
+    setSelectedPayee(payee)
+  }
+
+  const handleDeletePayee = (payeeId) => {
+    // Remove payee from the list
+    setPayees(prev => prev.filter(payee => payee.id !== payeeId))
+    // Clear selected payee if it was the one deleted
+    if (selectedPayee && selectedPayee.id === payeeId) {
+      setSelectedPayee(null)
+    }
   }
 
   return (
@@ -111,7 +159,16 @@ function App() {
               <h1>Send Money</h1>
               <p>Send money quickly and securely</p>
             </div>
-            <SendMoneyForm onSubmit={handleSendMoney} />
+            <SendMoneyForm
+              onSubmit={handleSendMoney}
+              selectedPayee={selectedPayee}
+            />
+            <PayeesList
+              payees={payees}
+              onAddPayee={handleAddPayee}
+              onSelectPayee={handleSelectPayee}
+              onDeletePayee={handleDeletePayee}
+            />
           </div>
         )}
 
@@ -121,6 +178,14 @@ function App() {
             transactionId={transactionData.id}
             message={transactionData.message}
             onReturnHome={returnToHome}
+          />
+        )}
+
+        {/* Add Payee Modal */}
+        {showAddPayeeModal && (
+          <AddPayeeModal
+            onSave={handleSavePayee}
+            onCancel={handleCancelAddPayee}
           />
         )}
       </div>
