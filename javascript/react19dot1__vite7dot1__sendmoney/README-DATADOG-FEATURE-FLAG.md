@@ -374,7 +374,54 @@ React renders/hides PayeesList based on value
 - Changes in Datadog take effect on next cache refresh
 - Hard refresh browser to force immediate update
 
----
+### How OpenFeature Checks Flag Values
+
+When the line "OpenFeature client checks flag value" runs in the flow above, here's what actually happens:
+
+#### Communication Protocol
+
+**Protocol:** HTTPS REST API (not WebSockets, not push notifications)
+
+**Method:** Polling with client-side evaluation
+
+#### Detailed Process
+
+**1. Initial Connection (During `initializeFeatureFlags()`)**
+```
+Browser --> HTTPS Request --> Datadog Feature Flag API
+                              (https://api.datadoghq.com/api/v2/feature_flags)
+Browser <-- HTTPS Response <-- Flag configurations downloaded as JSON
+```
+
+What gets downloaded:
+- All feature flag definitions for your application
+- Targeting rules and conditions
+- Default values and variations
+- Evaluation logic
+
+**2. Local Storage (In Browser Memory)**
+- The Datadog provider stores all flag configurations in browser memory
+- No database or localStorage used (fresh download on each page load)
+- Contains ALL flags for your app, not just the ones you're using
+
+**3. Flag Evaluation (When `useFeatureFlag` is called)**
+```javascript
+// When your component calls:
+const { isEnabled } = useFeatureFlag('enable-payee-feature', false)
+```
+
+**4. Exposure Logging (When `enableExposureLogging: true`)**
+```
+Flag evaluated (e.g., returns "true")
+     ↓
+Browser --> HTTPS Request --> Datadog RUM API
+                              (logs which flag, which value, which user)
+```
+
+This is a **separate** request that:
+- Sends analytics about flag usage
+- Helps track which users saw which variants
+- Counts as RUM event (may impact costs)
 
 ## FAQ
 
@@ -401,6 +448,9 @@ A: Use the same `useFeatureFlag` hook with a different flag name. Create the new
 
 **Q: Is there a performance impact?**
 A: Minimal. Flag checks are fast (< 10ms) and cached. The async initialization adds ~100-200ms to app startup but happens before rendering.
+
+**Q: Does OpenFeature use polling or push for flag updates?**
+A: OpenFeature with Datadog provider uses **polling** (pull-based). The browser requests flag updates from Datadog every 60 seconds. It does NOT use WebSockets or push notifications. Flag evaluations happen locally in the browser (no network request per check), making them extremely fast.
 
 **Q: How long should feature flags live?**
 A: Temporary flags (rollouts) should be removed 3-6 months after full deployment. Permanent flags (kill switches) can stay longer but should be reviewed regularly.
