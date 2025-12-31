@@ -17,8 +17,9 @@ export function useFeatureFlag(flagName, defaultValue = false) {
     async function checkFlag() {
       try {
         const client = getFeatureFlagClient()
-        const value = await client.getBooleanValue(flagName, defaultValue)
+        const value = await client.getBooleanValue('react19dot1-vite7dot1-sendmoney-featureflagkey', defaultValue)
         setIsEnabled(value)
+        console.log(`Datadog Feature Flags: Feature flag ${flagName} is ${value}`)  
       } catch (error) {
         console.error(`Datadog Feature Flags: Error checking feature flag ${flagName}:`, error)
         // Datadog Feature Flags: Fall back to default value on error

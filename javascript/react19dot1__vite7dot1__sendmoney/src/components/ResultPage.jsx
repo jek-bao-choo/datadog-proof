@@ -1,4 +1,4 @@
-function ResultPage({ status, transactionId, message, onReturnHome }) {
+function ResultPage({ status, transactionId, onReturnHome }) {
   const isSuccess = status === 200
 
   return (

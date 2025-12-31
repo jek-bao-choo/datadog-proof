@@ -14,8 +14,18 @@ if (typeof window !== 'undefined' && !window.__DATADOG_RUM_INSTALLED__) {
     sessionSampleRate: 100,
     sessionReplaySampleRate: 100,
     defaultPrivacyLevel: 'mask-user-input',
-    // This app doesn’t use react-router, so omit router tracking
+    // This app doesn't use react-router, so omit router tracking
     // plugins: [reactPlugin()],
+  })
+
+  // Set user information for RUM tracking
+  // IMPORTANT: This user.id must match the targetingKey in feature flags
+  datadogRum.setUser({
+    id: 'user-12345',
+    name: 'John Doe',
+    email: 'user-12345@example.com',
+    plan: 'premium',
+    userRole: 'beta-tester'
   })
 
   window.__DATADOG_RUM_INSTALLED__ = true
