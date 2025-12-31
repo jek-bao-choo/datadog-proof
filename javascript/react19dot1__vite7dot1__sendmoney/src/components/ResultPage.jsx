@@ -1,5 +1,23 @@
+import { useEffect } from 'react'
+
 function ResultPage({ status, transactionId, onReturnHome }) {
   const isSuccess = status === 200
+
+  // Custom Vital: Stop measuring transaction duration when result page renders
+  useEffect(() => {
+    window.DD_RUM.stopDurationVital('jekCustomVitalSendMoneyTransaction', {
+      context: {
+        status: status,
+        transactionId: transactionId,
+        isSuccess: isSuccess,
+        endTime: new Date().toISOString()
+      }
+    })
+    console.log('Custom Vital Stopped: jekCustomVitalSendMoneyTransaction', {
+      status,
+      transactionId
+    })
+  }, [status, transactionId, isSuccess])
 
   return (
     <div className={`result-page ${isSuccess ? 'success' : 'failure'}`}>

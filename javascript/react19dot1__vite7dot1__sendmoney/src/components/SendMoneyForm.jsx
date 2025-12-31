@@ -101,6 +101,17 @@ function SendMoneyForm({ onSubmit, selectedPayee }) {
 
   // Process the actual transaction
   const processTransaction = async () => {
+    // Custom Vital: Start measuring transaction duration
+    // This tracks time from button click to result page display
+    window.DD_RUM.startDurationVital('jekCustomVitalSendMoneyTransaction', {
+      context: {
+        phone: formData.phone,
+        amount: formData.amount,
+        startTime: new Date().toISOString()
+      }
+    })
+    console.log('Custom Vital Started: jekCustomVitalSendMoneyTransaction')
+
     setIsLoading(true)
 
     try {
