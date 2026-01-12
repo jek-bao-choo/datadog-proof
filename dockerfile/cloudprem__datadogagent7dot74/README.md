@@ -42,7 +42,7 @@ cp .env.example .env
 
 Since logs are sent to **CloudPrem locally** (not Datadog cloud), you have two options:
 
-**Option 1: Dummy API Key (Recommended for local testing)**
+**Dummy API Key**
 ```bash
 # .env file
 DD_API_KEY=0000000000000000000000000000000
@@ -51,17 +51,6 @@ DD_API_KEY=0000000000000000000000000000000
 - ✅ No need for a Datadog account
 - ⚠️ Metrics will fail to send to Datadog cloud (but logs work perfectly)
 
-**Option 2: Real API Key (If you want cloud metrics too)**
-```bash
-# .env file
-DD_API_KEY=your_actual_datadog_api_key_here
-```
-- ✅ Logs go to CloudPrem locally
-- ✅ Metrics and other data also sent to Datadog cloud
-- 📌 Get your key from: https://app.datadoghq.com/organization-settings/api-keys
-
-**Why is an API key required at all?**
-The Datadog agent validates that an API key is present at startup, even if you're only sending logs locally. A dummy key satisfies this requirement.
 
 ### Step 3: Start the Datadog Agent
 
@@ -190,58 +179,9 @@ docker-compose logs datadog-agent | grep "HTTP connectivity"
 # You should see:
 # HTTP connectivity successful
 
-# Verify custom attributes are being collected
-docker-compose exec datadog-agent agent tagger-list | grep -A 5 "log-generator"
-
-# You should see tags like: owner:jek env:test
 ```
 
-### Quick Test - Verify Everything Works
-
-```bash
-# 1. Start a JSON log generator (run this command)
-docker run -d --name log-generator \
-  --label owner=jek \
-  --label env=test \
-  alpine sh -c 'while true; do echo "{\"message\":\"Test log\",\"owner\":\"jek\",\"env\":\"test\",\"level\":\"info\"}"; sleep 1; done'
-
-# 2. Wait 30 seconds, then open CloudPrem
-# http://localhost:7280/logs
-
-# 3. Click on any log from "log-generator"
-# You should see owner, env, and level in FIELDS & ATTRIBUTES!
-
-# 4. Clean up when done
-docker stop log-generator && docker rm log-generator
-```
-
-### View Logs in CloudPrem
-
-1. Make sure CloudPrem is running on port 7280
-2. Open your browser to: http://localhost:7280/logs
-3. Logs should appear within 30 seconds
-4. Click on any log entry to see details
-
-**What you'll see in the log details:**
-
-In the **FIELDS & ATTRIBUTES** section:
-- `env: test` - Your custom environment attribute
-- `owner: jek` - Your custom owner attribute
-- `level: info` - Log level from JSON
-- `timestamp: 2026-01-12T07:20:02Z` - Timestamp from JSON
-- `message: Test log with custom attributes` - The log message
-
-In the **ALL TAGS** section:
-- `env:test` - From Docker labels
-- `container_name:log-generator` - Auto-collected by agent
-
-## 🧪 Generating Test Logs
-
-Want to see logs with custom attributes flowing into CloudPrem? Here are several ways to generate test logs:
-
-**Important**: Logs must be in JSON format for custom attributes to appear in the **FIELDS & ATTRIBUTES** section. Plain text logs will only show the message.
-
-### Use the Helper Script
+## Use the Helper Script to generate test logs
 
 ```bash
 # Run the interactive log generator
