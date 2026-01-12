@@ -189,6 +189,54 @@ docker-compose logs datadog-agent | grep "HTTP connectivity"
 
 All logs are generated in **JSON format** with custom attributes embedded in the log message: **owner=jek** and **env=test**
 
+## 📂 Where Logs Are Stored
+
+CloudPrem stores all logs in a **bind-mounted directory** on your host machine:
+
+**Location**: Check with this command:
+```bash
+docker inspect cloudprem | grep -A 1 '"Source"' | grep qwdata
+```
+
+Typical location: `~/path/to/qwdata/`
+
+**Important**: This directory persists even when you delete Docker containers and volumes!
+
+### Storage Structure
+
+```
+qwdata/
+├── indexes/datadog/    - Your indexed log data (.split files)
+├── wal/                - Write-Ahead Log (recent logs)
+├── indexer-split-cache/- Index cache
+└── ...                 - Other metadata
+```
+
+### Clear All Logs
+
+If you want to delete all historical logs and start fresh:
+
+**Option 1: Use the helper script**
+```bash
+./clear-cloudprem-logs.sh
+```
+
+**Option 2: Manual cleanup**
+```bash
+# 1. Stop CloudPrem
+docker stop cloudprem
+
+# 2. Find the data directory
+QWDATA_PATH=$(docker inspect cloudprem | grep -A 1 '"Source"' | grep qwdata | cut -d'"' -f4)
+echo "Data location: $QWDATA_PATH"
+
+# 3. Delete all data
+rm -rf "$QWDATA_PATH"/*
+
+# 4. Restart CloudPrem
+docker start cloudprem
+```
+
 ## 🔧 Troubleshooting
 
 ### No Logs Appearing in CloudPrem
@@ -273,6 +321,7 @@ cloudprem__datadogagent7dot74/
 ├── .gitignore                      # Git ignore rules
 ├── docker-compose.yml              # Container configuration
 ├── generate-logs.sh                # Log generation helper script
+├── clear-cloudprem-logs.sh         # Clear CloudPrem log data script
 └── README.md                       # This file
 ```
 
