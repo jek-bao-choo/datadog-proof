@@ -1,13 +1,6 @@
 # Datadog Agent Docker Setup
 
-A simple Docker Compose setup for running CloudPrem and Datadog Agent with environment-based API key configuration.
-
-## Features
-
-✅ **Local Log Indexing**: Logs sent to CloudPrem (localhost:7280) instead of Datadog cloud
-✅ **Custom Attributes**: JSON logs with custom fields (`owner`, `env`) appear as searchable attributes
-✅ **Docker Label Collection**: Container labels automatically collected as tags
-✅ **Easy Testing**: Helper script to generate test logs with custom attributes
+![](proof1.png)
 
 ## 🚀 Setup Instructions
 
