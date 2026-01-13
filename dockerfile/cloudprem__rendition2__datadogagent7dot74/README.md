@@ -20,3 +20,6 @@ docker compose up -d
 ```bash
 curl http://localhost:7280/api/v1/version
 ```
+
+## Reverse Connection
+The reverse connection option for Datadog SaaS connectivity to avoid setting up a public ingress. Reverse connection allows CloudPrem to initiate a secured connection with Datadog region and keep it open to allow bidirectional data exchange.

@@ -24,6 +24,9 @@ docker run  \
   datadog/cloudprem:edge run
 ```
 
+#### Reverse Connection
+The reverse connection option for Datadog SaaS connectivity to avoid setting up a public ingress. Reverse connection allows CloudPrem to initiate a secured connection with Datadog region and keep it open to allow bidirectional data exchange.
+
 Visit http://localhost:7280/logs/ to see it running
 
 ### Step 2: Configure Environment
