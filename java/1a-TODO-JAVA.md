@@ -2,9 +2,9 @@
 * A folder named springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback contains a Java 17 web app using Spring Boot version 3.5.9 with embedded Tomcat version 10.1 that uses openjdk 17.0.17 that uses Maven
 * Use SLF4J + Logback for logging implementation
 * Create 3 API endpoints:
-* First endpoint GET that returns some dummy data with 5 digits random number and writes to the log with every call.
-* Second endpoint POST that writes to the log with every call
-* Third endpoint PUT that will return status code followed by writes to the log with every call
+* First endpoint GET that returns some dummy data with 5 digits random number and writes to the log with every call. It logs to the console.
+* Second endpoint POST that writes to the log with every call. It logs to the SyslogAppender.
+* Third endpoint PUT that will return status code followed by writes to the log with every call. It logs to the FileAppender.
 * Every endpoint will have a 30% chance of returning 2XX status code, 40% chance of returning a 4XX status code, and 30% chance of returning a 5XX status code. 
 * Use Playwright Java MCP to test the Java app whenever viable.
 * Document instructions on testing these three endpoints using curl commands to README.md
