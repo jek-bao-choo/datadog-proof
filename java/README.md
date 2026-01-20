@@ -19,6 +19,8 @@ java --version
 
 ```
 
+---
+
 ## JMX = The JVM's built-in metrics system
 
 ### How JVM Metrics Work
@@ -248,3 +250,186 @@ management.metrics.enable.jvm=true
   ]
 }
 ```
+
+
+## JVM Logging: SLF4J vs Logback vs Log4j2
+
+### What They Are
+
+* **SLF4J**
+  A *logging API/abstraction*. Your code depends on it, but it does not perform actual logging.
+
+* **Logback**
+  A *logging implementation* designed to work natively with SLF4J. Simple, reliable, and the default in many frameworks (e.g., Spring Boot).
+
+* **Log4j2**
+  A *logging implementation* (successor to Log4j 1.x) with high throughput and advanced features. Can also be used via SLF4J.
+
+
+
+### Key Distinction
+
+* **SLF4J** = Logging API (what you code against)
+* **Logback** / **Log4j2** = Logging implementations (what writes the logs)
+
+> Always code against SLF4J and choose your logging implementation at runtime.
+
+
+### When to Use Which
+
+#### SLF4J
+
+* Always use as your logging API.
+* Decouples code from the logging backend.
+* Allows implementation swaps without code changes.
+
+
+
+#### Logback (Recommended Default)
+
+**Use when:**
+
+* You want a simple, reliable logger.
+* Using Spring Boot or moderate logging needs.
+* You prefer easy configuration.
+
+**Use cases**
+
+* Most microservices
+* Standard app logging
+* Structured logs (JSON or text)
+
+
+
+#### Log4j2 (Advanced / High Performance)
+
+**Use when:**
+
+* Logging performance and throughput matter.
+* You need advanced routing or async behavior.
+* Operational complexity is acceptable.
+
+**Use cases**
+
+* High-volume services
+* Latency-sensitive systems
+* Complex routing/filtering
+
+
+### Practical Rules
+
+* Application code → **SLF4J API**
+* Implementation choice → **Logback** or **Log4j2**
+* Do *not* mix multiple logging implementations
+* Validate async behavior under load if used
+
+
+
+### Decision Guide
+
+* Default service → **SLF4J + Logback**
+* High throughput / advanced features → **SLF4J + Log4j2**
+* Shared library → **SLF4J only**
+
+
+
+
+---
+
+
+
+
+## Use Spring Initializr for Springboot app
+
+Creating a Java 17 web application with Spring Boot 3.5.x is a modern, streamlined process. Spring Boot 3.x is designed to work with Java 17 as a minimum requirement and utilizes Jakarta EE 10, which includes **Tomcat 10.1** by default.
+
+
+### 1. Initialize the Project
+
+The easiest way to start is via [Spring Initializr](https://start.spring.io/). Use the following settings:
+
+* **Project:** Maven or Gradle (Maven is used for this example)
+* **Language:** Java
+* **Spring Boot:** 3.5.x (Choose the latest 3.5.x version available)
+* **Java:** 17
+* **Dependencies:** Spring Web
+
+Once generated, download the ZIP, extract it, and open it in your IDE (IntelliJ, VS Code, or Eclipse).
+
+
+### 2. Configure the `pom.xml` (Maven)
+
+Spring Boot manages dependencies via its "Parent" POM. This ensures that when you specify Spring Boot 3.5.9, the compatible version of Tomcat (10.1.x) is pulled in automatically.
+
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.9</version> <relativePath/>
+</parent>
+
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+</dependencies>
+
+<properties>
+    <java.version>17</java.version>
+</properties>
+
+```
+
+
+### 3. Understand the Architecture
+
+Spring Boot's "fat JAR" approach means the web server (Tomcat) is packaged inside your application, not the other way around.
+
+### 4. Create a Simple REST Controller
+
+To verify the app is working, create a controller class in your base package (e.g., `com.example.demo.HelloController`).
+
+```java
+package com.example.demo;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController {
+
+    @GetMapping("/")
+    public String index() {
+        return "Spring Boot 3.5.9 is running on Tomcat 10.1 with Java 17!";
+    }
+}
+
+```
+
+
+### 5. Run the Application
+
+You can run the application directly from your IDE or via the terminal:
+
+```bash
+./mvnw spring-boot:run
+
+```
+
+**Verification:**
+
+* Check the console logs. You should see a line similar to:
+`o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)`
+* Open your browser and navigate to `http://localhost:8080`.
+
+
+### Key Compatibility Notes
+
+| Component | Version Requirement |
+| --- | --- |
+| **Jakarta EE** | Spring Boot 3 uses **Jakarta EE 10** (Namespace `jakarta.*` instead of `javax.*`). |
+| **Tomcat 10.1** | This version is the first to support Jakarta EE 10 and is the default for Spring Boot 3. |
+| **Java 17** | This is the baseline. You cannot run Spring Boot 3 on Java 8 or 11. |
+
+---
