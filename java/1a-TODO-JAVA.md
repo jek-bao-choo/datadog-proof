@@ -7,9 +7,10 @@
 * Third endpoint PUT that will return status code followed by writes to the log with every call
 * Every endpoint will have a 30% chance of returning 2XX status code, 40% chance of returning a 4XX status code, and 30% chance of returning a 5XX status code. 
 * Use Playwright Java MCP to test the Java app whenever viable.
-* Document instructions on running the app as well as on packaging and using the .jar to README.md
 * Document instructions on testing these three endpoints using curl commands to README.md
-* Document instructions on creating executable JAR file deployment to README.md
+* Document instructions on running the app to README.md
+* Document instructions on packaging the executable JAR file deployment as well as running it in a Linux Ubuntu machine details to README.md
+
 
 ## USE CONTEXT7
 - use library /context7/gradle?tokens=5000
