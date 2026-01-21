@@ -8,12 +8,19 @@
 ## TASKS:
 * Update the ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md file to include a section call "Datadog dd-trace-java" on steps to add dd-trace-java to the running .jar java app in MacOS and Linux Ubuntu OS. 
 * Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on log linking - by using the dd-trace-java SDK to inject trace_id and span_id into your logs, Datadog's backend can automatically surface all logs related to a specific error event.
-* Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on Dynamic Instrumentation for Java using dd-trace-java SDK - by adding "Log Probes" to the running application without redeploying code. The conditions where a probe would turn up the volume of logging based on an error.
-* Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on Datadog Agent level filtering by configuring the datadog.yaml and setting the Datadog Agent to send more of ERROR and CRITICAL logs. Also send more of "Info" logs during an incident.
-* Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on manually trigger "more logs" when you catch an exception in Java, you can use the Datadog SDK dd-trace-java to add "Tags" or "Baggage" to the current span. This makes the "lesser" logs much more valuable during an error.
-* Explain how Datadog can automatically prioritize the ingestion of logs that are part of an "Error Trace." in the ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md
-* Document instructions on testing these to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md
-* When adding instructions, please make sure that the instructions are simple and short - don't bloat the instructions before over explaining.
+* Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on Dynamic Instrumentation for Java using dd-trace-java SDK - by adding "Log Probes" to the running application without redeploying code. The conditions are for a probe to turn up the volume of logging based on an error.
+* Explain the architecture and components interaction of dynamic instrumentation and how log probe work to fulfil my objective to the ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md
+* Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on how to use Datadog Agent level filtering by configuring in a Linux Ubuntu environment the datadog.yaml and setting the Datadog Agent to send more of ERROR and CRITICAL logs. Also send more of "Info" logs during an incident.
+* Add instructions to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md on how to manually trigger "more logs" when you catch an exception in Java, you can use the Datadog SDK dd-trace-java to add "Tags" or "Baggage" to the current span. This makes the "lesser" logs much more valuable during an error.
+* Explain how Datadog can automatically prioritise the logs ingestion that are part of an "Error Trace." in the ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md
+* Document instructions on testing the above tasks to ./springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback/README.md
+* When adding instructions, please make sure that the instructions are simple and concise - don't bloat the instructions but over explaining.
+
+## Documentation Reference
+* https://docs.datadoghq.com/tracing/trace_collection/dynamic_instrumentation/enabling/java/?tab=curl for adding dynamic instrumentation
+* https://docs.datadoghq.com/tracing/trace_collection/library_config/java/
+* https://docs.datadoghq.com/tracing/trace_collection/dynamic_instrumentation/ for creating a probe, creating log probes, creating metric probes, creating span probes, and creating span tag probes
+* https://docs.datadoghq.com/tracing/other_telemetry/connect_logs_and_traces/java/?tab=maven for trace spans and logs correlation
 
 
 ## USE CONTEXT7
