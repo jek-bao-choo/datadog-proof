@@ -32,8 +32,8 @@ All endpoints randomly return HTTP status codes based on probability:
 Verify Java installation:
 ```bash
 java -version
-# Should show: openjdk version "17.0.17" or higher
 ```
+Should show: openjdk version "17.0.17" or higher
 
 ## Project Structure
 
