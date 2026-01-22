@@ -39,11 +39,23 @@ It gives us the ability to create new spans without Custom Instrumentation code 
 ![](proof11.png)
 Here is what I selected in my Span Probe setup. Easy - definitely easier than custom instrumentation with code changes. It's also timely, allowing you to adjust whenever you want without redeployment.
 
+---
 
+### On Dynamic Instrumentation Span Tag Probe
 
+![](proof12.png)
 
+![](proof13.png)
 
+![](proof14.png)
 
+![](proof15.png)
+
+---
+
+### On Dynamic Instrumentation Metric Probe
+
+WIP...
 
 ## Overview
 
