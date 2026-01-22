@@ -1,21 +1,10 @@
 # Spring Boot 3.5.9 REST API with Dynamic Instrumentation Log Probe and Span Probe
 
-### On Dynamic Instrumentation Log Probe
 
-![](proof1.png)
-Sending of logs (FileAppender).
+### On Dynamic Instrumentation Metric Probe
 
-![](proof3.png)
-With dynamic instrumentation for logs
-
-![](proof6.png)
-Here is the result of how the logs look like from dynamic instrumentation log probe. 
-
-![](proof5.png)
-Here is what it looks like when I am setting it up.
-
-![](proof4.png)
-Here is what it looks like after I set it up dynamic instrumentation log probe.
+![proof16.png]
+![proof17.png]
 
 ---
 
@@ -53,9 +42,56 @@ Here is what I selected in my Span Probe setup. Easy - definitely easier than cu
 
 ---
 
-### On Dynamic Instrumentation Metric Probe
 
-WIP...
+### On Dynamic Instrumentation Log Probe
+
+![](proof1.png)
+Sending of logs (FileAppender).
+
+![](proof3.png)
+With dynamic instrumentation for logs
+
+![](proof6.png)
+Here is the result of how the logs look like from dynamic instrumentation log probe. 
+
+![](proof5.png)
+Here is what it looks like when I am setting it up.
+
+![](proof4.png)
+Here is what it looks like after I set it up dynamic instrumentation log probe.
+
+#### The benefit of Dynamic Instrumentation Log Probe
+
+**Add Logs Without Code Changes or Redeployment**
+- Insert logs into running production applications on-the-fly
+- No need to modify source code, rebuild, or redeploy
+- Perfect for debugging production issues without downtime
+
+**Zero Permanent Code Pollution**
+- Temporary logging that you can enable/disable from the Datadog UI
+- Keeps your codebase clean and maintainable
+- No debug logs cluttering your source code
+
+**Safe for Production**
+- Rate limiting: Max 5,000 executions/second per instance
+- Conditional execution: Only log when specific conditions are met (e.g., `statusCode >= 400`)
+- Low overhead: Minimal performance impact
+
+**Dynamic Debugging**
+- Capture variable values, method arguments, and object properties in real-time
+- See exact values when errors occur without guessing
+
+**Faster Troubleshooting**
+
+Traditional approach (slow):
+1. User reports bug → Add debug logs to code → Commit, build, deploy → Wait for issue → Remove logs, redeploy
+2. **Total time: Hours or days**
+
+With Log Probes (fast):
+1. User reports bug → Add log probe in Datadog UI (30 seconds) → See debug data immediately → Delete probe when done
+2. **Total time: Minutes**
+
+**Real-World Example**: Users report intermittent 500 errors on PUT endpoint. Instead of redeploying with debug logs, create a probe with condition `statusCode >= 500` and message `"Error - Status: {statusCode}, Data: {responseData}"`. See logs immediately when the error occurs.
 
 ## Overview
 
