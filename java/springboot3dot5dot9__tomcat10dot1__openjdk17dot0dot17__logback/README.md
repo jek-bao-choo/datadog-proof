@@ -1,6 +1,97 @@
-# Spring Boot 3.5.9 REST API with Random Status Codes
+# Spring Boot 3.5.9 REST API with Dynamic Instrumentation Log Probe and Span Probe
 
-A demonstration Java web application built with Spring Boot 3.5.9, featuring REST API endpoints that return random HTTP status codes with configurable probability distribution and JSON logging using multiple Logback appenders.
+
+### On Dynamic Instrumentation Metric Probe
+
+![proof16.png]
+![proof17.png]
+
+---
+
+### On Dynamic Instrumentation Span Probe
+
+![](proof2.png)
+Spans are in.
+
+![](proof7.png)
+With and without dynamic instrumentation span probe.
+
+![](proof9.png)
+Two auto instrumentation spans
+
+![](proof8.png)
+Notice the difference in the span attributes / tags? But what does this mean?
+
+![](proof10.png)
+It gives us the ability to create new spans without Custom Instrumentation code changes when the auto instrumentation isn't capturing the spans we need. Therefore, we can debug more precisely.
+
+![](proof11.png)
+Here is what I selected in my Span Probe setup. Easy - definitely easier than custom instrumentation with code changes. It's also timely, allowing you to adjust whenever you want without redeployment.
+
+---
+
+### On Dynamic Instrumentation Span Tag Probe
+
+![](proof12.png)
+
+![](proof13.png)
+
+![](proof14.png)
+
+![](proof15.png)
+
+---
+
+
+### On Dynamic Instrumentation Log Probe
+
+![](proof1.png)
+Sending of logs (FileAppender).
+
+![](proof3.png)
+With dynamic instrumentation for logs
+
+![](proof6.png)
+Here is the result of how the logs look like from dynamic instrumentation log probe. 
+
+![](proof5.png)
+Here is what it looks like when I am setting it up.
+
+![](proof4.png)
+Here is what it looks like after I set it up dynamic instrumentation log probe.
+
+#### The benefit of Dynamic Instrumentation Log Probe
+
+**Add Logs Without Code Changes or Redeployment**
+- Insert logs into running production applications on-the-fly
+- No need to modify source code, rebuild, or redeploy
+- Perfect for debugging production issues without downtime
+
+**Zero Permanent Code Pollution**
+- Temporary logging that you can enable/disable from the Datadog UI
+- Keeps your codebase clean and maintainable
+- No debug logs cluttering your source code
+
+**Safe for Production**
+- Rate limiting: Max 5,000 executions/second per instance
+- Conditional execution: Only log when specific conditions are met (e.g., `statusCode >= 400`)
+- Low overhead: Minimal performance impact
+
+**Dynamic Debugging**
+- Capture variable values, method arguments, and object properties in real-time
+- See exact values when errors occur without guessing
+
+**Faster Troubleshooting**
+
+Traditional approach (slow):
+1. User reports bug → Add debug logs to code → Commit, build, deploy → Wait for issue → Remove logs, redeploy
+2. **Total time: Hours or days**
+
+With Log Probes (fast):
+1. User reports bug → Add log probe in Datadog UI (30 seconds) → See debug data immediately → Delete probe when done
+2. **Total time: Minutes**
+
+**Real-World Example**: Users report intermittent 500 errors on PUT endpoint. Instead of redeploying with debug logs, create a probe with condition `statusCode >= 500` and message `"Error - Status: {statusCode}, Data: {responseData}"`. See logs immediately when the error occurs.
 
 ## Overview
 
@@ -232,7 +323,7 @@ curl -s http://localhost:8080/api/data | jq
 
 ## Logging Configuration
 
-The application uses **Logback** with **JSON formatting** via `logstash-logback-encoder`.
+The application uses **Logback** with **JSON formatting** via `logstash-logback-encoder`. The logback file is at `/src/main/resources/logback-spring.xml`.
 
 ### Three Logging Destinations
 
@@ -330,11 +421,11 @@ java -version
 
 ### Step 2: Transfer JAR to Ubuntu Server
 
-**Option A: Using scp**
+**Option A: Using scp (preferred)**
 ```bash
 # From your local machine
-scp target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar \
-  user@ubuntu-server:/home/user/app/
+scp -i "~/.ssh/<key file name>" target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar \ 
+  ubuntu@xxxxxx.com:/home/ubuntu/
 ```
 
 **Option B: Using rsync**
@@ -587,6 +678,171 @@ To use Datadog APM and Dynamic Instrumentation with this application:
 - **dd-trace-java**: Latest version (compatible with Java 8+, including Java 17)
 - **Remote Configuration**: Enabled in Datadog Agent for Dynamic Instrumentation
 
+
+## Installing Datadog Agent (Ubuntu)
+
+```bash
+# Install Datadog Agent
+DD_API_KEY=<YOUR_API_KEY> \
+DD_SITE="datadoghq.com" \
+DD_ENV=testv7 \
+bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
+
+# Verify installation
+sudo systemctl status datadog-agent
+
+# Enable log collection
+sudo sed -i 's/# logs_enabled: false/logs_enabled: true/' /etc/datadog-agent/datadog.yaml
+
+# Restart agent
+sudo systemctl restart datadog-agent
+```
+
+Replace `<YOUR_API_KEY>` with your Datadog API key from [app.datadoghq.com](https://app.datadoghq.com/organization-settings/api-keys).
+
+### Agent Picks Up File Appender Logs
+
+The PUT endpoint logs to `logs/app.log`. Configure the Datadog Agent to tail this file:
+
+**1. Create Agent configuration file:**
+```bash
+sudo mkdir -p /etc/datadog-agent/conf.d/springboot-app.d
+sudo vim /etc/datadog-agent/conf.d/springboot-app.d/conf.yaml
+```
+
+**2. Add this configuration** (update `path` to match your deployment location):
+```yaml
+logs:
+  # Add this section for file appender logs
+  - type: file
+    path: /home/ubuntu/logs/app.log
+    service: springboot-app
+    source: java
+    tags:
+      - env:testv7
+      - version:0.0.2
+      - endpoint:put
+  # Console logs (stdout/stderr) from systemd service
+  # WORKS ONLY IF THE SPRINGBOOT-APP IS RUNNING AS A SYSTEMD SERVICE
+  - type: journald
+    service: springboot-app
+    source: java
+    tags:
+      - env:testv7
+      - endpoint:get
+```
+
+**3. Enable log collection and restart Agent:**
+```bash
+sudo sed -i 's/# logs_enabled: false/logs_enabled: true/' /etc/datadog-agent/datadog.yaml
+sudo systemctl restart datadog-agent
+```
+
+**4. VERY IMPORTANT - Set file permissions:**
+```bash
+# Give dd-agent group read access to the logs directory
+sudo chmod 755 /home/ubuntu
+sudo chmod 755 /home/ubuntu/logs
+sudo chmod 644 /home/ubuntu/logs/app.log
+
+# Verify dd-agent can now read it
+sudo -u dd-agent cat ~/logs/app.log | head -5
+
+# Restart
+sudo systemctl restart datadog-agent
+
+```
+
+**5. Verify:**
+```bash
+# Wait 30 seconds, then check status
+sleep 30
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+
+# Test with PUT request
+curl -X PUT http://localhost:8080/api/update
+```
+
+Logs appear in [Datadog Logs Explorer](https://app.datadoghq.com/logs) filtered by `service:springboot-app`. Trace IDs (`dd.trace_id`) automatically link logs to APM traces.
+
+
+### Agent Picks Up Syslog Appender Logs
+Create a dedicated syslog configuration file:
+
+`sudo mkdir -p /etc/datadog-agent/conf.d/syslog.d`
+
+`sudo nano /etc/datadog-agent/conf.d/syslog.d/conf.yaml`
+
+```yaml
+logs:
+  - type: udp
+    port: 514
+    service: springboot-app
+    source: syslog
+    tags:
+      - env:testv7
+      - endpoint:post
+```
+
+`sudo systemctl restart datadog-agent`
+
+2. Verify the Agent is listening on port 514:
+
+```bash
+sudo netstat -tulpn | grep 514
+# Or
+sudo ss -tulpn | grep 514
+```
+
+```bash
+# Test POST endpoint
+curl -v -X POST http://localhost:8080/api/submit \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test", "value": 123}'
+
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+```
+
+### Agent Level Filtering (Prioritize ERROR/CRITICAL Logs)
+
+Configure the Datadog Agent to filter logs and prioritize high-severity messages.
+
+**Configuration File**: `/etc/datadog-agent/datadog.yaml` (Ubuntu) or `/opt/datadog-agent/etc/datadog.yaml` (macOS)
+
+**Include Only ERROR/CRITICAL Logs**:
+```yaml
+logs_enabled: true
+logs_config:
+  processing_rules:
+    - type: include_at_match
+      name: include_errors_critical
+      pattern: '"level":"ERROR"|"level":"WARN"|"level":"FATAL"'
+```
+
+**Exclude INFO/DEBUG Logs** (alternative approach):
+```yaml
+logs_config:
+  processing_rules:
+    - type: exclude_at_match
+      name: exclude_low_severity
+      pattern: '"level":"INFO"|"level":"DEBUG"'
+```
+
+**Apply Changes**:
+```bash
+# Validate configuration
+sudo datadog-agent configcheck
+
+# Restart agent
+sudo systemctl restart datadog-agent
+
+# Verify agent status
+sudo systemctl status datadog-agent
+```
+
+**Dynamic Adjustment**: Comment/uncomment filtering rules during incidents to temporarily increase log volume.
+
+
 ## Installing dd-trace-java
 
 Download the Datadog Java tracer agent:
@@ -682,6 +938,28 @@ With dd-trace-java running, logs include trace context:
 
 Click trace IDs in Datadog Logs to view related traces.
 
+### Test All Endpoints
+
+```bash
+# Check before state of Logs processed and sent
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+
+# Test GET endpoint
+curl -v http://localhost:8080/api/data
+
+# Test POST endpoint
+curl -v -X POST http://localhost:8080/api/submit \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test", "value": 123}'
+
+# Test PUT endpoint
+curl -v -X PUT http://localhost:8080/api/update
+
+# Check if Logs are processed and sent
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+```
+
+
 ## Dynamic Instrumentation
 
 ### What is Dynamic Instrumentation
@@ -699,20 +977,15 @@ Dynamic Instrumentation adds logging, metrics, and tracing to your running appli
 
 Add the configuration flag when starting your application:
 
-**Option 1: JVM Argument**
+**JVM Argument**
 ```bash
 java -javaagent:dd-java-agent.jar \
   -Ddd.service=springboot-app \
-  -Ddd.env=production \
+  -Ddd.env=testv7 \
   -Ddd.version=0.0.1 \
+  -Ddd.agent.host=localhost \
   -Ddd.dynamic.instrumentation.enabled=true \
-  -jar target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar
-```
-
-**Option 2: Environment Variable**
-```bash
-export DD_DYNAMIC_INSTRUMENTATION_ENABLED=true
-java -javaagent:dd-java-agent.jar -jar target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar
+  -jar springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar
 ```
 
 Requires Datadog Agent 7.49.0+ with Remote Configuration enabled.
@@ -725,27 +998,61 @@ Create probes in the Datadog UI at **APM > Dynamic Instrumentation**.
 1. Click **"Create Probe"** → Select **"Log"**
 2. Specify location:
    - **Class**: `com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.ApiController`
-   - **Method**: `getData` (or `putUpdate` for PUT endpoint)
+   - **Method**: `updateData()` of the PUT endpoint
    - **Line Number**: Optional for precise placement
 3. Define message template:
    ```
-   Error 5XX detected - Status: {statusCode}
+   Error 4XX or 5XX detected - Status: {statusCode}
    ```
 4. Add condition (optional):
    ```
-   statusCode >= 500
+   statusCode >= 400
    ```
 5. Click **"Create"**
 
 **Example Probe: Trigger on 5XX Errors**
 
-- **Location**: `ApiController.putUpdate()` method
-- **Condition**: `statusCode >= 500`
-- **Message**: `5XX Error - Status: {statusCode}, Thread: {Thread.currentThread().getName()}`
+- **Location**: `ApiController.updateData()` method
+- **Condition**: `statusCode >= 400`
+- **Message**: `4XX or 5XX Error - Status: {statusCode}, Thread: {Thread.currentThread().getName()}`
 
-**Result**: Probe logs appear in Datadog with tag `source:dd_debugger` only when statusCode >= 500.
+Test it
+```bash
+# Test PUT endpoint
+curl -v -X PUT http://localhost:8080/api/update
+```
+
+**Result**: Probe logs appear in Datadog with tag `source:dd_debugger` only when statusCode >= 400.
 
 **Rate Limiting**: Probes execute up to 5,000 times/second per instance to prevent performance impact.
+
+![](proof3.png)
+
+![](proof6.png)
+Here is the result of how the logs look like from dynamic instrumentation log probe.
+
+### Creating Span Probes
+
+Span probes create custom APM spans to measure method execution time and performance.
+
+**Steps**:
+1. Go to **APM > Dynamic Instrumentation** → Click **"Create Probe"** → Select **"Span"**
+2. Specify location:
+   - **Class**: `com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.ApiController`
+   - **Method**: `submitData(Map)`
+3. Configure span:
+   - **Span Name**: `custom.submit.data`
+   - **Resource**: Optional (e.g., `POST /api/submit`)
+4. Click **"Create"**
+
+**Test it**:
+```bash
+curl -X POST http://localhost:8080/api/submit \
+  -H "Content-Type: application/json" \
+  -d '{"test":"data"}'
+```
+
+**Result**: Custom spans appear in APM traces with tag `source:dd_debugger`, showing exact execution time of the `submitData` method.
 
 ### Dynamic Expression Examples
 
@@ -842,65 +1149,6 @@ Dynamic Instrumentation architecture showing how probes work:
 - **Remote Configuration**: Real-time probe deployment
 - **Expression Language**: Dynamic runtime context evaluation
 - **Non-Invasive**: Probes don't modify source code or persist after restart
-
-## Datadog Agent Installation & Configuration
-
-### Installing Datadog Agent (Ubuntu)
-
-```bash
-# Install Datadog Agent
-DD_API_KEY=<YOUR_API_KEY> DD_SITE="datadoghq.com" bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
-
-# Verify installation
-sudo systemctl status datadog-agent
-
-# Enable log collection
-sudo sed -i 's/# logs_enabled: false/logs_enabled: true/' /etc/datadog-agent/datadog.yaml
-
-# Restart agent
-sudo systemctl restart datadog-agent
-```
-
-Replace `<YOUR_API_KEY>` with your Datadog API key from [app.datadoghq.com](https://app.datadoghq.com/organization-settings/api-keys).
-
-### Agent Level Filtering (Prioritize ERROR/CRITICAL Logs)
-
-Configure the Datadog Agent to filter logs and prioritize high-severity messages.
-
-**Configuration File**: `/etc/datadog-agent/datadog.yaml` (Ubuntu) or `/opt/datadog-agent/etc/datadog.yaml` (macOS)
-
-**Include Only ERROR/CRITICAL Logs**:
-```yaml
-logs_enabled: true
-logs_config:
-  processing_rules:
-    - type: include_at_match
-      name: include_errors_critical
-      pattern: '"level":"ERROR"|"level":"WARN"|"level":"FATAL"'
-```
-
-**Exclude INFO/DEBUG Logs** (alternative approach):
-```yaml
-logs_config:
-  processing_rules:
-    - type: exclude_at_match
-      name: exclude_low_severity
-      pattern: '"level":"INFO"|"level":"DEBUG"'
-```
-
-**Apply Changes**:
-```bash
-# Validate configuration
-sudo datadog-agent configcheck
-
-# Restart agent
-sudo systemctl restart datadog-agent
-
-# Verify agent status
-sudo systemctl status datadog-agent
-```
-
-**Dynamic Adjustment**: Comment/uncomment filtering rules during incidents to temporarily increase log volume.
 
 ## Automatic Error Trace Prioritization
 
