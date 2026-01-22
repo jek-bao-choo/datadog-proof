@@ -1,0 +1,20 @@
+kind: "DatadogAgent"
+apiVersion: "datadoghq.com/v2alpha1"
+metadata:
+  name: "datadog"
+spec:
+  global:
+    site: "datadoghq.com"
+    credentials:
+      apiSecret:
+        secretName: "datadog-secret"
+        keyName: "api-key"
+    clusterName: "jek-ddoperator-gke1dot32-standard"
+    registry: "gcr.io/datadoghq"
+    tags:
+      - "env:dev"
+      - "version:1.1.99"
+  features:
+    logCollection:
+      enabled: true
+      containerCollectAll: true

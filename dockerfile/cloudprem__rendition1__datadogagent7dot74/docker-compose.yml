@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7.74.0
+    container_name: datadog-agent
+    pid: host
+    cgroup: host
+    
+    # Environment variables loaded from .env file
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      # Custom logs endpoint for CloudPrem indexer
+      - DD_LOGS_CONFIG_USE_HTTP=true
+      - DD_LOGS_CONFIG_LOGS_NO_SSL=true
+      - DD_LOGS_CONFIG_LOGS_DD_URL=http://host.docker.internal:7280
+      # Collect Docker labels as tags/attributes
+      - DD_DOCKER_LABELS_AS_TAGS={"owner":"who-is-jek","env":"my-docker-env"}
+
+    # Required Docker parameters for system monitoring
+    # network_mode: host  # Commented out to allow port mapping
+    
+    # Security context
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    
+    # Required volume mounts (read-only for security)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "agent health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+    restart: unless-stopped

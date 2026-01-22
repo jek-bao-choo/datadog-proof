@@ -13,14 +13,6 @@ A modern, mobile-responsive React 19.1 application for sending money transaction
 - **Transaction Results**: Success and failure pages with transaction IDs
 - **Accessibility**: Proper ARIA labels and keyboard navigation support
 
-## 🛠 Technology Stack
-
-- **Frontend**: React 19.1.1
-- **Build Tool**: Vite 7.1.7
-- **Styling**: CSS Custom Properties (CSS Variables)
-- **Icons**: Unicode symbols (✓, ✗)
-- **Development**: ESLint, Hot Module Replacement
-
 ## 📦 Project Structure
 
 ```
@@ -132,51 +124,6 @@ Real User Monitoring is initialized before the app mounts.
 
 Note: This app doesn’t use React Router, so the Datadog React plugin is enabled without router tracking to ensure automatic view collection. So this is not required `@datadog/browser-rum-react`
 
-## 🎨 Design System
-
-The app uses a comprehensive design system with CSS custom properties:
-
-### Colors
-- Primary: Blue (`#007bff`)
-- Success: Green (`#28a745`)
-- Danger: Red (`#dc3545`)
-- Neutral: Gray scale (`#f8f9fa` to `#000000`)
-
-### Typography
-- Font Family: System UI fonts for optimal performance
-- Responsive font sizes (16px base, scaling to 18px on tablet+)
-- Clear hierarchy with proper contrast ratios
-
-### Spacing
-- Consistent spacing scale (4px, 8px, 12px, 16px, etc.)
-- Mobile-first approach with responsive adjustments
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-
-#### Form Validation
-- [ ] Phone number accepts only digits
-- [ ] Phone number limited to 8 characters
-- [ ] Amount accepts only digits
-- [ ] Amount limited to 4 characters
-- [ ] Form shows validation errors
-- [ ] Submit button disabled with invalid data
-
-#### API Integration
-- [ ] Loading state appears during API call
-- [ ] Success response shows success page
-- [ ] Failure response shows failure page
-- [ ] Transaction IDs are generated and displayed
-- [ ] "Return to Home" navigates back to form
-
-#### Responsive Design
-- [ ] Mobile layout (320px - 767px)
-- [ ] Tablet layout (768px - 1023px)
-- [ ] Desktop layout (1024px+)
-- [ ] Touch interactions work properly
-- [ ] All text is readable on mobile
-
 ## 🚀 Deployment
 
 ### Production Build
@@ -190,120 +137,6 @@ npm run preview
 
 The production files will be in the `dist/` directory.
 
-### 📱 Deploy to Cloudflare Pages (Recommended for WebView Apps)
-
-**Perfect for Android/iOS WebView integration with enterprise-grade performance and security.**
-
-#### Step 1: Build Your App
-```bash
-# Navigate to your project directory
-cd react19dot1__vite7dot1__sendmoney
-
-# Create production build
-npm run build
-```
-This creates a `dist/` folder with optimized files.
-
-#### Step 2: Deploy to Cloudflare Pages
-1. **Go to Cloudflare Pages**: Visit [pages.cloudflare.com](https://pages.cloudflare.com)
-
-2. **Create Free Account**: Sign up with email (no credit card required)
-
-3. **Upload Your App**:
-   - Click **"Upload assets"** button
-   - Drag and drop the entire `dist/` folder onto the upload area
-   - Wait for upload to complete (~30 seconds)
-
-4. **Configure Settings**:
-   - **Project name**: `send-money-app` (or your preferred name)
-   - **Production branch**: Leave default
-   - **Build settings**: Auto-detected (Vite)
-   - Click **"Save and Deploy"**
-
-5. **Get Your URL**: You'll receive a URL like:
-   ```
-   https://<REDACTED>.pages.dev
-   ```
-
-#### Step 3: Test Your Deployed App
-```bash
-# Test the live URL in your browser
-# Check mobile responsiveness (F12 → Device toolbar)
-# Verify all functionality works
-```
-
-### 🔧 WebView Integration Settings
-
-Your deployed app is automatically optimized for mobile WebView:
-
-#### ✅ **WebView-Ready Features**
-- **HTTPS**: Automatic SSL (required for iOS WKWebView)
-- **Mobile-optimized**: Touch-friendly design
-- **Fast loading**: Global CDN with 200+ locations
-- **No CORS issues**: Static files work in all WebViews
-- **Offline-friendly**: Cached assets for better performance
-
-#### 📱 **Android WebView Integration**
-```kotlin
-// In your Android app
-webView.loadUrl("https://your-app.pages.dev")
-webView.settings.javaScriptEnabled = true
-webView.settings.domStorageEnabled = true
-webView.settings.allowFileAccess = true
-```
-
-#### 🍎 **iOS WKWebView Integration**
-```swift
-// In your iOS app
-let url = URL(string: "https://your-app.pages.dev")!
-let request = URLRequest(url: url)
-webView.load(request)
-```
-
-### 🔄 **Updating Your Deployed App**
-
-When you make changes:
-```bash
-# 1. Build updated version
-npm run build
-
-# 2. Go to Cloudflare Pages dashboard
-# 3. Click your project → "Upload assets"
-# 4. Drag the new dist/ folder
-# 5. App updates automatically (~15 seconds)
-```
-
-### 🌐 **Custom Domain (Optional)**
-
-To use your own domain:
-1. **Buy domain** from any registrar
-2. **In Cloudflare Pages**: Go to project → Custom domains
-3. **Add domain**: Enter your domain name
-4. **Update DNS**: Add provided CNAME record to your domain
-5. **SSL**: Automatically provisioned
-
-### 📊 **Performance Benefits for PoC**
-- ⚡ **Fast loading**: ~200ms global response time
-- 🛡️ **DDoS protection**: Enterprise-grade security
-- 🌍 **Global CDN**: 200+ edge locations
-- 📱 **Mobile optimized**: Perfect for WebView apps
-- 🆓 **Completely free**: No limits for PoC usage
-
-### Alternative Deployment Options
-- **Vercel**: Great for React apps, similar setup
-- **Netlify**: Drag & drop deployment available
-- **GitHub Pages**: Git-based workflow
-- **Firebase Hosting**: Google ecosystem integration
-
-## 🔒 Security Considerations
-
-- **No Real Payment Processing**: This is a mock application only
-- **No Sensitive Data**: No real payment information is processed
-- **Input Sanitization**: Basic XSS prevention implemented
-- **No Backend**: All processing is client-side for demo purposes
-
-## ⚡ Performance
-
 ### Build Metrics
 - **Bundle Size**: ~192KB (gzipped: ~61KB)
 - **CSS Size**: ~7.4KB (gzipped: ~2KB)
@@ -315,37 +148,72 @@ To use your own domain:
 - Lazy loading ready architecture
 - Minimal external dependencies
 
-## 🛠 Development
 
-### Code Quality
-- ESLint configured for React best practices
-- Modern ES6+ syntax
-- Component-based architecture
-- Separation of concerns
+## Datadog Custom Actions
 
-### Browser Support
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+![](proof.png)
+![](proof2.png)
 
-## 📚 Learning Resources
+Datadog RUM Custom Actions --> https://docs.datadoghq.com/real_user_monitoring/guide/send-rum-custom-actions
 
-- [React 19.1 Documentation](https://react.dev/)
-- [Vite 7.1 Guide](https://vitejs.dev/guide/)
-- [CSS Custom Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/--*)
-- [Mobile-First Responsive Design](https://web.dev/responsive-web-design-basics/)
 
-## 🤝 Contributing
+In SendMoneyForm.jsx
+```js
+  // Handle Accept button in modal
+  const handleAcceptRisk = async () => {
+    // Track Accept action in Datadog RUM as Custom Action in Datadog RUM
+    datadogRum.addAction('acceptScamRisk', {
+      phoneNumber: formData.phone,
+      scamAmount: parseFloat(formData.amount),
+      scamBlacklistedNumber: true
+    })
 
-This is a proof-of-concept project. For improvements:
+    // Close modal
+    setShowScamAlert(false)
+    // Proceed with transaction even though number is blacklisted
+    await processTransaction()
+  }
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+  // Handle Reject button in modal
+  const handleRejectRisk = () => {
+    // Track Reject action in Datadog RUM as Custom Action in Datadog RUM
+    datadogRum.addAction('rejectScamRisk', {
+      phoneNumber: formData.phone,
+      scamAmount: parseFloat(formData.amount),
+      scamBlacklistedNumber: true
+    })
 
-## 📄 License
+    // Close modal and do nothing
+    setShowScamAlert(false)
+  }
+```
 
-This project is for educational and demonstration purposes only.
+## Datadog RUM Defined Action Name 
+Instead of default name, we can define the default action name
+
+Doc URL: https://docs.datadoghq.com/real_user_monitoring/application_monitoring/browser/tracking_user_actions/#declare-a-name-for-click-actions 
+
+In SendMoneyForm.jsx
+```js
+      <button
+        type="submit"
+        disabled={isLoading || !formData.phone || !formData.amount}
+        className="submit-button"
+        data-dd-action-name="Jek defined action name called Send Money haha"
+      >
+        {isLoading ? 'Processing...' : 'Send Money'}
+      </button>
+```
+
+Before
+![](proof3.png)
+
+After
+![](proof4.png)
+
+
+# My Datadog Feature Flags Proof
+
+![](proof5.png)
+![](proof7.png)
+![](proof6.png)

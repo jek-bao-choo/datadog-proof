@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Console Appender with JSON format for GET endpoint -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>false</includeContext>
+            <includeMdc>true</includeMdc>
+            <includeStructuredArguments>true</includeStructuredArguments>
+            <includeTags>true</includeTags>
+        </encoder>
+    </appender>
+
+    <!-- File Appender with JSON format for PUT endpoint -->
+    <appender name="FILE_JSON" class="ch.qos.logback.core.FileAppender">
+        <file>logs/app.log</file>
+        <append>true</append>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>false</includeContext>
+            <includeMdc>true</includeMdc>
+            <includeStructuredArguments>true</includeStructuredArguments>
+            <includeTags>true</includeTags>
+        </encoder>
+    </appender>
+
+    <!-- Syslog Appender with JSON format for POST endpoint -->
+    <appender name="SYSLOG_JSON" class="ch.qos.logback.classic.net.SyslogAppender">
+        <syslogHost>localhost</syslogHost>
+        <port>514</port>
+        <facility>USER</facility>
+        <suffixPattern>[%thread] %logger %msg</suffixPattern>
+    </appender>
+
+    <!-- Logger for GET endpoint - logs to Console -->
+    <logger name="com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.GetEndpoint" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_JSON" />
+    </logger>
+
+    <!-- Logger for POST endpoint - logs to Syslog -->
+    <logger name="com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.PostEndpoint" level="INFO" additivity="false">
+        <appender-ref ref="SYSLOG_JSON" />
+    </logger>
+
+    <!-- Logger for PUT endpoint - logs to File -->
+    <logger name="com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.PutEndpoint" level="INFO" additivity="false">
+        <appender-ref ref="FILE_JSON" />
+    </logger>
+
+    <!-- Root logger - default to console with JSON -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE_JSON" />
+    </root>
+
+</configuration>

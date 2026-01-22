@@ -12,6 +12,9 @@
   "dependencies": {
     "@datadog/browser-rum": "^6.21.1",
     "@datadog/browser-rum-react": "^6.21.1",
+    "@datadog/openfeature-browser": "^0.2.0",
+    "@openfeature/core": "^1.9.1",
+    "@openfeature/web-sdk": "^1.7.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

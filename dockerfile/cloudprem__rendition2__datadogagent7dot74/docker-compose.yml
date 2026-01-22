@@ -1,0 +1,51 @@
+services:
+  cloudprem:
+    image: datadog/cloudprem:edge
+    command: ["run"]
+    ports:
+      - "127.0.0.1:7280:7280"
+    environment:
+      - DD_SITE=${DD_SITE:-datadoghq.com}
+      - DD_API_KEY=${DD_API_KEY}
+      - CP_ENABLE_REVERSE_CONNECTION=false
+      - QW_ENABLE_CORS_DEBUG=true
+    volumes:
+      - ./qwdata:/quickwit/qwdata
+    # ADDED: Health check
+    healthcheck:
+      test: ["CMD-SHELL", "cloudprem health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7.74.0
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=${DD_SITE:-datadoghq.com}
+      - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_LOGS_DD_URL=http://cloudprem:7280
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
+      - DD_LOGS_CONFIG_EXPECTED_TAGS_DURATION=100000
+      - DD_CONTAINER_EXCLUDE="name:datadog-agent"
+      - DD_ENV=dev
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    # COMMENT: Long wait hence commented depends_on out
+    # depends_on:
+    #   cloudprem:
+    #     condition: service_healthy
+    # ADDED: Health check
+    healthcheck:
+      test: ["CMD-SHELL", "agent health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped

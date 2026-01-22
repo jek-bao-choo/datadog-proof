@@ -507,7 +507,12 @@ import com.datadog.android.webview.WebViewTracking
         // This allows Datadog to track user interactions within the WebView
         // For local HTML files, we allow all hosts (empty list)
         val allowedHosts = listOf<String>() // Empty list allows all hosts for local content
+        // if the Web App is hosted elsewhere then please add host. It is important otherwise it will be two separate sessions
         WebViewTracking.enable(webView, allowedHosts)
 
 ```
+
+When setting up the applications in Datadog UI > Manage Application, the WebView Web App has a separate Datadog Client Token and Datadog Application Id from the Android App's Datadog Client Token and Datadog Application Id.
+
+![](android-to-webview-proof.png)
 

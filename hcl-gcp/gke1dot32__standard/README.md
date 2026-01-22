@@ -254,14 +254,73 @@ resource "google_container_node_pool" "jek_primary_nodes" {
 }
 ```
 
-## Support
+## Add Datadog Helm Chart
+```bash
+helm repo add datadog https://helm.datadoghq.com
+helm repo update
+kubectl create secret generic datadog-secret --from-literal api-key=<REDACTED>
+```
 
-For issues with this Terraform configuration:
-1. Check the [troubleshooting section](#troubleshooting)
-2. Review [GKE documentation](https://cloud.google.com/kubernetes-engine/docs)
-3. Check [Terraform Google Provider docs](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+Update values.yaml accordingly
+```bash
+helm pull --untar datadog/datadog
 
----
+# e.g., in datadog-values.yaml
+```
 
-**Tags**: `owner=jek`, `env=test`  
-**Created**: For GKE 1.32 testing and learning purposes
+Deploy the helm chart
+```
+helm install datadog-agent -f datadog-values.yaml datadog/datadog
+```
+
+Update the helm chart if necessary
+```
+helm upgrade datadog-agent datadog/datadog -f datadog-values.yaml
+```
+![](helm-chart-proof.png)
+
+## Add Datadog Operator
+Follow the instructions at Datadog UI.
+
+```bash
+kubectl get pods --all-namespaces
+```
+
+Operator = Chef
+DatadogAgent Resource = Recipe
+DaemonSet = The actual meal
+
+```bash
+# Check Custom Resource Definitions (CRDs) installed
+kubectl get crd | grep datadog
+```
+
+```bash
+# 1. List all DatadogAgent resources:
+kubectl get datadogagent --all-namespaces
+
+# 2. View the full configuration in YAML format:
+kubectl get datadogagent datadog -o yaml
+# This shows you exactly what configuration is stored in Kubernetes
+```
+
+```bash
+# Quick view - see name, status
+kubectl get datadogagent
+
+# Full configuration - see everything you set
+kubectl get datadogagent datadog -o yaml > my-current-config.yaml
+
+# Compare with your original file
+diff datadog-operator-agent.yaml my-current-config.yaml
+
+# See your DatadogAgent and what it created
+kubectl get datadogagent,daemonset,deployment | grep datadog
+```
+
+
+```bash
+kubectl get daemonsets --all-namespaces
+
+kubectl get pods -n default | grep -i datadog
+```
