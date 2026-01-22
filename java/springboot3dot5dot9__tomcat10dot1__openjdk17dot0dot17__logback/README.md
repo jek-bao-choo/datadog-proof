@@ -232,7 +232,7 @@ curl -s http://localhost:8080/api/data | jq
 
 ## Logging Configuration
 
-The application uses **Logback** with **JSON formatting** via `logstash-logback-encoder`.
+The application uses **Logback** with **JSON formatting** via `logstash-logback-encoder`. The logback file is at `/src/main/resources/logback-spring.xml`.
 
 ### Three Logging Destinations
 
@@ -330,11 +330,11 @@ java -version
 
 ### Step 2: Transfer JAR to Ubuntu Server
 
-**Option A: Using scp**
+**Option A: Using scp (preferred)**
 ```bash
 # From your local machine
-scp target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar \
-  user@ubuntu-server:/home/user/app/
+scp -i "~/.ssh/<key file name>" target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar \ 
+  ubuntu@xxxxxx.com:/home/ubuntu/
 ```
 
 **Option B: Using rsync**
@@ -587,6 +587,70 @@ To use Datadog APM and Dynamic Instrumentation with this application:
 - **dd-trace-java**: Latest version (compatible with Java 8+, including Java 17)
 - **Remote Configuration**: Enabled in Datadog Agent for Dynamic Instrumentation
 
+
+## Datadog Agent Installation & Configuration
+
+### Installing Datadog Agent (Ubuntu)
+
+```bash
+# Install Datadog Agent
+DD_API_KEY=<YOUR_API_KEY> \
+DD_SITE="datadoghq.com" \
+DD_ENV=testv7 \
+bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
+
+# Verify installation
+sudo systemctl status datadog-agent
+
+# Enable log collection
+sudo sed -i 's/# logs_enabled: false/logs_enabled: true/' /etc/datadog-agent/datadog.yaml
+
+# Restart agent
+sudo systemctl restart datadog-agent
+```
+
+Replace `<YOUR_API_KEY>` with your Datadog API key from [app.datadoghq.com](https://app.datadoghq.com/organization-settings/api-keys).
+
+### Agent Level Filtering (Prioritize ERROR/CRITICAL Logs)
+
+Configure the Datadog Agent to filter logs and prioritize high-severity messages.
+
+**Configuration File**: `/etc/datadog-agent/datadog.yaml` (Ubuntu) or `/opt/datadog-agent/etc/datadog.yaml` (macOS)
+
+**Include Only ERROR/CRITICAL Logs**:
+```yaml
+logs_enabled: true
+logs_config:
+  processing_rules:
+    - type: include_at_match
+      name: include_errors_critical
+      pattern: '"level":"ERROR"|"level":"WARN"|"level":"FATAL"'
+```
+
+**Exclude INFO/DEBUG Logs** (alternative approach):
+```yaml
+logs_config:
+  processing_rules:
+    - type: exclude_at_match
+      name: exclude_low_severity
+      pattern: '"level":"INFO"|"level":"DEBUG"'
+```
+
+**Apply Changes**:
+```bash
+# Validate configuration
+sudo datadog-agent configcheck
+
+# Restart agent
+sudo systemctl restart datadog-agent
+
+# Verify agent status
+sudo systemctl status datadog-agent
+```
+
+**Dynamic Adjustment**: Comment/uncomment filtering rules during incidents to temporarily increase log volume.
+
+
 ## Installing dd-trace-java
 
 Download the Datadog Java tracer agent:
@@ -682,6 +746,22 @@ With dd-trace-java running, logs include trace context:
 
 Click trace IDs in Datadog Logs to view related traces.
 
+### Test All Endpoints
+
+```bash
+# Test GET endpoint
+curl -v http://localhost:8080/api/data
+
+# Test POST endpoint
+curl -v -X POST http://localhost:8080/api/submit \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test", "value": 123}'
+
+# Test PUT endpoint
+curl -v -X PUT http://localhost:8080/api/update
+```
+
+
 ## Dynamic Instrumentation
 
 ### What is Dynamic Instrumentation
@@ -699,20 +779,15 @@ Dynamic Instrumentation adds logging, metrics, and tracing to your running appli
 
 Add the configuration flag when starting your application:
 
-**Option 1: JVM Argument**
+**JVM Argument**
 ```bash
 java -javaagent:dd-java-agent.jar \
   -Ddd.service=springboot-app \
-  -Ddd.env=production \
+  -Ddd.env=testv7 \
   -Ddd.version=0.0.1 \
+  -Ddd.agent.host=localhost \
   -Ddd.dynamic.instrumentation.enabled=true \
-  -jar target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar
-```
-
-**Option 2: Environment Variable**
-```bash
-export DD_DYNAMIC_INSTRUMENTATION_ENABLED=true
-java -javaagent:dd-java-agent.jar -jar target/springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar
+  -jar springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback-0.0.1-SNAPSHOT.jar
 ```
 
 Requires Datadog Agent 7.49.0+ with Remote Configuration enabled.
@@ -842,65 +917,6 @@ Dynamic Instrumentation architecture showing how probes work:
 - **Remote Configuration**: Real-time probe deployment
 - **Expression Language**: Dynamic runtime context evaluation
 - **Non-Invasive**: Probes don't modify source code or persist after restart
-
-## Datadog Agent Installation & Configuration
-
-### Installing Datadog Agent (Ubuntu)
-
-```bash
-# Install Datadog Agent
-DD_API_KEY=<YOUR_API_KEY> DD_SITE="datadoghq.com" bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
-
-# Verify installation
-sudo systemctl status datadog-agent
-
-# Enable log collection
-sudo sed -i 's/# logs_enabled: false/logs_enabled: true/' /etc/datadog-agent/datadog.yaml
-
-# Restart agent
-sudo systemctl restart datadog-agent
-```
-
-Replace `<YOUR_API_KEY>` with your Datadog API key from [app.datadoghq.com](https://app.datadoghq.com/organization-settings/api-keys).
-
-### Agent Level Filtering (Prioritize ERROR/CRITICAL Logs)
-
-Configure the Datadog Agent to filter logs and prioritize high-severity messages.
-
-**Configuration File**: `/etc/datadog-agent/datadog.yaml` (Ubuntu) or `/opt/datadog-agent/etc/datadog.yaml` (macOS)
-
-**Include Only ERROR/CRITICAL Logs**:
-```yaml
-logs_enabled: true
-logs_config:
-  processing_rules:
-    - type: include_at_match
-      name: include_errors_critical
-      pattern: '"level":"ERROR"|"level":"WARN"|"level":"FATAL"'
-```
-
-**Exclude INFO/DEBUG Logs** (alternative approach):
-```yaml
-logs_config:
-  processing_rules:
-    - type: exclude_at_match
-      name: exclude_low_severity
-      pattern: '"level":"INFO"|"level":"DEBUG"'
-```
-
-**Apply Changes**:
-```bash
-# Validate configuration
-sudo datadog-agent configcheck
-
-# Restart agent
-sudo systemctl restart datadog-agent
-
-# Verify agent status
-sudo systemctl status datadog-agent
-```
-
-**Dynamic Adjustment**: Comment/uncomment filtering rules during incidents to temporarily increase log volume.
 
 ## Automatic Error Trace Prioritization
 
