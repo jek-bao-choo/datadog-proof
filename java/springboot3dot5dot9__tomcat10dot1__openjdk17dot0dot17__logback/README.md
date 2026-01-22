@@ -1,5 +1,10 @@
 # Spring Boot 3.5.9 REST API with Random Status Codes
 
+![](proof1.png)
+Sending of logs using FileAppender.
+
+
+
 A demonstration Java web application built with Spring Boot 3.5.9, featuring REST API endpoints that return random HTTP status codes with configurable probability distribution and JSON logging using multiple Logback appenders.
 
 ## Overview
@@ -631,6 +636,14 @@ logs:
       - env:testv7
       - version:0.0.2
       - endpoint:put
+  # Console logs (stdout/stderr) from systemd service
+  # WORKS ONLY IF THE SPRINGBOOT-APP IS RUNNING AS A SYSTEMD SERVICE
+  - type: journald
+    service: springboot-app
+    source: java
+    tags:
+      - env:testv7
+      - endpoint:get
 ```
 
 **3. Enable log collection and restart Agent:**
@@ -666,6 +679,43 @@ curl -X PUT http://localhost:8080/api/update
 
 Logs appear in [Datadog Logs Explorer](https://app.datadoghq.com/logs) filtered by `service:springboot-app`. Trace IDs (`dd.trace_id`) automatically link logs to APM traces.
 
+
+### Agent Sends Syslog Appender Logs
+Create a dedicated syslog configuration file:
+
+`sudo mkdir -p /etc/datadog-agent/conf.d/syslog.d`
+
+`sudo nano /etc/datadog-agent/conf.d/syslog.d/conf.yaml`
+
+```yaml
+logs:
+  - type: udp
+    port: 514
+    service: springboot-app
+    source: syslog
+    tags:
+      - env:testv7
+      - endpoint:post
+```
+
+`sudo systemctl restart datadog-agent`
+
+2. Verify the Agent is listening on port 514:
+
+```bash
+sudo netstat -tulpn | grep 514
+# Or
+sudo ss -tulpn | grep 514
+```
+
+```bash
+# Test POST endpoint
+curl -v -X POST http://localhost:8080/api/submit \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test", "value": 123}'
+
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+```
 
 ### Agent Level Filtering (Prioritize ERROR/CRITICAL Logs)
 

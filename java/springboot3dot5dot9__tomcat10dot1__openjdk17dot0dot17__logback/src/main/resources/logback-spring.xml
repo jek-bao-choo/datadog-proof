@@ -28,7 +28,7 @@
         <syslogHost>localhost</syslogHost>
         <port>514</port>
         <facility>USER</facility>
-        <suffixPattern>[%thread] %logger %msg</suffixPattern>
+        <suffixPattern>[%thread] %logger dd.trace_id=%X{dd.trace_id} dd.span_id=%X{dd.span_id} %msg</suffixPattern>
     </appender>
 
     <!-- Logger for GET endpoint - logs to Console -->
