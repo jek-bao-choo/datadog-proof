@@ -588,9 +588,7 @@ To use Datadog APM and Dynamic Instrumentation with this application:
 - **Remote Configuration**: Enabled in Datadog Agent for Dynamic Instrumentation
 
 
-## Datadog Agent Installation & Configuration
-
-### Installing Datadog Agent (Ubuntu)
+## Installing Datadog Agent (Ubuntu)
 
 ```bash
 # Install Datadog Agent
@@ -610,6 +608,64 @@ sudo systemctl restart datadog-agent
 ```
 
 Replace `<YOUR_API_KEY>` with your Datadog API key from [app.datadoghq.com](https://app.datadoghq.com/organization-settings/api-keys).
+
+### Agent Picks Up File Appender Logs
+
+The PUT endpoint logs to `logs/app.log`. Configure the Datadog Agent to tail this file:
+
+**1. Create Agent configuration file:**
+```bash
+sudo mkdir -p /etc/datadog-agent/conf.d/springboot-app.d
+sudo vim /etc/datadog-agent/conf.d/springboot-app.d/conf.yaml
+```
+
+**2. Add this configuration** (update `path` to match your deployment location):
+```yaml
+logs:
+  # Add this section for file appender logs
+  - type: file
+    path: /home/ubuntu/logs/app.log
+    service: springboot-app
+    source: java
+    tags:
+      - env:testv7
+      - version:0.0.2
+      - endpoint:put
+```
+
+**3. Enable log collection and restart Agent:**
+```bash
+sudo sed -i 's/# logs_enabled: false/logs_enabled: true/' /etc/datadog-agent/datadog.yaml
+sudo systemctl restart datadog-agent
+```
+
+**4. VERY IMPORTANT - Set file permissions:**
+```bash
+# Give dd-agent group read access to the logs directory
+sudo chmod 755 /home/ubuntu
+sudo chmod 755 /home/ubuntu/logs
+sudo chmod 644 /home/ubuntu/logs/app.log
+
+# Verify dd-agent can now read it
+sudo -u dd-agent cat ~/logs/app.log | head -5
+
+# Restart
+sudo systemctl restart datadog-agent
+
+```
+
+**5. Verify:**
+```bash
+# Wait 30 seconds, then check status
+sleep 30
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+
+# Test with PUT request
+curl -X PUT http://localhost:8080/api/update
+```
+
+Logs appear in [Datadog Logs Explorer](https://app.datadoghq.com/logs) filtered by `service:springboot-app`. Trace IDs (`dd.trace_id`) automatically link logs to APM traces.
+
 
 ### Agent Level Filtering (Prioritize ERROR/CRITICAL Logs)
 
