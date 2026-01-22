@@ -1,4 +1,4 @@
-# Spring Boot 3.5.9 REST API with Random Status Codes
+# Spring Boot 3.5.9 REST API with Dynamic Instrumentation Log Probe and Span Probe
 
 ### On Dynamic Instrumentation Log Probe
 
@@ -12,10 +12,10 @@ With dynamic instrumentation for logs
 Here is the result of how the logs look like from dynamic instrumentation log probe. 
 
 ![](proof5.png)
-Here is what if looks like when I am setting it up.
+Here is what it looks like when I am setting it up.
 
 ![](proof4.png)
-Here is what it looks like after I set it up to do log probe.
+Here is what it looks like after I set it up dynamic instrumentation log probe.
 
 ---
 
@@ -24,11 +24,26 @@ Here is what it looks like after I set it up to do log probe.
 ![](proof2.png)
 Spans are in.
 
+![](proof7.png)
+With and without dynamic instrumentation span probe.
+
+![](proof9.png)
+Two auto instrumentation spans
+
+![](proof8.png)
+Notice the difference in the span attributes / tags? But what does this mean?
+
+![](proof10.png)
+It gives us the ability to create new spans without Custom Instrumentation code changes when the auto instrumentation isn't capturing the spans we need. Therefore, we can debug more precisely.
+
+![](proof11.png)
+Here is what I selected in my Span Probe setup. Easy - definitely easier than custom instrumentation with code changes. It's also timely, allowing you to adjust whenever you want without redeployment.
 
 
 
 
-A demonstration Java web application built with Spring Boot 3.5.9, featuring REST API endpoints that return random HTTP status codes with configurable probability distribution and JSON logging using multiple Logback appenders.
+
+
 
 ## Overview
 
@@ -966,8 +981,30 @@ curl -v -X PUT http://localhost:8080/api/update
 ![](proof3.png)
 
 ![](proof6.png)
-Here is the result of how the logs look like from dynamic instrumentation log probe. 
+Here is the result of how the logs look like from dynamic instrumentation log probe.
 
+### Creating Span Probes
+
+Span probes create custom APM spans to measure method execution time and performance.
+
+**Steps**:
+1. Go to **APM > Dynamic Instrumentation** → Click **"Create Probe"** → Select **"Span"**
+2. Specify location:
+   - **Class**: `com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.ApiController`
+   - **Method**: `submitData(Map)`
+3. Configure span:
+   - **Span Name**: `custom.submit.data`
+   - **Resource**: Optional (e.g., `POST /api/submit`)
+4. Click **"Create"**
+
+**Test it**:
+```bash
+curl -X POST http://localhost:8080/api/submit \
+  -H "Content-Type: application/json" \
+  -d '{"test":"data"}'
+```
+
+**Result**: Custom spans appear in APM traces with tag `source:dd_debugger`, showing exact execution time of the `submitData` method.
 
 ### Dynamic Expression Examples
 
