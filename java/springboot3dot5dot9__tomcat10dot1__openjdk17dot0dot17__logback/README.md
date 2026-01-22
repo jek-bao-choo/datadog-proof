@@ -1,7 +1,30 @@
 # Spring Boot 3.5.9 REST API with Random Status Codes
 
+### On Dynamic Instrumentation Log Probe
+
 ![](proof1.png)
-Sending of logs using FileAppender.
+Sending of logs (FileAppender).
+
+![](proof3.png)
+With dynamic instrumentation for logs
+
+![](proof6.png)
+Here is the result of how the logs look like from dynamic instrumentation log probe. 
+
+![](proof5.png)
+Here is what if looks like when I am setting it up.
+
+![](proof4.png)
+Here is what it looks like after I set it up to do log probe.
+
+---
+
+### On Dynamic Instrumentation Span Probe
+
+![](proof2.png)
+Spans are in.
+
+
 
 
 
@@ -680,7 +703,7 @@ curl -X PUT http://localhost:8080/api/update
 Logs appear in [Datadog Logs Explorer](https://app.datadoghq.com/logs) filtered by `service:springboot-app`. Trace IDs (`dd.trace_id`) automatically link logs to APM traces.
 
 
-### Agent Sends Syslog Appender Logs
+### Agent Picks Up Syslog Appender Logs
 Create a dedicated syslog configuration file:
 
 `sudo mkdir -p /etc/datadog-agent/conf.d/syslog.d`
@@ -855,6 +878,9 @@ Click trace IDs in Datadog Logs to view related traces.
 ### Test All Endpoints
 
 ```bash
+# Check before state of Logs processed and sent
+sudo datadog-agent status | grep -A 10 "Logs Agent"
+
 # Test GET endpoint
 curl -v http://localhost:8080/api/data
 
@@ -865,6 +891,9 @@ curl -v -X POST http://localhost:8080/api/submit \
 
 # Test PUT endpoint
 curl -v -X PUT http://localhost:8080/api/update
+
+# Check if Logs are processed and sent
+sudo datadog-agent status | grep -A 10 "Logs Agent"
 ```
 
 
@@ -906,27 +935,39 @@ Create probes in the Datadog UI at **APM > Dynamic Instrumentation**.
 1. Click **"Create Probe"** → Select **"Log"**
 2. Specify location:
    - **Class**: `com.jek.springboot3dot5dot9__tomcat10dot1__openjdk17dot0dot17__logback.controller.ApiController`
-   - **Method**: `getData` (or `putUpdate` for PUT endpoint)
+   - **Method**: `updateData()` of the PUT endpoint
    - **Line Number**: Optional for precise placement
 3. Define message template:
    ```
-   Error 5XX detected - Status: {statusCode}
+   Error 4XX or 5XX detected - Status: {statusCode}
    ```
 4. Add condition (optional):
    ```
-   statusCode >= 500
+   statusCode >= 400
    ```
 5. Click **"Create"**
 
 **Example Probe: Trigger on 5XX Errors**
 
-- **Location**: `ApiController.putUpdate()` method
-- **Condition**: `statusCode >= 500`
-- **Message**: `5XX Error - Status: {statusCode}, Thread: {Thread.currentThread().getName()}`
+- **Location**: `ApiController.updateData()` method
+- **Condition**: `statusCode >= 400`
+- **Message**: `4XX or 5XX Error - Status: {statusCode}, Thread: {Thread.currentThread().getName()}`
 
-**Result**: Probe logs appear in Datadog with tag `source:dd_debugger` only when statusCode >= 500.
+Test it
+```bash
+# Test PUT endpoint
+curl -v -X PUT http://localhost:8080/api/update
+```
+
+**Result**: Probe logs appear in Datadog with tag `source:dd_debugger` only when statusCode >= 400.
 
 **Rate Limiting**: Probes execute up to 5,000 times/second per instance to prevent performance impact.
+
+![](proof3.png)
+
+![](proof6.png)
+Here is the result of how the logs look like from dynamic instrumentation log probe. 
+
 
 ### Dynamic Expression Examples
 
