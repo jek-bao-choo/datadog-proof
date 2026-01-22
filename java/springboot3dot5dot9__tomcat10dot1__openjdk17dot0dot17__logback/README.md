@@ -3,8 +3,8 @@
 
 ### On Dynamic Instrumentation Metric Probe
 
-!()[proof16.png]
-!()[proof17.png]
+![](proof16.png)
+![](proof17.png)
 
 ---
 
