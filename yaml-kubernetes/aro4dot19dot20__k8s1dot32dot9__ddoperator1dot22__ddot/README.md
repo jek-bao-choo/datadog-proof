@@ -1,5 +1,13 @@
 # Setting up [Azure Redhat Openshift (ARO) 4 cluster using the Azure CLI](https://learn.microsoft.com/en-us/azure/openshift) with [DDOT Collector using Datadog Operator](https://docs.datadoghq.com/opentelemetry/setup/ddot_collector/install/kubernetes_daemonset/?tab=datadogoperator) 
 
+## Versions
+Azure Redshift Openshift 4.19.20
+Kubernetes 1.32.9
+DDOT
+Datadog Operator 1.22.0
+
+![](proof1.png)
+
 ## [Create an Azure Red Hat OpenShift 4 cluster](https://learn.microsoft.com/en-us/azure/openshift/create-cluster?pivots=aro-azure-cli)
 
 ```bash
@@ -67,7 +75,6 @@ export kubevar=""
 kubectl get nodes
 
 ```
-![](proof1.png)
 
 ## [Delete an Azure Red Hat OpenShift 4 cluster](https://learn.microsoft.com/en-us/azure/openshift/delete-cluster)
 
