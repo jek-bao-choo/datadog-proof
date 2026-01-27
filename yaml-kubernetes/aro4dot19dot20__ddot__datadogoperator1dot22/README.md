@@ -1,4 +1,4 @@
-# # Setting up [Azure Redhat Openshift (ARO) 4 cluster using the Azure CLI](https://learn.microsoft.com/en-us/azure/openshift) with [DDOT Collector using Datadog Operator](https://docs.datadoghq.com/opentelemetry/setup/ddot_collector/install/kubernetes_daemonset/?tab=datadogoperator) 
+# Setting up [Azure Redhat Openshift (ARO) 4 cluster using the Azure CLI](https://learn.microsoft.com/en-us/azure/openshift) with [DDOT Collector using Datadog Operator](https://docs.datadoghq.com/opentelemetry/setup/ddot_collector/install/kubernetes_daemonset/?tab=datadogoperator) 
 
 ## [Create an Azure Red Hat OpenShift 4 cluster](https://learn.microsoft.com/en-us/azure/openshift/create-cluster?pivots=aro-azure-cli)
 
@@ -46,9 +46,28 @@ az aro create --resource-group $RESOURCEGROUP --name $CLUSTER --vnet $VIRTUALNET
 ## [Connect to an Azure Red Hat OpenShift 4 cluster](https://learn.microsoft.com/en-us/azure/openshift/connect-cluster) 
 
 ```bash
+export RESOURCEGROUP=jek-aro-rg 
+export CLUSTER=jek-aro-cluster
 
+az aro list-credentials --name $CLUSTER --resource-group $RESOURCEGROUP
+
+# Launch the cluster console URL by running the following command, and outputs a URL like https://console-openshift-console.apps.<random>.<region>.aroapp.io/ 
+az aro show --name $CLUSTER --resource-group $RESOURCEGROUP --query "consoleProfile.url" --output tsv
+
+brew install openshift-cli
+
+export apiServer=$(az aro show --resource-group $RESOURCEGROUP --name $CLUSTER --query apiserverProfile.url --output tsv) 
+
+export kubevar=$(az aro list-credentials --name $CLUSTER --resource-group $RESOURCEGROUP --query kubeadminPassword --output tsv)
+
+oc login $apiServer --username kubeadmin --password $kubevar
+
+export kubevar=""
+
+kubectl get nodes
 
 ```
+![](proof1.png)
 
 ## [Delete an Azure Red Hat OpenShift 4 cluster](https://learn.microsoft.com/en-us/azure/openshift/delete-cluster)
 
