@@ -12,5 +12,6 @@
   "function-memory-size": 512,
   "function-timeout": 30,
   "function-handler": "dotnet10__al2023__lambda__native__aot",
+  "function-architecture": "arm64",
   "msbuild-parameters": "--self-contained true"
 }

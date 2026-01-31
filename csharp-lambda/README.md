@@ -109,6 +109,23 @@ dotnet new lambda.NativeAOT -n dotnet10__al2023__lambda__native__aot
 cd dotnet10__al2023__lambda__native__aot
 ```
 
+add `"function-architecture": "arm64"` to aws-lambda-tools-defaults.json since I'm using Mac M4 chip.
+
+```bash
+dotnet lambda deploy-function
+```
+
+and indicate the lambda function name as `jek_dotnet10_al2023_native_aot`
+
+Test it
+```bash
+dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload "hello world"
+```
+
+Clean up
+```bash
+dotnet lambda delete-function jek_dotnet10_al2023_native_aot
+```
 
 ---
 
