@@ -6,6 +6,8 @@ This guide provides comprehensive instructions for setting up a .NET development
 
 ## Prerequisites
 
+![](dotnet-version-and-its-operating-systems.png)
+
 ### .NET SDK Installation
 
 1. Download the .NET SDK:
@@ -52,170 +54,84 @@ This guide provides comprehensive instructions for setting up a .NET development
 1. Install Visual Studio Code (VSCode)
 2. Install the C# extension in VSCode
 
-## Creating a New API Project
 
-For detailed information about available project templates and `dotnet new` commands, visit:
-https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-new
+## .NET AWS Lambda
 
-You can choose between two main approaches for building APIs in .NET:
+Follow this https://docs.aws.amazon.com/lambda/latest/dg/lambda-csharp.html 
 
-### 1. Minimal APIs
+To install the project templates, run the following command:
 
-Minimal APIs provide a streamlined approach ideal for microservices and small applications. They offer a simplified architecture with reduced boilerplate code.
-
-**Documentation:** https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-8.0&tabs=visual-studio-code
-
-> Note: The `webapiaot` template (for .NET 8+) includes Ahead-of-time compilation support and is limited to minimal APIs only.
-
-#### Setup Steps:
-
-1. Create a new project:
-   ```
-   dotnet new web --output jek-dotnet8-minimalapi-web --verbosity diag --dry-run
-   ```
-   > Note: The `web` template creates an empty ASP.NET Core project.
-
-   Command line parameters:
-   - `--output <OUTPUT_DIRECTORY>`: Specifies the output directory
-   - `--verbosity <LEVEL>`: Sets logging detail (available in .NET 7+)
-
-2. Navigate to the project directory:
-   ```
-   cd jek-dotnet8-minimalapi-web
-   ```
-
-3. Configure HTTPS certificate:
-   ```
-   dotnet dev-certs https --trust
-   ```
-
-4. Run the application:
-   ```
-   dotnet run
-   ```
-
-### 2. Controller-based APIs
-
-Controller-based APIs follow a traditional approach with a more structured architecture, making them suitable for larger applications requiring extensive features and organization.
-
-**Documentation:** https://learn.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-8.0&tabs=visual-studio
-
-#### Setup Steps:
-
-1. Create a new project:
-   ```
-   dotnet new webapi --use-controllers --output jek-dotnet8-controllerbasedapi-webapi --verbosity diag --dry-run
-   ```
-   > Note: The `webapi` template creates a standard ASP.NET Core Web API.
-
-2. Navigate to the project directory:
-   ```
-   cd jek-dotnet8-controllerbasedapi-webapi
-   ```
-
-3. Add Entity Framework Core In-Memory package:
-   ```
-   dotnet add package Microsoft.EntityFrameworkCore.InMemory
-   ```
-
-4. Open in VSCode:
-   ```
-   code -r ../jek-dotnet8-controllerbasedapi-webapi
-   ```
-
-5. Configure HTTPS certificate:
-   ```
-   dotnet dev-certs https --trust
-   ```
-
-6. Run the application:
-   ```
-   dotnet run --launch-profile https
-   ```
-
-## Common Operations
-
-### Building the Application
-```
-dotnet build
+```bash
+dotnet new install Amazon.Lambda.Templates
 ```
 
-### Publishing and Containerizing the Application
+To install the command line tools:
 
-Ensure Docker is running before proceeding. For more information about .NET containerization, visit:
-https://learn.microsoft.com/en-us/dotnet/core/docker/introduction#building-container-images
+```bash
+dotnet tool install -g Amazon.Lambda.Tools
 
-1. Build and publish the container:
-   ```
-   dotnet publish --framework net8.0 -t:PublishContainer --os linux --arch x64 /p:ContainerImageName=jchoo/jek-dotnet8-minimalapi-web /p:ContainerImageTag=1.0
-   ```
+# or
 
-2. Run the container:
-   ```
-   docker run --rm -d -p 8000:8080 jek-dotnet8-minimalapi-web
-   ```
-
-3. Test the deployment:
-   ```
-   curl -s http://localhost:8000
-   ```
-
-4. Stop the container:
-   ```
-   docker ps
-   docker kill <container id>
-   ```
-
-### Publishing to Docker Hub
-```
-docker push jchoo/jek-dotnet8-minimalapi-web:1.0
+dotnet tool update -g Amazon.Lambda.Tools
 ```
 
-## Kubernetes Deployment
+After installing this package, run the following command to see a list of the available templates.
 
-### Option 1: Semi-automated Deployment
-
-This approach uses a custom deployment configuration in a YAML file. You can use any Kubernetes cluster (local, EKS, AKS, GKE, etc.).
-
-1. Install the Datadog Agent Chart
-
-2. Deploy the application:
-   ```
-   kubectl apply -f deployment-miniapi.yaml
-   ```
-
-3. Set up port forwarding:
-   ```
-   kubectl port-forward deployment/jek-dotnet8-minimalapi-web 3009:8080
-   ```
-
-4. Test the deployment:
-   ```
-   # Test general endpoint
-   curl http://localhost:3009
-
-   # View deployment logs
-   kubectl logs deployment/jek-dotnet8-minimalapi-web
-   ```
-
-### Option 2: Automated Instrumentation with Datadog Operator
-
-```
-helm repo add [datadog operator command here]
+```bash
+dotnet new list
 ```
 
-```
-helm repo update
+### Many types new lambda project that I can initialise with dotnet cli tool - choose one of these:
+1. Initialise a native AOT compiled Lambda function
+`dotnet new lambda.NativeAOT -n JekNativeAotSample` reference: https://docs.aws.amazon.com/lambda/latest/dg/dotnet-native-aot.html
+
+2. Initialise an ASP.NET Web API Lambda function
+`dotnet new serverless.AspNetCoreWebAPI -n JekAspNetOnLambda` reference: https://docs.aws.amazon.com/lambda/latest/dg/csharp-package-asp.html#csharp-package-asp-deploy-api
+
+3. Initialise an ASP.NET minimal APIs Lambda function `dotnet new serverless.AspNetCoreMinimalAPI -n JekMinimalApiOnLambda` reference: https://docs.aws.amazon.com/lambda/latest/dg/csharp-package-asp.html#csharp-package-asp-deploy-minimal
+
+4. Initialise an empty .NET project Lambda function
+`dotnet new lambda.EmptyFunction --name JekMyDotnetFunction` reference: https://docs.aws.amazon.com/lambda/latest/dg/csharp-package-cli.html and https://docs.aws.amazon.com/lambda/latest/dg/csharp-handler.html#csharp-handler-setup
+
+5. Initialise an AWS SAM application Lambda function
+`sam init --app-template hello-world --name sam-app \
+--package-type Zip --runtime dotnet8` reference:  https://docs.aws.amazon.com/lambda/latest/dg/csharp-package-sam.html#csharp-package-sam-deploy
+
+6. Initialise an AWS CDK application Lambda function `cdk init app --language csharp` reference: https://docs.aws.amazon.com/lambda/latest/dg/csharp-package-cdk.html#csharp-package-cdk-deploy
+
+
+#### Initialise a native AOT compiled Lambda function
+```bash
+dotnet new lambda.NativeAOT -n dotnet10__al2023__lambda__native__aot
 ```
 
-Check if a cert-manager is already installed by looking for cert-manager pods.
-```
-kubectl get pods -l app=cert-manager --all-namespaces
+```bash
+cd dotnet10__al2023__lambda__native__aot
 ```
 
-Follow the command in the Datadog doc for using Datadog Operator
 
-## Additional Info (optional)
+---
+
+#### Initialise an empty .NET project Lambda function using DOTNET Lambda Global CLI:
+
+```bash
+dotnet new lambda.EmptyFunction --name lambda__globalcli__net8dot0__processmeterreading --region ap-southeast-1 --profile default
+```
+
+To deploy your code to Lambda as a .zip deployment package, run the following command. Choose your own function name.
+
+```bash
+cd lambda__globalcli__net8dot0__processmeterreading/src/lambda__globalcli__net8dot0__processmeterreading
+
+dotnet lambda deploy-function lambda__globalcli__net8dot0__processmeterreading
+```
+
+Test
+
+```bash
+dotnet lambda invoke-function lambda__globalcli__net8dot0__processmeterreading --payload "Just checking if everything is OK"
+```
+
 
 ### The popular .NET Logging Frameworks
 
@@ -234,47 +150,3 @@ The main logging frameworks we'll encounter in the .NET world:
     * **Why it's popular:** It's one of the oldest and most established frameworks (a port of the famous Java log4j). Many older, large enterprise applications use it. While still functional, most new projects tend to choose Serilog or NLog.
 
 * **OpenTelemetry Logs:** A growing option if you want vendor-neutral pipelines; often used with MEL and exported to your backend.
-
-## .NET AWS Lambda
-
-Follow this https://docs.aws.amazon.com/lambda/latest/dg/lambda-csharp.html 
-
-To install the project templates, run the following command:
-
-```
-dotnet new install Amazon.Lambda.Templates
-```
-
-To install the command line tools:
-
-```
-dotnet tool install -g Amazon.Lambda.Tools
-```
-
-After installing this package, run the following command to see a list of the available templates.
-
-```
-dotnet new list
-```
-
-E.g. using .NET Lambda Global CLI to create
-
-```
-dotnet new lambda.EmptyFunction --name lambda__globalcli__net8dot0__processmeterreading --region ap-southeast-1 --profile default
-```
-
-To deploy your code to Lambda as a .zip deployment package, run the following command. Choose your own function name.
-
-```
-cd lambda__globalcli__net8dot0__processmeterreading/src/lambda__globalcli__net8dot0__processmeterreading
-
-dotnet lambda deploy-function lambda__globalcli__net8dot0__processmeterreading
-```
-
-Test
-
-```
-dotnet lambda invoke-function lambda__globalcli__net8dot0__processmeterreading --payload "Just checking if everything is OK"
-```
-
-
