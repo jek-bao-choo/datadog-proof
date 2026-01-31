@@ -76,6 +76,9 @@ kubectl get nodes
 
 ```
 
+## Install Datadog Operator
+
+
 ## [Delete an Azure Red Hat OpenShift 4 cluster](https://learn.microsoft.com/en-us/azure/openshift/delete-cluster)
 
 ```bash

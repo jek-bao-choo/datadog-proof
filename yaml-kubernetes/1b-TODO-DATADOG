@@ -1,0 +1,18 @@
+## TASK:
+* My current environment is an Azure Redhat Openshift cluster
+* I want to research into doing a on-prem Openshift installation of Datadog Operator
+* I want to assume that the prospect only has initial access to the internet, after which, will have no access to internet.
+* In the past, I have this guide for installing a helm chart https://raw.githubusercontent.com/jek-bao-choo/splunk-otel-example/refs/heads/main/infrastructure-kubernetes/k8s-no-internet-offline-installation/README.md but instead now I want to install a Datadog operator to an on-prem environment.
+* Please research how it can be done.
+* In your research explain how Datadog Operator works in Openshift cluster and how is a Datadog Agent going to run in the Openshift cluster as well as if there is Datadog OpenTelemetry Collector that comes with it. Also please explain how Datadog Operator work. 
+    * Explain these using simple diagrams are welcomed.
+
+## USE CONTEXT7
+* use library id /datadog/datadog-operator
+
+## OTHER CONSIDERATIONS:
+* Append setup, deployment, verification, and cleanup steps in README-DATADOG-OPERATOR.md only after the above task is fully completed
+* Explain the steps you would take in clear, beginner-friendly language
+* Keep all the explanation simple
+* Write the research on performing the task
+* Save the research to `2-RESEARCH.md`
