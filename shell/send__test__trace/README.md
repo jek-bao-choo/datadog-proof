@@ -1,3 +1,20 @@
+# Quick Start: Send OTLP Trace
+
+Send a test trace to Datadog using curl:
+
+```bash
+curl -X POST https://otlp.app.datadoghq.com/v1/traces \
+  -H "Content-Type: application/json" \
+  -H "dd-api-key: YOUR_API_KEY" \
+  -d @otlp-trace-test.json
+```
+
+Or use the shell script:
+```bash
+cd shell/send__test__trace
+./send-test-trace.sh YOUR_API_KEY
+```
+
 # Send trace test 
 
 Useful reference https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md

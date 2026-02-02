@@ -5,8 +5,6 @@ Shell script development project
 
 ## Structure
 - Shallow directories, avoid deep nesting
-- Naming: `[verb]-[purpose]`
-- Example: `send-test-logs`, `post-custom-metrics`
 
 ## Workflow
 1. **Research**: Create `2-RESEARCH.md` implementation plan
