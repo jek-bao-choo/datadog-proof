@@ -1,0 +1,13 @@
+# Environment variables (contains credentials)
+.env
+
+# Python virtual environment
+.venv/
+venv/
+
+# Temporary files
+*.tmp
+/tmp/
+
+# macOS
+.DS_Store

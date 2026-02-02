@@ -1,49 +1,55 @@
 # Quick Start: Send OTLP Trace
 
-Send a test trace to Datadog using curl:
+## Setup
+
+### 1. Configure Environment Variables
+
+Create a `.env` file with your Grafana Cloud credentials:
 
 ```bash
-curl -X POST https://otlp.app.datadoghq.com/v1/traces \
-  -H "Content-Type: application/json" \
-  -H "dd-api-key: YOUR_API_KEY" \
-  -d @otlp-trace-test.json
+# Copy the example file
+cp .env.example .env
+
+# Edit .env with your credentials
+nano .env  # or use your preferred editor
 ```
 
-Or use the shell script:
+Update the `.env` file with your Grafana Cloud settings:
+
+```bash
+# Grafana Cloud OTLP endpoint
+ENDPOINT="https://otlp-gateway-prod-YOUR-REGION.grafana.net/otlp/v1/traces"
+
+# Grafana Cloud authorization header (Base64 encoded credentials)
+AUTH_HEADER="Authorization: Basic YOUR_BASE64_ENCODED_CREDENTIALS"
+```
+
+**Where to find your credentials:**
+- Get them from your Grafana Cloud portal under "OTLP Configuration"
+- The endpoint includes your region (e.g., `us-central-1`, `ap-southeast-1`)
+- The authorization header contains your encoded instance ID and API token
+
+### 2. Send Test Traces
+
+## Send to Grafana Cloud
+
+### Live Timestamps
+Send a test trace with **current timestamps** (generates fresh data each time):
+
 ```bash
 cd shell/send__test__trace
-./send-test-trace.sh YOUR_API_KEY
+./send-test-trace-grafana-live.sh
 ```
 
-# Send trace test 
+This script automatically generates trace data from the last 5 minutes, so it will always appear in Grafana's "Last 30 minutes" view.
 
-Useful reference https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md
+### Important Notes
+- **Setup required:** You must configure `.env` with your Grafana Cloud credentials (see Setup section above)
+- **Timestamps matter!** Grafana only shows traces within your selected time range
+- The live script generates data from "5 minutes ago to now"
+- Credentials are stored in `.env` file (keep this file secure and don't commit to git)
+- Data typically appears in Grafana within 1-2 minutes
 
-`TraceId` A valid trace identifier is a 16-byte array with at least one non-zero byte.
-
-`SpanId` A valid span identifier is an 8-byte array with at least one non-zero byte.
-
-## OTLP Tracer Test json file (otlp-trace-test.json)
-```
-kubectl run tmp --image=nginx:alpine
-
-kubectl exec -it tmp -- curl -OL https://raw.githubusercontent.com/jek-bao-choo/splunk-otel-example/main/infrastructure-kubernetes/eks-ec2-alb-dual-helm-gateway-collectors/trace-test.json
-
-kubectl exec -i -t tmp -c tmp -- sh
-
-# Check that trace-test.json is downloaded
-ls 
-
-# For example kubectl exec -it tmp -- curl -vi -X POST http://<the svc name followed by namespace>:4318/v1/traces -H'Content-Type: application/json' -d @trace-test.json
-
-kubectl exec -it tmp -- curl -vi -X POST http://traceid-load-balancing-gateway-splunk-otel-collector.splunk-monitoring:4318/v1/traces -H'Content-Type: application/json' -d @trace-test.json
-```
-
-## Zipkin Tracer Test json file (zipkin-yelp.json)
-```
-kubectl exec -it tmp -- curl -OL https://raw.githubusercontent.com/openzipkin/zipkin/master/zipkin-lens/testdata/yelp.json
-
-# For example kubectl exec -it tmp -- curl -vi -X POST http://<the svc name followed by namespace>:9411/api/v2/spans -H'Content-Type: application/json' -d @yelp.json
-
-kubectl exec -it tmp -- curl -vi -X POST http://traceid-load-balancing-gateway-splunk-otel-collector.splunk-monitoring:9411/api/v2/spans -H'Content-Type: application/json' -d @yelp.json
-```
+### Security Note
+- Add `.env` to your `.gitignore` to avoid committing credentials
+- Use `.env.example` as a template for others to set up their own credentials
