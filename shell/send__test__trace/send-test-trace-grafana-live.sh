@@ -79,9 +79,9 @@ trace_data = {
                     },
                     "spans": [
                         {
-                            "traceId": "71699b6fe85982c7c8995ea3d9c95df3",
+                            "traceId": "71699b6fe85982c7c8995ea3d9c95df6",
                             "spanId": "3c191d03fa8be066",
-                            "name": "I'm a healthy client span",
+                            "name": "Jek v6 I'm a healthy client span",
                             "startTimeUnixNano": str(start_time),
                             "endTimeUnixNano": str(end_time),
                             "kind": 1,
@@ -98,10 +98,10 @@ trace_data = {
                             }
                         },
                         {
-                            "traceId": "71699b6fe85982c7c8995ea3d9c95df3",
+                            "traceId": "71699b6fe85982c7c8995ea3d9c95df6",
                             "spanId": "3c191d03fa8be067",
                             "parentSpanId": "3c191d03fa8be066",
-                            "name": "I'm a error server span",
+                            "name": "Jek v6 I'm a error server span",
                             "startTimeUnixNano": str(start_time + 1_000_000_000),
                             "endTimeUnixNano": str(end_time),
                             "kind": 2,
