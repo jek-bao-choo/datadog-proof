@@ -35,6 +35,8 @@ dotnet lambda delete-function jek_dotnet10_al2023_native_aot
 
 This Lambda function demonstrates OpenTelemetry distributed tracing to a OTLP Endpoint. **Note:** Native AOT is disabled to support OpenTelemetry's runtime requirements.
 
+![](something.png)
+
 ## Quick Start
 
 ### Prerequisites
