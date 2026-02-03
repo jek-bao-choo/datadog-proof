@@ -1,6 +1,7 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.Lambda.APIGatewayEvents;
 using System.Text.Json.Serialization;
 
 namespace dotnet10__al2023__lambda__native__aot;
@@ -14,44 +15,95 @@ public class Function
     /// </summary>
     private static async Task Main()
     {
-        Func<string, ILambdaContext, string> handler = FunctionHandler;
+        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = FunctionHandler;
         await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
             .Build()
             .RunAsync();
     }
 
     /// <summary>
-    /// A simple function that takes a string and does a ToUpper.
-    ///
-    /// To use this handler to respond to an AWS event, reference the appropriate package from 
-    /// https://github.com/aws/aws-lambda-dotnet#events
-    /// and change the string input parameter to the desired event type. When the event type
-    /// is changed, the handler type registered in the main method needs to be updated and the LambdaFunctionJsonSerializerContext 
-    /// defined below will need the JsonSerializable updated. If the return type and event type are different then the 
-    /// LambdaFunctionJsonSerializerContext must have two JsonSerializable attributes, one for each type.
-    ///
-    // When using Native AOT extra testing with the deployed Lambda functions is required to ensure
-    // the libraries used in the Lambda function work correctly with Native AOT. If a runtime 
-    // error occurs about missing types or methods the most likely solution will be to remove references to trim-unsafe 
-    // code or configure trimming options. This sample defaults to partial TrimMode because currently the AWS 
-    // SDK for .NET does not support trimming. This will result in a larger executable size, and still does not 
-    // guarantee runtime trimming errors won't be hit. 
+    /// Lambda function handler that returns a random number with probabilistic error responses.
+    /// - 34% chance: Returns 200 OK with random number (1-1000)
+    /// - 33% chance: Returns 400 Bad Request (client error)
+    /// - 33% chance: Returns 500 Internal Server Error
     /// </summary>
-    /// <param name="input">The event for the Lambda function handler to process.</param>
-    /// <param name="context">The ILambdaContext that provides methods for logging and describing the Lambda environment.</param>
-    /// <returns></returns>
-    public static string FunctionHandler(string input, ILambdaContext context)
+    /// <param name="request">API Gateway proxy request</param>
+    /// <param name="context">Lambda execution context</param>
+    /// <returns>API Gateway proxy response with JSON body</returns>
+    public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        return input.ToUpper();
+        // Generate random number between 1 and 1000
+        var randomNumber = Random.Shared.Next(1, 1001);
+
+        // Generate error chance (1-100)
+        var errorChance = Random.Shared.Next(1, 101);
+
+        // 34% success (1-34)
+        if (errorChance <= 34)
+        {
+            var successResponse = new SuccessResponse { RandomNumber = randomNumber };
+            return new APIGatewayProxyResponse
+            {
+                StatusCode = 200,
+                Body = System.Text.Json.JsonSerializer.Serialize(successResponse),
+                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+            };
+        }
+
+        // 33% client error (35-67)
+        if (errorChance <= 67)
+        {
+            var errorResponse = new ErrorResponse
+            {
+                Error = "Client Error",
+                Message = "Bad Request - Invalid input parameters"
+            };
+            return new APIGatewayProxyResponse
+            {
+                StatusCode = 400,
+                Body = System.Text.Json.JsonSerializer.Serialize(errorResponse),
+                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+            };
+        }
+
+        // 33% server error (68-100)
+        var serverErrorResponse = new ErrorResponse
+        {
+            Error = "Server Error",
+            Message = "Internal Server Error - Service temporarily unavailable"
+        };
+        return new APIGatewayProxyResponse
+        {
+            StatusCode = 500,
+            Body = System.Text.Json.JsonSerializer.Serialize(serverErrorResponse),
+            Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+        };
     }
+}
+
+// Response model for successful requests
+public class SuccessResponse
+{
+    public int RandomNumber { get; set; }
+}
+
+// Response model for error requests
+public class ErrorResponse
+{
+    public string Error { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
 }
 
 /// <summary>
 /// This class is used to register the input event and return type for the FunctionHandler method with the System.Text.Json source generator.
-/// There must be a JsonSerializable attribute for each type used as the input and return type or a runtime error will occur 
+/// There must be a JsonSerializable attribute for each type used as the input and return type or a runtime error will occur
 /// from the JSON serializer unable to find the serialization information for unknown types.
 /// </summary>
 [JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(APIGatewayProxyRequest))]
+[JsonSerializable(typeof(APIGatewayProxyResponse))]
+[JsonSerializable(typeof(SuccessResponse))]
+[JsonSerializable(typeof(ErrorResponse))]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
     // By using this partial class derived from JsonSerializerContext, we can generate reflection free JSON Serializer code at compile time
