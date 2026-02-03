@@ -8,7 +8,7 @@
   "profile": "",
   "region": "",
   "configuration": "Release",
-  "function-runtime": "dotnet10",
+  "function-runtime": "provided.al2023",
   "function-memory-size": 512,
   "function-timeout": 30,
   "function-handler": "dotnet10__al2023__lambda__native__aot",

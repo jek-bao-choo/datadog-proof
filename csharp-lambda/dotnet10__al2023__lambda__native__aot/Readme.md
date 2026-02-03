@@ -80,3 +80,22 @@ dotnet lambda deploy-function
 dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{}'
 ```
 
+---
+
+## Task 2: Amazon Linux 2023 Runtime (COMPLETED)
+
+### Configuration Status
+The Lambda function is configured to deploy as Amazon Linux 2023 custom runtime with Native AOT compilation.
+
+### How It Works
+- **Native AOT:** `<PublishAot>true</PublishAot>` compiles C# to native ARM64 machine code
+- **Runtime:** `provided.al2023` uses custom runtime on Amazon Linux 2023
+- **Architecture:** `arm64` targets AWS Graviton processors
+- **Result:** Standalone executable with faster cold starts, no .NET runtime needed
+
+### Build Process
+```bash
+dotnet publish -c Release
+```
+This creates a native Linux ARM64 executable that runs directly on AL2023.
+
