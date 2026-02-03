@@ -1,0 +1,8 @@
+#!/bin/sh
+# Bootstrap script for .NET 10 Lambda with self-contained runtime
+
+# The .NET runtime is included in the deployment package
+cd "$LAMBDA_TASK_ROOT"
+
+# Run the self-contained .NET application
+exec ./dotnet10__al2023__lambda__native__aot "$@"
