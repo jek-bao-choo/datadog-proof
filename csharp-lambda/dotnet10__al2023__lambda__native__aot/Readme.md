@@ -14,14 +14,12 @@ when packaging .NET Native AOT Lambda functions on non-Amazon Linux 2023 build e
 
 ## Basic: Deploy
 ```bash
-dotnet lambda deploy-function
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --function-runtime provided.al2023 --function-architecture arm64 --function-handler bootstrap
 ```
 
-and indicate the lambda function name as `jek_dotnet10_al2023_native_aot`
-
-Test it
+Test it (use proper APIGatewayProxyRequest payload)
 ```bash
-dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload "hello world"
+dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{"httpMethod":"GET","path":"/","headers":{},"body":null}'
 ```
 
 Clean up
@@ -74,10 +72,10 @@ Added HTTP GET endpoint that returns random responses:
 Deploy and invoke the function multiple times to verify the ~34/33/33 distribution:
 ```bash
 # Deploy
-dotnet lambda deploy-function
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot
 
 # Invoke multiple times to see different responses
-dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{}'
+dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{"httpMethod":"GET","path":"/","headers":{},"body":null}'
 ```
 
 ---
@@ -98,4 +96,10 @@ The Lambda function is configured to deploy as Amazon Linux 2023 custom runtime 
 dotnet publish -c Release
 ```
 This creates a native Linux ARM64 executable that runs directly on AL2023.
+
+### Key Configuration
+- **Handler:** `bootstrap` (required for provided.al2023 runtime)
+- **Assembly Name:** `<AssemblyName>bootstrap</AssemblyName>` in .csproj
+- **Globalization:** `<InvariantGlobalization>true</InvariantGlobalization>` (avoids ICU dependencies)
+- **JSON Serialization:** Source-generated context for AOT compatibility
 

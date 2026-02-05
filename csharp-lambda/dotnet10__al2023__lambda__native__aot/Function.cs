@@ -45,7 +45,7 @@ public class Function
             return new APIGatewayProxyResponse
             {
                 StatusCode = 200,
-                Body = System.Text.Json.JsonSerializer.Serialize(successResponse),
+                Body = System.Text.Json.JsonSerializer.Serialize(successResponse, LambdaFunctionJsonSerializerContext.Default.SuccessResponse),
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
@@ -61,7 +61,7 @@ public class Function
             return new APIGatewayProxyResponse
             {
                 StatusCode = 400,
-                Body = System.Text.Json.JsonSerializer.Serialize(errorResponse),
+                Body = System.Text.Json.JsonSerializer.Serialize(errorResponse, LambdaFunctionJsonSerializerContext.Default.ErrorResponse),
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
@@ -75,7 +75,7 @@ public class Function
         return new APIGatewayProxyResponse
         {
             StatusCode = 500,
-            Body = System.Text.Json.JsonSerializer.Serialize(serverErrorResponse),
+            Body = System.Text.Json.JsonSerializer.Serialize(serverErrorResponse, LambdaFunctionJsonSerializerContext.Default.ErrorResponse),
             Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
         };
     }
