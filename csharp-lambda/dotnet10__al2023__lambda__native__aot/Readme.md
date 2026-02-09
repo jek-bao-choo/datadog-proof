@@ -17,11 +17,19 @@ when packaging .NET Native AOT Lambda functions on non-Amazon Linux 2023 build e
 dotnet lambda deploy-function
 ```
 
-and indicate the lambda function name as `jek_dotnet10_al2023_native_aot`
+and indicate the lambda function name as 
+```bash
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1
+```
 
 Test it
 ```bash
-dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload "hello world"
+aws lambda invoke \
+  --function-name jek_dotnet10_al2023_native_aot \
+  --region ap-southeast-1 \
+  --payload '{}' \
+  --log-type Tail \
+  response.json 2>&1 | grep LogResult | cut -d'"' -f4 | base64 -d | grep "Activity.TraceId:"
 ```
 
 Clean up
