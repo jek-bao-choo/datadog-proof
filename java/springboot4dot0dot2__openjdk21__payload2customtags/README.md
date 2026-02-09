@@ -116,12 +116,12 @@ Accepts a JSON key-value payload and adds each pair as a custom span tag using t
 # Basic test (single tag)
 curl -X GET http://localhost:8080/payload-to-spantags \
   -H "Content-Type: application/json" \
-  -d '{"customer.name":"John Doe"}'
+  -d '{"customer":"John Doe"}'
 
 # Multiple tags
 curl -X GET http://localhost:8080/payload-to-spantags \
   -H "Content-Type: application/json" \
-  -d '{"customer.name":"John Doe","order.id":"12345","priority":"high"}'
+  -d '{"customer":"John Doe","jekorder.id":"12345","priority":"high"}'
 
 # Expected response:
 # {"status":"success","tagsAdded":3,"tags":{"customer.name":"John Doe","order.id":"12345","priority":"high"}}
