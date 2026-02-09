@@ -85,7 +85,7 @@ java -javaagent:dd-java-agent.jar \
   -Ddd.version=0.0.1 \
   -Ddd.agent.host=localhost \
   -Ddd.dynamic.instrumentation.enabled=true \
-  -jar target/springboot4dot0dot2__openjdk21__payload2customtags-0.0.1-SNAPSHOT.jar
+  -jar springboot4dot0dot2__openjdk21__payload2customtags-0.0.1-SNAPSHOT.jar
 ```
 
 Trigger traffic
