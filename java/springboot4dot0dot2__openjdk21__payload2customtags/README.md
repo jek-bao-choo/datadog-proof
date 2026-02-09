@@ -129,9 +129,14 @@ curl -X GET http://localhost:8080/payload-to-spantags \
 
 > **Note:** When running without the Datadog agent, the endpoint still works (returns 200) but no tags are sent to Datadog. `Span.current()` returns a no-op span which safely ignores `setAttribute()` calls.
 
-Trigger traffic
 ```bash
+# Trigger error traffic
 curl localhost:8080
+```
+
+```bash
+# Trigger FSI related traffic for demo
+./traffic.sh
 ```
 
 ---
