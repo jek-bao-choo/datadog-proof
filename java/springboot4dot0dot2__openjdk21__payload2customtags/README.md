@@ -84,15 +84,57 @@ java -javaagent:dd-java-agent.jar \
   -Ddd.env=jek-sandbox-v1 \
   -Ddd.version=0.0.1 \
   -Ddd.agent.host=localhost \
+  -Ddd.logs.injection=true \
+  -Ddd.trace.otel.enabled=true \
+  -Ddd.profiling.enabled=true \
   -Ddd.dynamic.instrumentation.enabled=true \
+  -Ddd.remote_config.enabled=false \
   -jar springboot4dot0dot2__openjdk21__payload2customtags-0.0.1-SNAPSHOT.jar
 ```
+
+---
+
+## API Endpoint
+
+### GET `/payload-to-spantags`
+
+Accepts a JSON key-value payload and adds each pair as a custom span tag using the OpenTelemetry API.
+
+**Request:**
+- Method: `GET`
+- Content-Type: `application/json`
+- Body: JSON object with string key-value pairs
+
+**Responses:**
+- `200 OK` — Tags added successfully
+- `400 Bad Request` — Payload is null or empty
+- `500 Internal Server Error` — Unexpected error
+
+### Testing with curl
+
+```bash
+# Basic test (single tag)
+curl -X GET http://localhost:8080/payload-to-spantags \
+  -H "Content-Type: application/json" \
+  -d '{"customer.name":"John Doe"}'
+
+# Multiple tags
+curl -X GET http://localhost:8080/payload-to-spantags \
+  -H "Content-Type: application/json" \
+  -d '{"customer.name":"John Doe","order.id":"12345","priority":"high"}'
+
+# Expected response:
+# {"status":"success","tagsAdded":3,"tags":{"customer.name":"John Doe","order.id":"12345","priority":"high"}}
+```
+
+> **Note:** When running without the Datadog agent, the endpoint still works (returns 200) but no tags are sent to Datadog. `Span.current()` returns a no-op span which safely ignores `setAttribute()` calls.
 
 Trigger traffic
 ```bash
 curl localhost:8080
 ```
 
+---
 
 #### Step N: Kill
 ```bash
