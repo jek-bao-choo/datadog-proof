@@ -79,9 +79,9 @@ trace_data = {
                     },
                     "spans": [
                         {
-                            "traceId": "71699b6fe85982c7c8995ea3d9c95df7",
+                            "traceId": "71699b6fe85982c7c8995ea3d9c95df2",
                             "spanId": "3c191d03fa8be066",
-                            "name": "Jek v7 I'm a healthy client span",
+                            "name": "Jek v2 I'm a healthy client span",
                             "startTimeUnixNano": str(start_time),
                             "endTimeUnixNano": str(end_time),
                             "kind": 1,
@@ -98,10 +98,10 @@ trace_data = {
                             }
                         },
                         {
-                            "traceId": "71699b6fe85982c7c8995ea3d9c95df7",
+                            "traceId": "71699b6fe85982c7c8995ea3d9c95df2",
                             "spanId": "3c191d03fa8be067",
                             "parentSpanId": "3c191d03fa8be066",
-                            "name": "Jek v7 I'm a error server span",
+                            "name": "Jek v2 I'm a error server span",
                             "startTimeUnixNano": str(start_time + 1_000_000_000),
                             "endTimeUnixNano": str(end_time),
                             "kind": 2,
@@ -156,14 +156,14 @@ echo ""
 echo "================================"
 
 if [ $CURL_EXIT_CODE -eq 0 ]; then
-  echo "✓ SUCCESS: Trace sent to Grafana Cloud"
+  echo "✓ SUCCESS: Trace sent to Grafana Cloud / Datadog" 
   echo ""
   echo "Response body:"
   cat /tmp/grafana-response.txt
   echo ""
   echo "================================"
   echo ""
-  echo "Next: Check Grafana Cloud for service 'grafana-trace-test'"
+  echo "Next: Check Grafana Cloud / Datadog for service 'grafana-trace-test'"
   echo "      The trace should appear within 1-2 minutes"
   exit 0
 else
