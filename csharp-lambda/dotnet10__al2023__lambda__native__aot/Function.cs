@@ -3,6 +3,16 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.APIGatewayEvents;
 using System.Text.Json.Serialization;
+// OpenTelemetry Core API: Essential for creating tracers and spans
+using OpenTelemetry;
+// OpenTelemetry Tracing API: Essential for configuring the trace provider
+using OpenTelemetry.Trace;
+// AWS Lambda Instrumentation: Essential for automatically tracing Lambda function invocations and context
+using OpenTelemetry.Instrumentation.AWSLambda;
+// OpenTelemetry Exporter: Essential for defining how and where to export traces (e.g., OTLP)
+using OpenTelemetry.Exporter;
+// OpenTelemetry Resources: Essential for defining service metadata (service name, version, env)
+using OpenTelemetry.Resources;
 
 namespace dotnet10__al2023__lambda__native__aot;
 
@@ -15,10 +25,45 @@ public class Function
     /// </summary>
     private static async Task Main()
     {
-        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = FunctionHandler;
+        // Initialize the TracerProvider: Essential for collecting and exporting telemetry data
+        var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            // Configure Resource: Essential for identifying the service in Datadog (Service Name, Version, Env)
+            .ConfigureResource(r => r
+                .AddService("jek-dotnet10-native-lambda-v1", serviceVersion: "1.2.3")
+                .AddAttributes(new Dictionary<string, object>
+                {
+                    { "deployment.environment", "dev" }
+                }))
+            // Add AWS Lambda Configurations: Essential for capturing Lambda-specific attributes (Request ID, ARN, etc.)
+            .AddAWSLambdaConfigurations()
+            // Add HTTP Client Instrumentation: Essential for tracing outgoing HTTP requests to other services
+            .AddHttpClientInstrumentation()
+            // Add OTLP Exporter: Essential for sending the collected traces to Datadog's OTLP endpoint
+            .AddOtlpExporter(options =>
+            {
+                options.Endpoint = new Uri("https://otlp.datadoghq.com/v1/traces");
+                options.Protocol = OtlpExportProtocol.HttpProtobuf;
+                options.Headers = "dd-api-key=<REPLACE_WITH_DATADOG_API_KEY>,dd-otlp-source=datadog";
+            })
+            .Build();
+
+        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = 
+            (request, context) => 
+            {
+                // AWSLambdaWrapper.Trace: Essential for wrapping the handler execution in a trace span
+                var response = AWSLambdaWrapper.Trace(tracerProvider, FunctionHandler, request, context);
+                // ForceFlush: CRITICAL for Lambda. Forces the export of traces before the execution environment freezes.
+                // Without this, traces buffered in memory may be lost when the Lambda function pauses or shuts down.
+                tracerProvider.ForceFlush();
+                return response;
+            };
+
         await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
             .Build()
             .RunAsync();
+
+        // Dispose: Essential for properly shutting down the TracerProvider and flushing any remaining spans on shutdown
+        tracerProvider.Dispose();
     }
 
     /// <summary>
