@@ -1,3 +1,6 @@
+# Send direct OTLP traces to Datadog or via OTel Col with OTLP to Datadog
+![](proof-traces.png)
+
 ```bash
 # Start the container in the background
 docker-compose up -d
