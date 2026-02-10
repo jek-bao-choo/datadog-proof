@@ -221,60 +221,17 @@ Follow the command in the Datadog doc for using Datadog Operator
 
 The main logging frameworks we'll encounter in the .NET world:
 
-* **🥇 Serilog:** The modern go-to for many developers.
+* **Serilog:** The modern go-to for many developers.
     * **Why it's popular:** Its "structured logging first" design is its biggest feature. It has a rich ecosystem of "sinks" (plugins that send logs to different destinations like files, databases, or cloud services) and "enrichers" (which add context like a Request ID to your logs).
 
-* **🥈 NLog:** Another very popular, flexible, and high-performance framework.
+* **NLog:** Another very popular, flexible, and high-performance framework.
     * **Why it's popular:** It's known for its flexibility, high performance, and extensive configuration options. It has been a solid choice for a long time and is still actively developed.
 
-* **🥉 Microsoft.Extensions.Logging (MEL):** The built-in logging library.
+* **Microsoft.Extensions.Logging (MEL):** The built-in logging library.
     * **Why it's popular:** This is the logging *abstraction* provided by Microsoft in .NET Core and newer. It's not a full logging framework on its own but provides the `ILogger` interface. The key benefit is that you can write your code against this common interface, and then "plug in" a framework like Serilog or NLog to handle the actual log processing and output.
 
-* **🏛️ log4net:** The "classic" logging framework.
+* **log4net:** The "classic" logging framework.
     * **Why it's popular:** It's one of the oldest and most established frameworks (a port of the famous Java log4j). Many older, large enterprise applications use it. While still functional, most new projects tend to choose Serilog or NLog.
 
 * **OpenTelemetry Logs:** A growing option if you want vendor-neutral pipelines; often used with MEL and exported to your backend.
-
-## .NET AWS Lambda
-
-Follow this https://docs.aws.amazon.com/lambda/latest/dg/lambda-csharp.html 
-
-To install the project templates, run the following command:
-
-```
-dotnet new install Amazon.Lambda.Templates
-```
-
-To install the command line tools:
-
-```
-dotnet tool install -g Amazon.Lambda.Tools
-```
-
-After installing this package, run the following command to see a list of the available templates.
-
-```
-dotnet new list
-```
-
-E.g. using NET Lambda Global CLI to create
-
-```
-dotnet new lambda.EmptyFunction --name lambda__globalcli__net8dot0__processmeterreading --region ap-southeast-1 --profile default
-```
-
-To deploy your code to Lambda as a .zip deployment package, run the following command. Choose your own function name.
-
-```
-cd lambda__globalcli__net8dot0__processmeterreading/src/lambda__globalcli__net8dot0__processmeterreading
-
-dotnet lambda deploy-function lambda__globalcli__net8dot0__processmeterreading
-```
-
-Test
-
-```
-dotnet lambda invoke-function lambda__globalcli__net8dot0__processmeterreading --payload "Just checking if everything is OK"
-```
-
 
