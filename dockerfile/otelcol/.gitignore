@@ -2,3 +2,4 @@ events.json
 logs.json
 metrics.json
 trace.json
+.env

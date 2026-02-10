@@ -4,8 +4,8 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
 
-# processors:
-#   batch:
+processors:
+  batch:
 #   resource:
 #     attributes:
 #       - key: service.name
@@ -26,10 +26,18 @@ exporters:
   #   metrics_endpoint: "https://otlp.datadoghq.com/v1/metrics"
   #   logs_endpoint: "https://otlp.datadoghq.com/v1/logs"
   #   headers:
-  #     dd-api-key: "<DATADOG_API_KEY>"
+  #     dd-api-key: ${env:DD_API_KEY}
   #     # dd-otel-metric-config: '{"resource_attributes_as_tags": true}'
   #     # dd-otel-span-mapping: "{span_name_as_resource_name: false}"
   #     dd-otlp-source: "US1"
+  datadog:
+    api:
+      key: ${env:DD_API_KEY}
+    sending_queue:
+      batch:
+        min_size: 10
+        max_size: 100
+        flush_timeout: 10s
 
 # extensions:
 #   health_check:
@@ -44,8 +52,8 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      # processors: [batch, resource]
-      exporters: [debug]
+      processors: [batch]
+      exporters: [debug, datadog]
     metrics:
       receivers: [otlp]
       # processors: [batch]
