@@ -12,17 +12,28 @@ platform is Amazon Linux 2023. The AWS tooling for Lambda like the AWS Toolkit f
 perform a container build using a .NET 10 Amazon Linux 2023 build image when `PublishAot` is set to `true`. This means **docker is a requirement**
 when packaging .NET Native AOT Lambda functions on non-Amazon Linux 2023 build environments.
 
-## Basic: Deploy
+## Deploy
 ```bash
+dotnet lambda deploy-function
+
+# OR with function runtime
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --function-runtime provided.al2023 --function-architecture arm64 --function-handler bootstrap
+
+# OR indicate the lambda function name as 
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1
 ```
 
-Test it (use proper APIGatewayProxyRequest payload)
+## Test it
 ```bash
-dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{"httpMethod":"GET","path":"/","headers":{},"body":null}'
+aws lambda invoke \
+  --function-name jek_dotnet10_al2023_native_aot \
+  --region ap-southeast-1 \
+  --payload '{}' \
+  --log-type Tail \
+  response.json 2>&1 | grep LogResult | cut -d'"' -f4 | base64 -d | grep "Activity.TraceId:"
 ```
 
-Clean up
+## Clean up
 ```bash
 dotnet lambda delete-function jek_dotnet10_al2023_native_aot
 ```
