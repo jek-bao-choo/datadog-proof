@@ -1,5 +1,5 @@
 services:
-  otelcol:
+  otelcol-contrib:
     image: otel/opentelemetry-collector-contrib:0.145.0
     environment:
       - DD_API_KEY=${DD_API_KEY}
