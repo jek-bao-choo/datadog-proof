@@ -10,15 +10,20 @@ processors:
 exporters:
   debug:
     verbosity: detailed
-  otlp_http:
+  otlp_http/dd_traces:
     traces_endpoint: "https://otlp.datadoghq.com/v1/traces"
-    metrics_endpoint: "https://otlp.datadoghq.com/v1/metrics"
-    logs_endpoint: "https://otlp.datadoghq.com/v1/logs"
     headers:
       dd-api-key: ${env:DD_API_KEY}
-      # dd-otel-metric-config: '{"resource_attributes_as_tags": true}'
-      # dd-otel-span-mapping: "{span_name_as_resource_name: false}"
       dd-otlp-source: "datadog"
+  # otlp_http/dd_metrics:
+  #   metrics_endpoint: "https://otlp.datadoghq.com/v1/metrics"
+  #   headers:
+  #     dd-api-key: ${env:DD_API_KEY}
+  #     dd-otel-metric-config: '{"resource_attributes_as_tags": true}'
+  # otlp_http/dd_logs:
+  #   logs_endpoint: "https://otlp.datadoghq.com/v1/logs"
+  #   headers:
+  #     dd-api-key: ${env:DD_API_KEY}
 
 # extensions:
 #   health_check:
@@ -34,7 +39,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp_http, debug]
+      exporters: [otlp_http/dd_traces, debug]
     # metrics:
     #   receivers: [otlp]
     #   # processors: [batch]

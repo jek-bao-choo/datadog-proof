@@ -4,7 +4,7 @@ services:
     environment:
       - DD_API_KEY=${DD_API_KEY}
     volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml # to load a custom configuration file from your working directory, mount the file as a volume
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml # otelcol-contrib expects config at /etc/otelcol-contrib/config.yaml
     ports:
       # - 1888:1888 # pprof extension
       # - 8888:8888 # Prometheus metrics exposed by the Collector
