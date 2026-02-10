@@ -25,10 +25,12 @@ dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southea
 
 ## Test it
 ```bash
+dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{"httpMethod":"GET","path":"/","headers":{},"body":null}'
+
 aws lambda invoke \
   --function-name jek_dotnet10_al2023_native_aot \
   --region ap-southeast-1 \
-  --payload '{}' \
+  --payload '{"httpMethod":"GET","path":"/","headers":{},"body":null}' \
   --log-type Tail \
   response.json 2>&1 | grep LogResult | cut -d'"' -f4 | base64 -d | grep "Activity.TraceId:"
 ```
