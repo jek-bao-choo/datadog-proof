@@ -23,17 +23,23 @@ curl -O https://raw.githubusercontent.com/open-telemetry/opentelemetry-proto/ref
 curl -X POST -H "Content-Type: application/json" -d @events.json -i localhost:4318/v1/logs
 ```
 
-## Test Trace
-```bash
-curl -O https://raw.githubusercontent.com/open-telemetry/opentelemetry-proto/refs/heads/main/examples/trace.json
-
-curl -X POST -H "Content-Type: application/json" -d @trace.json -i localhost:4318/v1/traces
-```
-
 ## Test Metrics
 ```bash
 curl -O https://raw.githubusercontent.com/open-telemetry/opentelemetry-proto/refs/heads/main/examples/metrics.json
 
 curl -X POST -H "Content-Type: application/json" -d @metrics.json -i localhost:4318/v1/metrics
 ```
+
+
+## Test Trace
+```bash
+curl -O https://raw.githubusercontent.com/open-telemetry/opentelemetry-proto/refs/heads/main/examples/trace.json
+
+curl -X POST -H "Content-Type: application/json" -d @trace.json -i localhost:4318/v1/traces
+
+# send protobuf trace
+uv run --with opentelemetry-sdk --with opentelemetry-exporter-otlp-proto-http send_trace.py
+```
+
+
 
