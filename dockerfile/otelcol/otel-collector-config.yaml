@@ -30,14 +30,14 @@ exporters:
   #     # dd-otel-metric-config: '{"resource_attributes_as_tags": true}'
   #     # dd-otel-span-mapping: "{span_name_as_resource_name: false}"
   #     dd-otlp-source: "US1"
-  datadog:
-    api:
-      key: ${env:DD_API_KEY}
-    sending_queue:
-      batch:
-        min_size: 10
-        max_size: 100
-        flush_timeout: 10s
+  # datadog:
+  #   api:
+  #     key: ${env:DD_API_KEY}
+  #   sending_queue:
+  #     batch:
+  #       min_size: 10
+  #       max_size: 100
+  #       flush_timeout: 10s
 
 # extensions:
 #   health_check:
@@ -52,8 +52,8 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [debug, datadog]
+      # processors: [batch]
+      exporters: [debug]
     metrics:
       receivers: [otlp]
       # processors: [batch]
