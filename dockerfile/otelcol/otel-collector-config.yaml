@@ -6,6 +6,17 @@ receivers:
 
 # processors:
 #   batch:
+#   resource:
+#     attributes:
+#       - key: service.name
+#         value: "jek-service"
+#         action: upsert
+#       - key: deployment.environment.name
+#         value: "production"
+#         action: upsert
+#       - key: service.version
+#         value: "1.2.3"
+#         action: upsert
   
 exporters:
   debug:
@@ -15,7 +26,7 @@ exporters:
   #   metrics_endpoint: "https://otlp.datadoghq.com/v1/metrics"
   #   logs_endpoint: "https://otlp.datadoghq.com/v1/logs"
   #   headers:
-  #     dd-api-key: "<REPLACE_WITH_DATADOG_API_KEY>"
+  #     dd-api-key: "<DATADOG_API_KEY>"
   #     # dd-otel-metric-config: '{"resource_attributes_as_tags": true}'
   #     # dd-otel-span-mapping: "{span_name_as_resource_name: false}"
   #     dd-otlp-source: "US1"
@@ -33,7 +44,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      # processors: [batch]
+      # processors: [batch, resource]
       exporters: [debug]
     metrics:
       receivers: [otlp]
