@@ -40,7 +40,7 @@ curl -O https://raw.githubusercontent.com/open-telemetry/opentelemetry-proto/ref
 
 curl -X POST -H "Content-Type: application/json" -d @trace.json -i localhost:4318/v1/traces
 
-# send protobuf trace
+# send protobuf trace directly from app or via OTel Col
 source .env && export DD_API_KEY && uv run --with opentelemetry-sdk --with opentelemetry-exporter-otlp-proto-http send_trace.py
 ```
 
