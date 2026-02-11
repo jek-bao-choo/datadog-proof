@@ -18,9 +18,6 @@ namespace dotnet10__al2023__lambda__native__aot;
 
 public class Function
 {
-    private static readonly ActivitySource ActivitySource = new("Dotnet10LambdaNativeAot");
-    private static TracerProvider? _tracerProvider;
-
     /// <summary>
     /// The main entry point for the Lambda function. The main function is called once during the Lambda init phase. It
     /// initializes the .NET Lambda runtime client passing in the function handler to invoke for each Lambda event and
@@ -70,51 +67,47 @@ public class Function
     /// <returns>API Gateway proxy response with JSON body</returns>
     public static APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        using var activity = ActivitySource.StartActivity("ProcessRequest");
-        activity?.SetTag("lambda.request_id", context.AwsRequestId);
-
         // Generate random number between 1 and 1000
         var randomNumber = Random.Shared.Next(1, 1001);
 
         // Generate error chance (1-100)
         var errorChance = Random.Shared.Next(1, 101);
 
-        APIGatewayProxyResponse response;
-
         // 34% success (1-34)
         if (errorChance <= 34)
         {
-            activity?.SetTag("http.status_code", 200);
-            activity?.SetStatus(ActivityStatusCode.Ok);
-
             var successResponse = new SuccessResponse { RandomNumber = randomNumber };
-            response = new APIGatewayProxyResponse
+            return new APIGatewayProxyResponse
             {
                 StatusCode = 200,
                 Body = System.Text.Json.JsonSerializer.Serialize(successResponse, LambdaFunctionJsonSerializerContext.Default.SuccessResponse),
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
-        // 33% client error (35-67)
-        else if (errorChance <= 67)
-        {
-            activity?.SetTag("http.status_code", 400);
-            activity?.SetStatus(ActivityStatusCode.Error);
 
+        // 33% client error (35-67)
+        if (errorChance <= 67)
+        {
             var errorResponse = new ErrorResponse
             {
                 Error = "Client Error",
                 Message = "Bad Request - Invalid input parameters"
             };
-            response = new APIGatewayProxyResponse
+            return new APIGatewayProxyResponse
             {
                 StatusCode = 400,
                 Body = System.Text.Json.JsonSerializer.Serialize(errorResponse, LambdaFunctionJsonSerializerContext.Default.ErrorResponse),
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
+
         // 33% server error (68-100)
-        else
+        var serverErrorResponse = new ErrorResponse
+        {
+            Error = "Server Error",
+            Message = "Internal Server Error - Service temporarily unavailable"
+        };
+        return new APIGatewayProxyResponse
         {
             StatusCode = 500,
             Body = System.Text.Json.JsonSerializer.Serialize(serverErrorResponse, LambdaFunctionJsonSerializerContext.Default.ErrorResponse),
