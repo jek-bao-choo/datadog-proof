@@ -19,7 +19,10 @@ dotnet lambda deploy-function
 # OR with function runtime
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --function-runtime provided.al2023 --function-architecture arm64 --function-handler bootstrap
 
-# OR indicate the lambda function name as 
+# OR  with environment variables
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --environment-variables "OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.datadoghq.com/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf;OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=<YOUR_API_KEY>,dd-otlp-source=datadog"
+
+# OR simply indicate the lambda function name as 
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1
 ```
 
@@ -114,5 +117,14 @@ This creates a native Linux ARM64 executable that runs directly on AL2023.
 - **Handler:** `bootstrap` (required for provided.al2023 runtime)
 - **Assembly Name:** `<AssemblyName>bootstrap</AssemblyName>` in .csproj
 - **Globalization:** `<InvariantGlobalization>true</InvariantGlobalization>` (avoids ICU dependencies)
-- **JSON Serialization:** Source-generated context for AOT compatibility
+
+---
+
+## Task 3: OpenTelemetry & Datadog Integration (COMPLETED)
+
+### Minimum Code Changes
+To enable Native AOT tracing with Datadog, the following changes were made to `Function.cs`:
+1. **Initialize `TracerProvider`** with OTLP exporter in `Main`.
+2. **Wrap Handler:** Use `AWSLambdaWrapper.Trace(...)` to capture invocations.
+3. **Force Flush:** Call `tracerProvider.ForceFlush()` before the function returns (Critical for Lambda).
 
