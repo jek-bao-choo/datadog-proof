@@ -18,11 +18,19 @@ Update the `.env` file with your Grafana Cloud settings:
 
 ```bash
 # Grafana Cloud OTLP endpoint
-ENDPOINT="https://otlp-gateway-prod-YOUR-REGION.grafana.net/otlp/v1/traces"
+export ENDPOINT="https://otlp-gateway-prod-YOUR-REGION.grafana.net/otlp/v1/traces"
 
 # Grafana Cloud authorization header (Base64 encoded credentials)
-AUTH_HEADER="Authorization: Basic YOUR_BASE64_ENCODED_CREDENTIALS"
+export AUTH_HEADER="Authorization: Basic YOUR_BASE64_ENCODED_CREDENTIALS"
 ```
+
+Update the `.env` file with your Datadog settings:
+```bash
+export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL="http/protobuf"
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="https://otlp.datadoghq.com/v1/traces"
+export OTEL_EXPORTER_OTLP_TRACES_HEADERS="dd-api-key=<dd-api-key>,dd-otlp-source=US1"
+```
+
 
 **Where to find your credentials:**
 - Get them from your Grafana Cloud portal under "OTLP Configuration"

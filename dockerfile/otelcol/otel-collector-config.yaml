@@ -1,0 +1,50 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+  
+exporters:
+  debug:
+    verbosity: detailed
+  otlp_http/dd_traces:
+    traces_endpoint: "https://otlp.datadoghq.com/v1/traces"
+    headers:
+      dd-api-key: ${env:DD_API_KEY}
+      dd-otlp-source: "datadog"
+  # otlp_http/dd_metrics:
+  #   metrics_endpoint: "https://otlp.datadoghq.com/v1/metrics"
+  #   headers:
+  #     dd-api-key: ${env:DD_API_KEY}
+  #     dd-otel-metric-config: '{"resource_attributes_as_tags": true}'
+  # otlp_http/dd_logs:
+  #   logs_endpoint: "https://otlp.datadoghq.com/v1/logs"
+  #   headers:
+  #     dd-api-key: ${env:DD_API_KEY}
+
+# extensions:
+#   health_check:
+#       endpoint: 0.0.0.0:13133
+#   zpages:
+#     endpoint: 0.0.0.0:55679
+#     expvar:
+#       enabled: true
+
+service:
+  # extensions: [health_check, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp_http/dd_traces, debug]
+    # metrics:
+    #   receivers: [otlp]
+    #   # processors: [batch]
+    #   exporters: [debug]
+    # logs:
+    #   receivers: [otlp]
+    #   # processors: [batch]
+    #   exporters: [debug]
