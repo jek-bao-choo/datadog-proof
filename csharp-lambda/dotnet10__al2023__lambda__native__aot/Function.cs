@@ -3,10 +3,16 @@ using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.APIGatewayEvents;
 using System.Text.Json.Serialization;
+// OpenTelemetry Core API: Essential for creating tracers and spans
 using OpenTelemetry;
-using OpenTelemetry.Resources;
+// OpenTelemetry Tracing API: Essential for configuring the trace provider
 using OpenTelemetry.Trace;
-using System.Diagnostics;
+// AWS Lambda Instrumentation: Essential for automatically tracing Lambda function invocations and context
+using OpenTelemetry.Instrumentation.AWSLambda;
+// OpenTelemetry Exporter: Essential for defining how and where to export traces (e.g., OTLP)
+using OpenTelemetry.Exporter;
+// OpenTelemetry Resources: Essential for defining service metadata (service name, version, env)
+using OpenTelemetry.Resources;
 
 namespace dotnet10__al2023__lambda__native__aot;
 
@@ -22,24 +28,35 @@ public class Function
     /// </summary>
     private static async Task Main()
     {
-        // Configure OpenTelemetry
-        var otlpEndpoint = Environment.GetEnvironmentVariable("OTLP_ENDPOINT") ?? throw new InvalidOperationException("OTLP_ENDPOINT required");
-        var otlpAuthHeader = Environment.GetEnvironmentVariable("OTLP_AUTH_HEADER") ?? throw new InvalidOperationException("OTLP_AUTH_HEADER required");
-
-        _tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Dotnet10LambdaNativeAot"))
-            .AddSource("Dotnet10LambdaNativeAot")
-            .AddConsoleExporter()
-            .AddOtlpExporter(options => {
-                options.Endpoint = new Uri(otlpEndpoint);
-                options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.HttpProtobuf;
-                options.Headers = $"Authorization={otlpAuthHeader}";
-            })
+        // Initialize the TracerProvider: Essential for collecting and exporting telemetry data
+        // Configuration is now loaded from standard OTEL_* environment variables
+        var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            // Add AWS Lambda Configurations: Essential for capturing Lambda-specific attributes (Request ID, ARN, etc.)
+            .AddAWSLambdaConfigurations()
+            // Add HTTP Client Instrumentation: Essential for tracing outgoing HTTP requests to other services
+            .AddHttpClientInstrumentation()
+            // Add OTLP Exporter: Essential for sending the collected traces to Datadog's OTLP endpoint
+            // Endpoint, Protocol, and Headers are configured via environment variables
+            .AddOtlpExporter()
             .Build();
-        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = FunctionHandler;
+
+        Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = 
+            (request, context) => 
+            {
+                // AWSLambdaWrapper.Trace: Essential for wrapping the handler execution in a trace span
+                var response = AWSLambdaWrapper.Trace(tracerProvider, FunctionHandler, request, context);
+                // ForceFlush: CRITICAL for Lambda. Forces the export of traces before the execution environment freezes.
+                // Without this, traces buffered in memory may be lost when the Lambda function pauses or shuts down.
+                tracerProvider.ForceFlush();
+                return response;
+            };
+
         await LambdaBootstrapBuilder.Create(handler, new SourceGeneratorLambdaJsonSerializer<LambdaFunctionJsonSerializerContext>())
             .Build()
             .RunAsync();
+
+        // Dispose: Essential for properly shutting down the TracerProvider and flushing any remaining spans on shutdown
+        tracerProvider.Dispose();
     }
 
     /// <summary>
@@ -74,7 +91,7 @@ public class Function
             response = new APIGatewayProxyResponse
             {
                 StatusCode = 200,
-                Body = System.Text.Json.JsonSerializer.Serialize(successResponse),
+                Body = System.Text.Json.JsonSerializer.Serialize(successResponse, LambdaFunctionJsonSerializerContext.Default.SuccessResponse),
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
@@ -92,31 +109,17 @@ public class Function
             response = new APIGatewayProxyResponse
             {
                 StatusCode = 400,
-                Body = System.Text.Json.JsonSerializer.Serialize(errorResponse),
+                Body = System.Text.Json.JsonSerializer.Serialize(errorResponse, LambdaFunctionJsonSerializerContext.Default.ErrorResponse),
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
         // 33% server error (68-100)
         else
         {
-            activity?.SetTag("http.status_code", 500);
-            activity?.SetStatus(ActivityStatusCode.Error);
-
-            var serverErrorResponse = new ErrorResponse
-            {
-                Error = "Server Error",
-                Message = "Internal Server Error - Service temporarily unavailable"
-            };
-            response = new APIGatewayProxyResponse
-            {
-                StatusCode = 500,
-                Body = System.Text.Json.JsonSerializer.Serialize(serverErrorResponse),
-                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-            };
-        }
-
-        _tracerProvider?.ForceFlush();
-        return response;
+            StatusCode = 500,
+            Body = System.Text.Json.JsonSerializer.Serialize(serverErrorResponse, LambdaFunctionJsonSerializerContext.Default.ErrorResponse),
+            Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+        };
     }
 }
 
