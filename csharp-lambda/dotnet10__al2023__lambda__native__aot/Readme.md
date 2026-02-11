@@ -1,5 +1,11 @@
 # Native AOT
 
+![](proof1.png)
+![](proof2.png)
+![](proof3.png)
+![](proof4.png)
+![](proof5.png)
+
 Native AOT is a feature that compiles .NET assemblies into a single native executable. By using the native executable the .NET runtime 
 is not required to be installed on the target platform. Native AOT can significantly improve Lambda cold starts for .NET Lambda functions. 
 This project enables Native AOT by setting the .NET `PublishAot` property in the .NET project file to `true`. The `StripSymbols` property is also
@@ -20,7 +26,7 @@ dotnet lambda deploy-function
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --function-runtime provided.al2023 --function-architecture arm64 --function-handler bootstrap
 
 # OR  with environment variables
-dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --environment-variables "OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.datadoghq.com/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf;OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=<YOUR_API_KEY>,dd-otlp-source=datadog"
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1 --environment-variables "OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.datadoghq.com/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf;OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=<REPLACE_WITH_DATADOG_API_KEY>,dd-otlp-source=datadog"
 
 # OR simply indicate the lambda function name as 
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1

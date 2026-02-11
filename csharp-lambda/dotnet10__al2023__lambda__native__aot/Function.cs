@@ -26,25 +26,15 @@ public class Function
     private static async Task Main()
     {
         // Initialize the TracerProvider: Essential for collecting and exporting telemetry data
+        // Configuration is now loaded from standard OTEL_* environment variables
         var tracerProvider = Sdk.CreateTracerProviderBuilder()
-            // Configure Resource: Essential for identifying the service in Datadog (Service Name, Version, Env)
-            .ConfigureResource(r => r
-                .AddService("jek-dotnet10-native-lambda-v1", serviceVersion: "1.2.3")
-                .AddAttributes(new Dictionary<string, object>
-                {
-                    { "deployment.environment", "dev" }
-                }))
             // Add AWS Lambda Configurations: Essential for capturing Lambda-specific attributes (Request ID, ARN, etc.)
             .AddAWSLambdaConfigurations()
             // Add HTTP Client Instrumentation: Essential for tracing outgoing HTTP requests to other services
             .AddHttpClientInstrumentation()
             // Add OTLP Exporter: Essential for sending the collected traces to Datadog's OTLP endpoint
-            .AddOtlpExporter(options =>
-            {
-                options.Endpoint = new Uri("https://otlp.datadoghq.com/v1/traces");
-                options.Protocol = OtlpExportProtocol.HttpProtobuf;
-                options.Headers = "dd-api-key=<REPLACE_WITH_DATADOG_API_KEY>,dd-otlp-source=datadog";
-            })
+            // Endpoint, Protocol, and Headers are configured via environment variables
+            .AddOtlpExporter()
             .Build();
 
         Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler = 
