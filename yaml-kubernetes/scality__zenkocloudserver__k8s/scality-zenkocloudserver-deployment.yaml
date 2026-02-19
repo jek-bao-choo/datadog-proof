@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scality-zenkocloudserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scality-zenkocloudserver
+  template:
+    metadata:
+      labels:
+        app: scality-zenkocloudserver
+    spec:
+      initContainers:
+      - name: init-dirs
+        image: busybox:latest
+        command: ["sh", "-c", "mkdir -p /data/objects /data/metadata"]
+        volumeMounts:
+        - name: scality-storage
+          mountPath: /data
+      containers:
+      - name: cloudserver
+        image: zenko/cloudserver:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SCALITY_ACCESS_KEY_ID
+          value: "myAccessKey"
+        - name: SCALITY_SECRET_ACCESS_KEY
+          value: "mySuperSecretKey123"
+        - name: S3BACKEND
+          value: "file"
+        - name: S3DATAPATH
+          value: "/data/objects"
+        - name: S3METADATAPATH
+          value: "/data/metadata"
+        - name: ENDPOINT
+          value: "scality-zenkocloudserver-svc"
+        volumeMounts:
+        - name: scality-storage
+          mountPath: /data
+      volumes:
+      - name: scality-storage
+        persistentVolumeClaim:
+          claimName: scality-zenkocloudserver-pvc
