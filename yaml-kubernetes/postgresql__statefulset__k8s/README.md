@@ -7,6 +7,9 @@ description: This document explains how I setup PostgreSQL in preparation for se
 
 Setup postgresql
 ```bash
+# Delete anything that exist
+kubectl delete -f postgres-statefulset.yaml
+
 # Apply the new StatefulSet configuration
 kubectl apply -f postgres-statefulset.yaml
 ```
