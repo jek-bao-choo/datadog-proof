@@ -14,6 +14,9 @@ kubectl apply -f scality-zenkocloudserver-service.yaml
 
 Option 1: Generate dummy logs using k8s job
 ```bash
+# delete if any exists
+kubectl delete job log-generator
+
 kubectl apply -f log-generator-job.yaml
 ```
 
