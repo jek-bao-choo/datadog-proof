@@ -24,7 +24,7 @@ Option 2: Generate dummy logs using temp interactive pod commandline
 kubectl run s3-tester --rm -i --restart=Never --image=amazon/aws-cli \
   --env="AWS_ACCESS_KEY_ID=myAccessKey" \
   --env="AWS_SECRET_ACCESS_KEY=mySuperSecretKey123" \
-  --command -- sh -c 'echo "This is an extremely basic log entry Jek option 2 v1." > basic.log && aws s3 cp basic.log s3://k8s-logs/basic.log --endpoint-url http://scality-zenkocloudserver-svc:8000 && aws s3 ls s3://k8s-logs/ --endpoint-url http://scality-zenkocloudserver-svc:8000'
+  --command -- sh -c 'echo "This is an extremely basic log entry Jek option 2 v2." > basic.log && aws s3 cp basic.log s3://k8s-logs/basic.log --endpoint-url http://scality-zenkocloudserver-svc:8000 && aws s3 ls s3://k8s-logs/ --endpoint-url http://scality-zenkocloudserver-svc:8000'
 
 # Explanation: `kubectl run --rm -it` spins up a disposable pod that runs a command and deletes itself on exit. We use the `amazon/aws-cli` image because Zenko CloudServer is S3-compatible, so the standard AWS CLI works out of the box — just point it at the service with `--endpoint-url`.
 ```

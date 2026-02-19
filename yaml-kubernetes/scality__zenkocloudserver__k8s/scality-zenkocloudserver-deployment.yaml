@@ -21,7 +21,7 @@ spec:
           mountPath: /data
       containers:
       - name: cloudserver
-        image: zenko/cloudserver:latest
+        image: ghcr.io/scality/cloudserver:9.3.0
         ports:
         - containerPort: 8000
         env:

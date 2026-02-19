@@ -17,7 +17,7 @@ spec:
         args:
         - |
           echo "1. Generating dummy log file..."
-          echo "Dummy Log Entry by Jek Option 1 v1 - K8s Job - $(date)" > /tmp/dummy.log
+          echo "Dummy Log Entry by Jek Option 1 v2 - K8s Job - $(date)" > /tmp/dummy.log
           
           echo "2. Creating bucket 'k8s-logs' (ignoring error if it already exists)..."
           aws s3api create-bucket --bucket k8s-logs --endpoint-url http://scality-zenkocloudserver-svc:8000 || true
