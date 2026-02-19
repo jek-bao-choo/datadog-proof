@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "supersecretpassword" # This bcomes the password=supersecretpassword
+---
+# Headless Service: Required for StatefulSet to manage the DNS domain of the pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# Client Service: The standard entry point for other applications to connect
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service # <--- This becomes the hostname!
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: "postgres-headless" # Must match the Headless Service name
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15 # user=postgres and dbname=postgres were baked into the postgres:15 container image
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-storage
+          resources:
+            requests:
+              memory: "2Gi"   # The pod is guaranteed 1 Gigabyte of memory
+              cpu: "1000m"     # The pod is guaranteed half of a CPU core
+            limits:
+              memory: "4Gi"   # The pod cannot exceed 2 Gigabytes of memory
+              cpu: "2"
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - "-U"
+                - "postgres" # The default superuser name
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - "-U"
+                - "postgres"
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+  # volumeClaimTemplates dynamically provisions a PVC for every replica
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
