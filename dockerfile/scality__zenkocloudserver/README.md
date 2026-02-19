@@ -3,6 +3,8 @@ name: Scality Zenko CloudServer Setup using Docker
 description: This document explains (and proves out) how to setup Scality Zenko CloudServer for a simple PoC grade log storage 
 ---
 
+# This README.md explains (and proves out) how to setup Scality Zenko CloudServer for a simple PoC grade log storage 
+
 ![](proof1.png)
 
 create the data and metadata folders inside your specified directory
