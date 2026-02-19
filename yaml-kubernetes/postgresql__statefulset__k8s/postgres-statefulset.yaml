@@ -28,8 +28,8 @@ spec:
   selector:
     app: postgres
   ports:
-    - port: 5432
-      targetPort: 5432
+    - port: 5432 # By default, the PostgreSQL software is hardcoded to listen for network traffic on port 5432
+      targetPort: 5432 # By default, the PostgreSQL software is hardcoded to listen for network traffic on port 5432
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -50,7 +50,7 @@ spec:
         - name: postgres
           image: postgres:15 # user=postgres and dbname=postgres were baked into the postgres:15 container image
           ports:
-            - containerPort: 5432
+            - containerPort: 5432 # By default, the PostgreSQL software is hardcoded to listen for network traffic on port 5432
           env:
             - name: POSTGRES_PASSWORD
               valueFrom:

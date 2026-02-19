@@ -42,7 +42,7 @@ CREATE TABLE test_users (
     name VARCHAR(50)
 );
 
-INSERT INTO test_users (name) VALUES ('Alice'), ('Bob'), ('Charlie');
+INSERT INTO test_users (name) VALUES ('Alicev1'), ('Bobv1'), ('Charliev1');
 ```
 
 view test data
@@ -56,6 +56,34 @@ leave the PostgreSQL prompt and return to your regular terminal
 ```
 
 verify statefulset by deleting the postgres pod
+```bash
+# delete it
+kubectl delete pod <the postgres pod name>
+
+# watch it Come Back
+kubectl get pods -w
+
+# connect to it
+kubectl run psql-client \
+  --rm -it \
+  --image=bitnami/postgresql:latest \
+  --restart=Never \
+  --command -- psql "host=postgres-service port=5432 dbname=postgres user=postgres password=supersecretpassword"
 ```
 
+test it
+```sql
+SELECT * FROM test_users;
+```
+
+---
+
+tl;dr;
+```bash
+# i'll need this connection string for cloudprem setup 
+kubectl run psql-client \
+  --rm -it \
+  --image=bitnami/postgresql:latest \
+  --restart=Never \
+  --command -- psql "host=postgres-service port=5432 dbname=postgres user=postgres password=supersecretpassword"
 ```
