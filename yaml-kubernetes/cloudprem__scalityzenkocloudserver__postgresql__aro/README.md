@@ -1,10 +1,6 @@
 ---
 name: Datadog CloudPrem using Scality's Zenko CloudServer for Object Storage on Azure Redhat Openshift (ARO)
 description: This document explains how I validate CloudPrem works with Scality's Zenko CloudServer on ARO. The specific version of the ARO is version 4.19.20 with kubernetes version 1.32.9. Please take note of the pre-requisites mentioned below.
-cloudprem_helm_chart_version: 0.1.14
-cloudprem_app_version: v0.1.16
-kubernetes_version: v1.32.9
-openshift_version: 4.19.20
 date_tested: 2026-02-20
 ---
 
@@ -27,13 +23,12 @@ The pre-requisites steps (in order):
 ## Step 1 — Verify prerequisites are running
 
 ```bash
-# Verify Scality Zenko CloudServer is running (default namespace)
+# Scality Zenko CloudServer (default namespace)
 kubectl get pods -l app=scality-zenkocloudserver
 kubectl get svc scality-zenkocloudserver-svc
 
-# Verify PostgreSQL is running (zalando-cluster namespace)
+# PostgreSQL (zalando-cluster namespace)
 kubectl get postgresql -n zalando-cluster
-kubectl get pods -n zalando-cluster
 ```
 
 ## Step 2 — Create the S3 bucket for CloudPrem indexes
@@ -53,35 +48,20 @@ kubectl run s3-bucket-create --rm -i --restart=Never --image=amazon/aws-cli:late
 The Zalando operator auto-generates passwords. Retrieve it:
 
 ```bash
-# Get the app_owner password
 PG_PASSWORD=$(kubectl get secret app-owner.acid-pg17-cluster.credentials.postgresql.acid.zalan.do \
   -n zalando-cluster -o jsonpath='{.data.password}' | base64 -d)
 
 echo "PostgreSQL password: $PG_PASSWORD"
 ```
 
-## Step 4 — Test connectivity to PostgreSQL and S3
-
-```bash
-# Test PostgreSQL access (cross-namespace)
-kubectl run psql-client --rm -it --restart=Never --image=bitnami/postgresql:latest \
-  --command -- psql "host=acid-pg17-cluster.zalando-cluster.svc port=5432 dbname=myappdb user=app_owner password=<PASSWORD>"
-
-# Test S3 access
-kubectl run s3-test --rm -it --restart=Never --image=amazon/aws-cli:latest \
-  --env="AWS_ACCESS_KEY_ID=myAccessKey" \
-  --env="AWS_SECRET_ACCESS_KEY=mySuperSecretKey123" \
-  --command -- sh -c 'aws s3 ls s3://cloudprem-indexes/ --endpoint-url http://scality-zenkocloudserver-svc:8000'
-```
-
-## Step 5 — Add Datadog Helm repository
+## Step 4 — Add Datadog Helm repository
 
 ```bash
 helm repo add datadog https://helm.datadoghq.com
 helm repo update
 ```
 
-## Step 6 — Grant OpenShift SCC and create Kubernetes secrets
+## Step 5 — Grant OpenShift SCC and create Kubernetes secrets
 
 ```bash
 # Grant anyuid SCC to CloudPrem service account (OpenShift only)
@@ -101,32 +81,24 @@ kubectl create secret generic cloudprem-scality-credentials \
   --from-literal AWS_SECRET_ACCESS_KEY="mySuperSecretKey123"
 ```
 
-## Step 7 — Deploy CloudPrem with Helm
+## Step 6 — Deploy CloudPrem with Helm
 
-Important notes on `datadog-values.yaml`:
-- The Helm chart uses `control_plane` (snake_case), not `controlPlane` (camelCase) as shown in the Datadog guide
-- The S3 endpoint must use the **short service name** (`http://scality-zenkocloudserver-svc:8000`), not the FQDN. Scality's Zenko CloudServer `restEndpoints` config only recognises the hostname set in its `ENDPOINT` env var
-- Resource requests are sized for PoC (500m-1 CPU / 512Mi-4Gi). The default chart values (4 CPU / 16Gi) exceed a single ARO worker node
+Note: The Helm chart uses `control_plane` (snake_case), not `controlPlane` (camelCase) as shown in the Datadog guide. The S3 endpoint must use the **short service name** (`http://scality-zenkocloudserver-svc:8000`), not the FQDN, because Scality's Zenko CloudServer `restEndpoints` config only recognises the hostname set in its `ENDPOINT` env var. Resource requests are sized for PoC; the default chart values (4 CPU / 16Gi) exceed a single ARO worker node.
 
 ```bash
 helm upgrade --install cloudprem datadog/cloudprem \
   -f datadog-values.yaml
 ```
 
-## Step 8 — Validate deployment
+## Step 7 — Validate deployment
 
 ```bash
 # Check all pods are Running
 kubectl get pods -l app.kubernetes.io/instance=cloudprem
 
-# Check metastore logs for successful cluster joining
-kubectl logs -l app.kubernetes.io/component=metastore --tail=50
-
-# Check indexer logs for successful S3 connectivity (look for "publish-new-splits")
-kubectl logs -l app.kubernetes.io/component=indexer --tail=50
-
-# Check control-plane logs
-kubectl logs -l app.kubernetes.io/component=control-plane --tail=50
+# Check logs (look for "publish-new-splits" in indexer, no connection errors)
+kubectl logs -l app.kubernetes.io/component=metastore --tail=20
+kubectl logs -l app.kubernetes.io/component=indexer --tail=20
 
 # Verify data is being written to Scality S3 bucket
 kubectl run s3-verify --rm -i --restart=Never --image=amazon/aws-cli:latest \
@@ -134,8 +106,6 @@ kubectl run s3-verify --rm -i --restart=Never --image=amazon/aws-cli:latest \
   --env="AWS_SECRET_ACCESS_KEY=mySuperSecretKey123" \
   --command -- sh -c 'aws s3 ls s3://cloudprem-indexes/ --recursive --endpoint-url http://scality-zenkocloudserver-svc:8000 | head -20'
 ```
-
-All pods (control-plane, indexer, searcher, janitor, metastore) should show `Running` status with no connection errors in logs. The S3 bucket should contain `.split` files under `indexes/`.
 
 ## Cleanup
 

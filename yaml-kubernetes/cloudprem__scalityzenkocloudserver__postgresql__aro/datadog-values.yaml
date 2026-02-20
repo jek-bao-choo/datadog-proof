@@ -4,17 +4,6 @@ datadog:
 environment:
   AWS_REGION: us-east-1
 
-serviceAccount:
-  create: true
-  name: cloudprem
-
-# OpenShift requires adjusting security context
-podSecurityContext:
-  fsGroup: 1005
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1005
-
 config:
   default_index_root_uri: s3://cloudprem-indexes/indexes
   storage:
