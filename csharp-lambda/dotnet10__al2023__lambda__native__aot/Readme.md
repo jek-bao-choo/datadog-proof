@@ -1,6 +1,6 @@
 ---
-name: dotnet10-al2023-lambda-native-aot
-description: .NET 10 AWS Lambda function with Native AOT compilation on Amazon Linux 2023, instrumented with OpenTelemetry for Datadog tracing via OTLP.
+name: dotnet10-al2023-lambda-native-aot-otel
+description: .NET 10 AWS Lambda Native AOT on Amazon Linux 2023, using OpenTelemetry .NET (instead of dd-trace-dotnet) for manual instrumentation to send traces to Datadog via OTLP, as recommended by Datadog Support.
 ---
 
 # Native AOT
