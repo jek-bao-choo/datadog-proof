@@ -61,9 +61,30 @@ dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --function-runtime 
 # OR  with environment variables
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1 --environment-variables "OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.datadoghq.com/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf;OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=<REPLACE_WITH_DATADOG_API_KEY>,dd-otlp-source=datadog"
 
-# OR simply indicate the lambda function name as 
+# OR simply indicate the lambda function name as
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1
 ```
+
+## Add Lambda Layer (via CLI)
+```bash
+# 1. Check existing layers
+aws lambda get-function-configuration \
+  --function-name jek_dotnet10_al2023_native_aot \
+  --region ap-southeast-1 \
+  --query 'Layers[].Arn' --output text
+
+# 2. Add new layer while preserving existing ones (filters out "None" when no layers exist)
+EXISTING_LAYERS=$(aws lambda get-function-configuration \
+  --function-name jek_dotnet10_al2023_native_aot \
+  --region ap-southeast-1 \
+  --query 'Layers[].Arn' --output text | tr '\t' ' ' | sed 's/None//g' | xargs)
+
+aws lambda update-function-configuration \
+  --function-name jek_dotnet10_al2023_native_aot \
+  --region ap-southeast-1 \
+  --layers ${EXISTING_LAYERS:+$EXISTING_LAYERS} "arn:aws:lambda:ap-southeast-1:464622532012:layer:dd-trace-dotnet-ARM:23"
+```
+![](proof7.png)
 
 ## Test it
 ```bash
