@@ -14,6 +14,48 @@ date_tested: 2026-02-20
 
 Referencing [Datadog's guide](https://docs.datadoghq.com/cloudprem/install/custom_k8s.md) on Install CloudPrem on Custom Kubernetes but adapting it to use Scality's Zenko CloudServer instead of MinIO
 
+```mermaid
+graph TB
+    subgraph "Datadog Cloud (US1)"
+        DD_UI["Datadog Logs Explorer UI"]
+    end
+
+    subgraph "Azure Red Hat OpenShift 4.19.20 / K8s 1.32.9"
+        subgraph "default namespace"
+            CP_CP["Control Plane"]
+            CP_IDX["Indexer"]
+            CP_SCH["Searcher"]
+            CP_META["Metastore"]
+            CP_JAN["Janitor"]
+            SCALITY["Scality Zenko CloudServer 9.3.0<br/>scality-zenkocloudserver-svc:8000"]
+
+            CP_IDX -- "S3 API<br/>read/write splits" --> SCALITY
+            CP_SCH -- "S3 API<br/>read splits" --> SCALITY
+            CP_JAN -- "S3 API<br/>delete splits" --> SCALITY
+            CP_CP -- "manages" --> CP_IDX
+            CP_CP -- "manages" --> CP_SCH
+        end
+
+        subgraph "zalando-cluster namespace"
+            PG["PostgreSQL 17<br/>acid-pg17-cluster:5432"]
+        end
+
+        CP_META -- "metastore URI<br/>cross-namespace" --> PG
+    end
+
+    DD_UI -- "reverse connection<br/>queries via gRPC :7283" --> CP_SCH
+    CP_IDX -- "/api/v2/logs<br/>log ingestion" --> CP_IDX
+
+    style DD_UI fill:#632CA6,color:#fff
+    style CP_CP fill:#4F4F4F,color:#fff
+    style CP_IDX fill:#4F4F4F,color:#fff
+    style CP_SCH fill:#4F4F4F,color:#fff
+    style CP_META fill:#4F4F4F,color:#fff
+    style CP_JAN fill:#4F4F4F,color:#fff
+    style SCALITY fill:#0A6E31,color:#fff
+    style PG fill:#336791,color:#fff
+```
+
 Tested versions
 | Component | Version |
 |---|---|
