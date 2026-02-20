@@ -6,6 +6,28 @@
 ![](proof4.png)
 ![](proof5.png)
 
+## Tech Stack & Versions
+
+| Category | Technology | Version |
+|---|---|---|
+| **Language** | C# | .NET 10 |
+| **Framework** | .NET Target Framework | `net10.0` |
+| **Runtime** | AWS Lambda Custom Runtime | `provided.al2023` (Amazon Linux 2023) |
+| **Architecture** | ARM64 (Graviton) | `arm64` |
+| **Compilation** | Native AOT | `PublishAot=true` |
+| **AWS SDK** | Amazon.Lambda.RuntimeSupport | 1.14.1 |
+| **AWS SDK** | Amazon.Lambda.Core | 2.8.0 |
+| **AWS SDK** | Amazon.Lambda.Serialization.SystemTextJson | 2.4.4 |
+| **AWS SDK** | Amazon.Lambda.APIGatewayEvents | 2.7.3 |
+| **Telemetry** | OpenTelemetry | 1.15.0 |
+| **Telemetry** | OpenTelemetry.Api | 1.15.0 |
+| **Telemetry** | OpenTelemetry.Extensions.AWS | 1.15.0 |
+| **Telemetry** | OpenTelemetry.Instrumentation.AWSLambda | 1.15.0 |
+| **Telemetry** | OpenTelemetry.Instrumentation.Http | 1.15.0 |
+| **Telemetry** | OpenTelemetry.Exporter.OpenTelemetryProtocol | 1.15.0 |
+| **Telemetry** | OpenTelemetry.Exporter.Console | 1.15.0 |
+| **Observability** | Datadog (via OTLP) | — |
+
 Native AOT is a feature that compiles .NET assemblies into a single native executable. By using the native executable the .NET runtime 
 is not required to be installed on the target platform. Native AOT can significantly improve Lambda cold starts for .NET Lambda functions. 
 This project enables Native AOT by setting the .NET `PublishAot` property in the .NET project file to `true`. The `StripSymbols` property is also
