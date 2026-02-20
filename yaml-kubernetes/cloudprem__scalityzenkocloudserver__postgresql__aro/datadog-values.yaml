@@ -1,6 +1,7 @@
 datadog:
   apiKeyExistingSecret: datadog-secret
 
+# Required by the AWS SDK even with a custom S3 endpoint; value is ignored by Scality
 environment:
   AWS_REGION: us-east-1
 
