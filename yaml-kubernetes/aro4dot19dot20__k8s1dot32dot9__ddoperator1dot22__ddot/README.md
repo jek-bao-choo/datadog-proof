@@ -72,6 +72,8 @@ oc login $apiServer --username kubeadmin --password $kubevar
 
 export kubevar=""
 
+oc get nodes
+
 kubectl get nodes
 
 ```
