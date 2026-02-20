@@ -1,0 +1,78 @@
+datadog:
+  apiKeyExistingSecret: datadog-secret
+
+# Required by the AWS SDK even with a custom S3 endpoint; value is ignored by Scality
+environment:
+  AWS_REGION: us-east-1
+
+config:
+  default_index_root_uri: s3://cloudprem-indexes/indexes
+  storage:
+    s3:
+      endpoint: http://scality-zenkocloudserver-svc:8000
+      force_path_style_access: true
+
+metastore:
+  replicaCount: 1
+  extraEnvFrom:
+    - secretRef:
+        name: cloudprem-metastore-uri
+    - secretRef:
+        name: cloudprem-scality-credentials
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+indexer:
+  replicaCount: 1
+  extraEnvFrom:
+    - secretRef:
+        name: cloudprem-scality-credentials
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "1"
+      memory: 4Gi
+
+searcher:
+  replicaCount: 1
+  extraEnvFrom:
+    - secretRef:
+        name: cloudprem-scality-credentials
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "1"
+      memory: 4Gi
+
+control_plane:
+  extraEnvFrom:
+    - secretRef:
+        name: cloudprem-scality-credentials
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+janitor:
+  extraEnvFrom:
+    - secretRef:
+        name: cloudprem-scality-credentials
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi

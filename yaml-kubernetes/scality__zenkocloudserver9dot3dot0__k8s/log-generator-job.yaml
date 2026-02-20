@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: log-generator
+spec:
+  template:
+    spec:
+      containers:
+      - name: log-uploader
+        image: amazon/aws-cli:latest
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          value: "myAccessKey"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: "mySuperSecretKey123"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "1. Generating dummy log file..."
+          echo "Dummy Log Entry by Jek Option 1 v2 - K8s Job - $(date)" > /tmp/dummy.log
+          
+          echo "2. Creating bucket 'k8s-logs' (ignoring error if it already exists)..."
+          aws s3api create-bucket --bucket k8s-logs --endpoint-url http://scality-zenkocloudserver-svc:8000 || true
+          
+          echo "3. Uploading log file to Scality Zenko CloudServer..."
+          aws s3 cp /tmp/dummy.log s3://k8s-logs/dummy-$(date +%s).log --endpoint-url http://scality-zenkocloudserver-svc:8000
+          
+          echo "4. Done! Here are the current contents of your bucket:"
+          aws s3 ls s3://k8s-logs/ --endpoint-url http://scality-zenkocloudserver-svc:8000
+      restartPolicy: Never
+  backoffLimit: 2

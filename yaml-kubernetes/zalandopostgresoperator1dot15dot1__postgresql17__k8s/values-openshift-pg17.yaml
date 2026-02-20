@@ -1,0 +1,27 @@
+# Zalando Postgres Operator - Helm Values for OpenShift + PostgreSQL 17
+# Operator version: v1.15.1
+# Spilo image: PostgreSQL 17 (spilo-17:4.0-p3)
+#
+# IMPORTANT: After installing the operator, you must also patch the
+# postgres-pod ClusterRole to add "endpoints/restricted" permission.
+# Without this, Patroni leader election fails on OpenShift.
+# Apply patch-clusterrole.yaml after helm install.
+
+image:
+  registry: ghcr.io
+  repository: zalando/postgres-operator
+  tag: v1.15.1
+
+configGeneral:
+  # Pin the Spilo image to PostgreSQL 17
+  docker_image: ghcr.io/zalando/spilo-17:4.0-p3
+
+configKubernetes:
+  # Disable privilege escalation (compatible with OpenShift restricted SCC)
+  spilo_privileged: false
+  spilo_allow_privilege_escalation: false
+
+configMajorVersionUpgrade:
+  major_version_upgrade_mode: "manual"
+  minimal_major_version: "14"
+  target_major_version: "17"
