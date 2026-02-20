@@ -74,7 +74,10 @@ Instead of sending OTLP directly to `https://otlp.datadoghq.com`, you can route 
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `https://otlp.datadoghq.com/v1/traces` | `http://localhost:4318/v1/traces` |
 | `OTEL_EXPORTER_OTLP_HEADERS` | `dd-api-key=<KEY>,dd-otlp-source=datadog` | not needed |
 | `DD_API_KEY` | not needed | `<KEY>` (read by the extension) |
+| `DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT` | not needed | `localhost:4318` (tells the extension to listen for OTLP over HTTP) |
 | Lambda Layer | none | Datadog Extension layer required |
+
+See [Datadog docs](https://docs.datadoghq.com/serverless/aws_lambda/opentelemetry/?tab=python#sdk) for reference.
 
 
 ### Add Lambda Layer (via CLI)
@@ -104,7 +107,7 @@ aws lambda update-function-configuration \
 # 2. Deploy with extension-compatible environment variables
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot \
   --region ap-southeast-1 \
-  --environment-variables "DD_API_KEY=<REPLACE_WITH_DATADOG_API_KEY>;OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf"
+  --environment-variables "DD_API_KEY=<REPLACE_WITH_DATADOG_API_KEY>;DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT=localhost:4318;OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf"
 ```
 
 ## Test it
