@@ -1,3 +1,17 @@
+---
+name: zalando-postgresql17-openshift
+description: Deploy Zalando PostgreSQL 17 on OpenShift using Helm with local storage for on-premise PoC
+tags:
+  - postgresql
+  - zalando
+  - openshift
+  - helm
+  - kubernetes
+  - database
+author: jekbao.choo
+created: 2026-02-20
+---
+
 # Zalando PostgreSQL 17 on OpenShift
 
 Helm installs the [Zalando postgres-operator](https://github.com/zalando/postgres-operator), which manages PostgreSQL clusters via `postgresql` custom resources. Data is stored on local disk (host path) for on-premise PoC use.
@@ -85,11 +99,43 @@ Expected: CR status is `Running`, Patroni shows Leader + Replica streaming.
 - **Primary (read/write):** `acid-pg17-cluster.zalando-cluster.svc:5432`
 - **Replica (read-only):** `acid-pg17-cluster-repl.zalando-cluster.svc:5432`
 
-Retrieve a user's password:
+The operator auto-generates a random password for each user defined in `postgresql-cluster.yaml` and stores it as a Kubernetes secret named `<user>.<cluster>.credentials.postgresql.acid.zalan.do`. To retrieve it:
 
 ```bash
 oc get secret app-owner.acid-pg17-cluster.credentials.postgresql.acid.zalan.do \
   -n zalando-cluster -o jsonpath='{.data.password}' | base64 -d
+```
+
+Connect from a temporary pod using the retrieved password:
+
+```bash
+oc run psql-client --rm -it -n zalando-cluster \
+  --image=bitnami/postgresql:latest \
+  --command -- psql "host=acid-pg17-cluster port=5432 dbname=myappdb user=app_owner password=<PASSWORD>"
+```
+
+## Testing with sample data
+
+Insert:
+
+```bash
+oc exec acid-pg17-cluster-0 -n zalando-cluster -- psql -U app_owner -d myappdb -c "
+CREATE TABLE employees (id SERIAL PRIMARY KEY, name TEXT, department TEXT, salary NUMERIC(10,2));
+"
+
+oc exec acid-pg17-cluster-0 -n zalando-cluster -- psql -U app_owner -d myappdb -c "
+INSERT INTO employees (name, department, salary) VALUES
+  ('Alice v1', 'Engineering', 95000),
+  ('Bob v1', 'Marketing', 72000),
+  ('Charlie v1', 'Finance', 88000);
+"
+```
+
+Query from primary and replica:
+
+```bash
+oc exec acid-pg17-cluster-0 -n zalando-cluster -- psql -U app_owner -d myappdb -c "SELECT * FROM employees;"
+oc exec acid-pg17-cluster-1 -n zalando-cluster -- psql -U app_owner -d myappdb -c "SELECT * FROM employees;"
 ```
 
 ## Cleanup
