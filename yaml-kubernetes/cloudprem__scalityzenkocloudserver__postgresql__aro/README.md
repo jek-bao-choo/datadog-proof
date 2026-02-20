@@ -56,6 +56,9 @@ graph TB
     style PG fill:#336791,color:#fff
 ```
 
+![](proof3.png)
+![](proof4.png)
+
 Tested versions
 | Component | Version |
 |---|---|
