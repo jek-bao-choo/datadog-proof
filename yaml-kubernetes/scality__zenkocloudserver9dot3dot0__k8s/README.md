@@ -1,9 +1,28 @@
 ---
 name: Scality Zenko CloudServer Setup using Kubernetes
-description: This document explains (and proves out) how to setup Scality Zenko CloudServer using K8s for a simple PoC grade log storage 
+description: This document explains (and proves out) how to setup Scality Zenko CloudServer using K8s for a simple PoC grade log storage
+scality_zenko_cloudserver_version: 9.3.0
+busybox_version: latest
+aws_cli_version: latest
+kubernetes_version: v1.32.9
+openshift_version: 4.19.20
+oc_client_version: 4.20.10
+platform: Azure Red Hat OpenShift (ARO)
+s3_backend: file
+date_tested: 2026-02-20
 ---
 
 ![](proof1.png)
+
+Tested versions
+| Component | Version |
+|---|---|
+| Scality Zenko CloudServer | 9.3.0 (`ghcr.io/scality/cloudserver:9.3.0`) |
+| Init container (busybox) | latest (`docker.io/library/busybox:latest`) |
+| AWS CLI (log generator / verification) | latest (`docker.io/amazon/aws-cli:latest`) |
+| Kubernetes | v1.32.9 |
+| OpenShift | 4.19.20 (OC client 4.20.10) |
+| Platform | Azure Red Hat OpenShift (ARO) |
 
 Prerequisites (OpenShift / ARO only)
 ```bash
