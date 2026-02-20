@@ -79,6 +79,13 @@ Instead of sending OTLP directly to `https://otlp.datadoghq.com`, you can route 
 
 See [Datadog docs](https://docs.datadoghq.com/serverless/aws_lambda/opentelemetry/?tab=python#sdk) for reference.
 
+### Direct to Datadog
+![](oteldotnettodatadog.png)
+
+
+### Via Lambda Extension
+![](credit-to-keisukesakasai.png)
+[image courtesy](https://www.datadoghq.com/architecture/enhancing-observability-in-aws-lambda-with-otel/)
 
 ### Add Lambda Layer (via CLI)
 ```bash
@@ -128,6 +135,9 @@ dotnet lambda delete-function jek_dotnet10_al2023_native_aot
 ```
 
 ---
+
+
+# Optional Info Below:
 
 ## Task 1: HTTP GET Endpoint 
 
