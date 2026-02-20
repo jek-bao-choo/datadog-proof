@@ -14,6 +14,8 @@ created: 2026-02-20
 
 # Zalando PostgreSQL 17 on OpenShift
 
+![](proof1.png)
+
 Helm installs the [Zalando postgres-operator](https://github.com/zalando/postgres-operator), which manages PostgreSQL clusters via `postgresql` custom resources. Data is stored on local disk (host path) for on-premise PoC use.
 
 ## Pinned versions
@@ -93,6 +95,14 @@ oc exec acid-pg17-cluster-0 -n zalando-cluster -- patronictl list
 ```
 
 Expected: CR status is `Running`, Patroni shows Leader + Replica streaming.
+
+Verify data is on local storage (not cloud disks):
+
+```bash
+oc get pvc -n zalando-cluster
+```
+
+Expected: both PVCs show `STORAGECLASS = local-storage`. Data is stored at `/var/lib/postgresql/pgdata-{0,1}` on the worker nodes.
 
 ## Connecting
 
