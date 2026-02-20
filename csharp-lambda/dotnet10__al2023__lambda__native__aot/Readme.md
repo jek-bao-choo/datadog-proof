@@ -65,7 +65,19 @@ dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southea
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1
 ```
 
-## Add Lambda Layer (via CLI)
+## Send OTLP via Datadog Lambda Extension (Alternative)
+
+Instead of sending OTLP directly to `https://otlp.datadoghq.com`, you can route traces through the **Datadog Lambda Extension** running locally inside the Lambda environment. No code changes needed — `.AddOtlpExporter()` reads from environment variables.
+
+| Setting | Direct to Datadog | Via Lambda Extension |
+|---|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `https://otlp.datadoghq.com/v1/traces` | `http://localhost:4318/v1/traces` |
+| `OTEL_EXPORTER_OTLP_HEADERS` | `dd-api-key=<KEY>,dd-otlp-source=datadog` | not needed |
+| `DD_API_KEY` | not needed | `<KEY>` (read by the extension) |
+| Lambda Layer | none | Datadog Extension layer required |
+
+
+### Add Lambda Layer (via CLI)
 ```bash
 # 1. Check existing layers
 aws lambda get-function-configuration \
@@ -85,6 +97,15 @@ aws lambda update-function-configuration \
   --layers ${EXISTING_LAYERS:+$EXISTING_LAYERS} "arn:aws:lambda:ap-southeast-1:464622532012:layer:dd-trace-dotnet-ARM:23"
 ```
 ![](proof7.png)
+
+### Then deploy with extension-compatible environment variables after adding Lambda Layer (via CLI)
+
+```bash
+# 2. Deploy with extension-compatible environment variables
+dotnet lambda deploy-function jek_dotnet10_al2023_native_aot \
+  --region ap-southeast-1 \
+  --environment-variables "DD_API_KEY=<REPLACE_WITH_DATADOG_API_KEY>;OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf"
+```
 
 ## Test it
 ```bash
