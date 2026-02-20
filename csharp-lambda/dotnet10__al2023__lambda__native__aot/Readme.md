@@ -123,9 +123,60 @@ Creates a self-contained .NET application (Native AOT disabled for OpenTelemetry
 
 ## Task 3: OpenTelemetry & Datadog Integration (COMPLETED)
 
-### Minimum Code Changes
-To enable Native AOT tracing with Datadog, the following changes were made to `Function.cs`:
-1. **Initialize `TracerProvider`** with OTLP exporter in `Main`.
-2. **Wrap Handler:** Use `AWSLambdaWrapper.Trace(...)` to capture invocations.
-3. **Force Flush:** Call `tracerProvider.ForceFlush()` before the function returns (Critical for Lambda).
+### Why These Code Changes Are Required
+
+By default, a .NET Lambda function produces **no traces**. To get distributed tracing into Datadog, we need to:
+1. **Build a tracing pipeline** — something to collect spans and export them over OTLP
+2. **Instrument the handler** — wrap each invocation so it becomes a trace span
+3. **Flush before freeze** — Lambda freezes the execution environment between invocations, so buffered spans must be sent immediately or they are lost
+
+### Code Changes in `Function.cs`
+
+#### 1. Add OpenTelemetry imports (lines 6–15)
+
+```csharp
+using OpenTelemetry;                            // Core SDK — Sdk.CreateTracerProviderBuilder()
+using OpenTelemetry.Trace;                      // TracerProvider type
+using OpenTelemetry.Instrumentation.AWSLambda;  // AWSLambdaWrapper.Trace() + Lambda attributes
+using OpenTelemetry.Exporter;                   // OTLP exporter (.AddOtlpExporter())
+using OpenTelemetry.Resources;                  // Service metadata (name, env, version)
+```
+
+**Why:** Each library provides a specific piece of the tracing pipeline — without any one of them, traces either won't be created, won't have Lambda context, or won't reach Datadog.
+
+#### 2. Initialize TracerProvider in `Main()` (lines 30–38)
+
+```csharp
+var tracerProvider = Sdk.CreateTracerProviderBuilder()
+    .AddAWSLambdaConfigurations()   // Captures Lambda attributes: ARN, Request ID, cold start
+    .AddHttpClientInstrumentation() // Auto-traces outgoing HTTP calls as child spans
+    .AddOtlpExporter()              // Sends traces to the endpoint in OTEL_EXPORTER_OTLP_ENDPOINT
+    .Build();
+```
+
+**Why:** This runs once during Lambda cold start (init phase). It sets up *what* to trace and *where* to send it. All exporter config (endpoint, API key, protocol) comes from environment variables — no secrets in code.
+
+#### 3. Wrap handler + ForceFlush (lines 40–49)
+
+```csharp
+Func<APIGatewayProxyRequest, ILambdaContext, APIGatewayProxyResponse> handler =
+    (request, context) =>
+    {
+        var response = AWSLambdaWrapper.Trace(tracerProvider, FunctionHandler, request, context);
+        tracerProvider.ForceFlush();
+        return response;
+    };
+```
+
+**Why:**
+- `AWSLambdaWrapper.Trace()` — wraps `FunctionHandler` in a span that records function name, duration, status code, and exceptions
+- `ForceFlush()` — **critical for Lambda**. Pushes all buffered spans to Datadog immediately. Without this, spans stay in memory and are lost when Lambda freezes the execution environment
+
+#### 4. Dispose on shutdown (line 56)
+
+```csharp
+tracerProvider.Dispose();
+```
+
+**Why:** Releases resources when the Lambda environment shuts down. In practice, `ForceFlush()` in step 3 is the real safeguard since Lambda environments are often terminated without reaching this line.
 
