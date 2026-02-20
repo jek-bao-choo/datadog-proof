@@ -1,0 +1,46 @@
+# Patch: Add endpoints/restricted permission for OpenShift compatibility
+# OpenShift requires explicit access to the endpoints/restricted subresource
+# for Patroni leader election via Endpoints to work.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgres-pod
+  annotations:
+    meta.helm.sh/release-name: postgres-operator
+    meta.helm.sh/release-namespace: zalando-postgres
+  labels:
+    app.kubernetes.io/instance: postgres-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: postgres-operator
+    helm.sh/chart: postgres-operator-1.15.1
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+      - endpoints/restricted
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - create

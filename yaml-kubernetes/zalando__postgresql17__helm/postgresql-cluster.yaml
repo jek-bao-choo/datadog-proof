@@ -1,0 +1,48 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: acid-pg17-cluster
+  namespace: zalando-cluster
+  labels:
+    team: acid
+spec:
+  teamId: "acid"
+  numberOfInstances: 2
+
+  postgresql:
+    version: "17"
+    parameters:
+      shared_buffers: "256MB"
+      max_connections: "100"
+      log_statement: "all"
+
+  volume:
+    size: 10Gi
+    # storageClass: "your-openshift-storageclass"
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+  users:
+    app_owner:
+      - superuser
+      - createdb
+    app_user:
+      - login
+
+  databases:
+    myappdb: app_owner
+
+  patroni:
+    initdb:
+      encoding: "UTF8"
+      locale: "en_US.UTF-8"
+      data-checksums: "true"
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
