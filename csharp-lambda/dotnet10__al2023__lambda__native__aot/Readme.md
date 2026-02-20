@@ -33,6 +33,12 @@ description: .NET 10 AWS Lambda function with Native AOT compilation on Amazon L
 | **Telemetry** | OpenTelemetry.Exporter.Console | 1.15.0 |
 | **Observability** | Datadog (via OTLP) | — |
 
+## Why OpenTelemetry .NET Instead of dd-trace-dotnet
+
+This project uses **OpenTelemetry .NET** (manual instrumentation with code changes) instead of Datadog's own **dd-trace-dotnet** library. This was recommended by the **Datadog Support Team** as a compatible approach for sending traces from a Lambda Native AOT .NET application to Datadog via OTLP.
+
+> **Disclaimer:** I have tested `dd-trace-dotnet` using **layer-based automatic instrumentation** on a Lambda Native AOT .NET 10 app (which didn't work OOTB late Dec 2025 / Jan 2026), but I have **not** tested `dd-trace-dotnet` using **manual instrumentation** (i.e., adding `dd-trace-dotnet` as a NuGet package with code changes to `Function.cs`, similar to how OpenTelemetry .NET is used here). It is possible that manual instrumentation with `dd-trace-dotnet` also works, but that has not been verified in this project.
+
 Native AOT is a feature that compiles .NET assemblies into a single native executable. By using the native executable the .NET runtime 
 is not required to be installed on the target platform. Native AOT can significantly improve Lambda cold starts for .NET Lambda functions. 
 This project enables Native AOT by setting the .NET `PublishAot` property in the .NET project file to `true`. The `StripSymbols` property is also
