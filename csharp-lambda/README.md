@@ -54,6 +54,20 @@ This guide provides comprehensive instructions for setting up a .NET development
 1. Install Visual Studio Code (VSCode)
 2. Install the C# extension in VSCode
 
+---
+
+### Instrumenting NativeAOT
+### Why Code Changes Are Required and How Extensive They Are
+Auto instrumentation does not work with Native AOT because AOT apps are compiled to native code, leaving no bytecode to rewrite. This is not a shortcoming of the Datadog Trace .NET SDK. In fact, both the [Datadog Trace .NET SDK](https://github.com/DataDog/dd-trace-dotnet) and [OpenTelemetry's .NET Automatic Instrumentation](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation) ([which was a fork of dd-trace-dotnet](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/commit/9560dd167754ae15ebddbc108eb79e51799333be)) rewrite bytecode at runtime to modify the user's application. This explains why auto instrumentation does not work with Native AOT. Hence, manual instrumentation is required, though with minimal code changes.
+
+The code changes look like [this example](https://github.com/jek-bao-choo/datadog-proof/blob/main/csharp-lambda/dotnet10__al2023__lambda__native__aot/Function.cs#L34). ![](opentelemetry-dotnet-add-instrumentation.png) Additional instrumentations that can be added are available in [OpenTelemetry .NET Contrib](https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/main/src) ![](opentelemetry-dotnet-instrumentation.png) — look for packages named `OpenTelemetry.Instrumentation.*`. Each one requires just a single configuration line, such as `.AddHttpClientInstrumentation()`.
+
+These OTel instrumentations provide something akin to "automatic" instrumentation — though code changes are still required, unlike full zero-touch auto instrumentation — in the sense that they need only a one-time configuration without manually creating each span. These types of code changes are compatible with Native AOT .NET apps.
+
+
+---
+
+
 
 ## .NET AWS Lambda
 
