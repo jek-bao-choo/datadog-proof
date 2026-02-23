@@ -1,6 +1,6 @@
 ---
 name: dotnet10-al2023-lambda-native-aot-otel
-description: .NET 10 AWS Lambda Native AOT on Amazon Linux 2023, using OpenTelemetry .NET (instead of dd-trace-dotnet) for manual instrumentation to send traces to Datadog via OTLP, as recommended by Datadog Support.
+description: .NET 10 AWS Lambda Native AOT on Amazon Linux 2023, using OpenTelemetry .NET (instead of dd-trace-dotnet) for manual instrumentation to send traces to Datadog via OTLP, as recommended by the Datadog Support team.
 ---
 
 # Native AOT
@@ -35,21 +35,15 @@ description: .NET 10 AWS Lambda Native AOT on Amazon Linux 2023, using OpenTelem
 
 ## Why OpenTelemetry .NET Instead of dd-trace-dotnet
 
-This project uses **OpenTelemetry .NET** (manual instrumentation with code changes) instead of Datadog's own **dd-trace-dotnet** library. This was recommended by the **Datadog Support Team** as a compatible approach for sending traces from a Lambda Native AOT .NET application to Datadog via OTLP.
+This project uses **OpenTelemetry .NET** (manual instrumentation with code changes) instead of Datadog's own **dd-trace-dotnet** library. This was recommended by the **Datadog Support Team** as the compatible approach for sending traces from a Lambda Native AOT .NET application to Datadog via OTLP.
 
-> **Disclaimer:** I have tested `dd-trace-dotnet` using **layer-based automatic instrumentation** on a Lambda Native AOT .NET 10 app (which didn't work OOTB late Dec 2025 / Jan 2026), but I have **not** tested `dd-trace-dotnet` using **manual instrumentation** (i.e., adding `dd-trace-dotnet` as a NuGet package with code changes to `Function.cs`, similar to how OpenTelemetry .NET is used here). It is possible that manual instrumentation with `dd-trace-dotnet` also works, but that has not been verified in this project.
+> **Disclaimer:** I have tested `dd-trace-dotnet` using **layer-based automatic instrumentation** on a Lambda Native AOT .NET 10 app (which did not work out of the box in late Dec 2025 / Jan 2026), but I have **not** tested `dd-trace-dotnet` using **manual instrumentation** (i.e., adding `dd-trace-dotnet` as a NuGet package with code changes to `Function.cs`, similar to how OpenTelemetry .NET is used here). It is possible that manual instrumentation with `dd-trace-dotnet` also works, but that has not been verified in this project.
 
-Native AOT is a feature that compiles .NET assemblies into a single native executable. By using the native executable the .NET runtime 
-is not required to be installed on the target platform. Native AOT can significantly improve Lambda cold starts for .NET Lambda functions. 
-This project enables Native AOT by setting the .NET `PublishAot` property in the .NET project file to `true`. The `StripSymbols` property is also
-set to `true` to strip debugging symbols from the deployed executable to reduce the executable's size.
+Native AOT is a feature that compiles .NET assemblies into a single native executable. By using the native executable, the .NET runtime is not required to be installed on the target platform. Native AOT can significantly improve Lambda cold starts for .NET Lambda functions. This project enables Native AOT by setting the .NET `PublishAot` property in the .NET project file to `true`. The `StripSymbols` property is also set to `true` to strip debugging symbols from the deployed executable and reduce its size.
 
 ## Basic: Building Native AOT
 
-When publishing with Native AOT the build OS and Architecture must match the target platform that the application will run. For AWS Lambda that target
-platform is Amazon Linux 2023. The AWS tooling for Lambda like the AWS Toolkit for Visual Studio, .NET Global Tool Amazon.Lambda.Tools and SAM CLI will 
-perform a container build using a .NET 10 Amazon Linux 2023 build image when `PublishAot` is set to `true`. This means **docker is a requirement**
-when packaging .NET Native AOT Lambda functions on non-Amazon Linux 2023 build environments.
+When publishing with Native AOT, the build OS and architecture must match the target platform where the application will run. For AWS Lambda, that target platform is Amazon Linux 2023. AWS tooling for Lambda — such as the AWS Toolkit for Visual Studio, the .NET Global Tool `Amazon.Lambda.Tools`, and SAM CLI — will perform a container build using a .NET 10 Amazon Linux 2023 build image when `PublishAot` is set to `true`. This means **Docker is a requirement** when packaging .NET Native AOT Lambda functions on non-Amazon Linux 2023 build environments.
 
 ## Deploy
 ```bash
@@ -61,13 +55,13 @@ dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --function-runtime 
 # OR  with environment variables
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1 --environment-variables "OTEL_SERVICE_NAME=jek-lambda-al2023-nativeaot-v1;OTEL_RESOURCE_ATTRIBUTES=deployment.environment=jek-sandbox-v3,version=1.1.1;OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.datadoghq.com/v1/traces;OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf;OTEL_EXPORTER_OTLP_HEADERS=dd-api-key=<REPLACE_WITH_DATADOG_API_KEY>,dd-otlp-source=datadog"
 
-# OR simply indicate the lambda function name as
+# OR simply specify the Lambda function name
 dotnet lambda deploy-function jek_dotnet10_al2023_native_aot --region ap-southeast-1
 ```
 
 ## Send OTLP via Datadog Lambda Extension (Alternative)
 
-Instead of sending OTLP directly to `https://otlp.datadoghq.com`, you can route traces through the **Datadog Lambda Extension** running locally inside the Lambda environment. No code changes needed — `.AddOtlpExporter()` reads from environment variables.
+Instead of sending OTLP directly to `https://otlp.datadoghq.com`, you can route traces through the **Datadog Lambda Extension** running locally inside the Lambda environment. No code changes are needed — `.AddOtlpExporter()` reads from environment variables.
 
 | Setting | Direct to Datadog | Via Lambda Extension |
 |---|---|---|
@@ -139,7 +133,7 @@ dotnet lambda delete-function jek_dotnet10_al2023_native_aot
 
 # Optional Info Below:
 
-## Task 1: HTTP GET Endpoint 
+## Task 1: HTTP GET Endpoint
 
 ### What Was Implemented
 Added HTTP GET endpoint that returns random responses:
@@ -190,7 +184,7 @@ dotnet lambda invoke-function jek_dotnet10_al2023_native_aot --payload '{"httpMe
 
 ---
 
-## Task 2: Amazon Linux 2023 Runtime 
+## Task 2: Amazon Linux 2023 Runtime
 
 ### Configuration Status
 The Lambda function is configured to deploy as Amazon Linux 2023 custom runtime with Native AOT compilation.
@@ -268,9 +262,10 @@ tracerProvider.Dispose();
 
 **Why:** Releases resources when the Lambda environment shuts down. In practice, `ForceFlush()` in step 3 is the real safeguard since Lambda environments are often terminated without reaching this line.
 
-### Explanation on why and how much code changes would be required
-Auto instrumentation method does not and cannot work with Native AOT because AOT apps are compiled into native code so there is no bytecode to rewrite. This is not a Datadog trace dotnet shortcoming. In fact, the [Datadog Trace .NET SDK](https://github.com/DataDog/dd-trace-dotnet) and [OpenTelemetry's .NET Automatic Instrumentation](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation) ([was a fork of dd-trace-dotnet](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/commit/9560dd167754ae15ebddbc108eb79e51799333be)) both rewrite bytecode at run time to modify the user's application. So this explains why auto instrumentation doesn't work. Hence, there is a need for manual instrumentation while with minimal code changes.
+### Why Auto-Instrumentation Doesn't Work and How Much Code Change Is Required
 
-The code changes would be like in ([my example](https://github.com/jek-bao-choo/datadog-proof/blob/main/csharp-lambda/dotnet10__al2023__lambda__native__aot/Function.cs#L34)). ![](opentelemetry-dotnet-add-instrumentation.png) and I can see those that I can additionally add: [OpenTelemetry .NET Contrib instrumentations](https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/main/src) ![](opentelemetry-dotnet-instrumentation.png) look for those named `OpenTelemetry.Instrumentation.*`  so just add a single config line (like the `.AddHttpClientInstrumentation()`. 
+Auto-instrumentation does not and cannot work with Native AOT because AOT apps are compiled into native code — there is no bytecode to rewrite at runtime. This is not a shortcoming specific to dd-trace-dotnet. In fact, both the [Datadog Trace .NET SDK](https://github.com/DataDog/dd-trace-dotnet) and [OpenTelemetry's .NET Automatic Instrumentation](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation) ([originally forked from dd-trace-dotnet](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/commit/9560dd167754ae15ebddbc108eb79e51799333be)) both rewrite bytecode at runtime to modify the running application. This is why auto-instrumentation cannot work with Native AOT. Manual instrumentation is therefore required — but the code changes are minimal.
 
-These OTel instrumentation provide something like "automatic" instrumentation (but yes, there is still code changes - not full automatic instrumentation) in the sense that they only configure it once and don't need to create each span manually. These type of code changes can work with Native AOT .NET app. 
+The required changes are shown in [my example](https://github.com/jek-bao-choo/datadog-proof/blob/main/csharp-lambda/dotnet10__al2023__lambda__native__aot/Function.cs#L34): ![](opentelemetry-dotnet-add-instrumentation.png). Additional instrumentations are available in [OpenTelemetry .NET Contrib](https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/main/src) ![](opentelemetry-dotnet-instrumentation.png); look for packages named `OpenTelemetry.Instrumentation.*`. Each one requires only a single config line, such as `.AddHttpClientInstrumentation()`.
+
+These OTel instrumentations act as "semi-automatic" instrumentation: you configure them once and they automatically capture spans without needing to create each span manually. This type of code change is compatible with Native AOT .NET applications.
