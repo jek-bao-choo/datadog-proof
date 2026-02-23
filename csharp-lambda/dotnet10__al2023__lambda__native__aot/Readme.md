@@ -268,3 +268,9 @@ tracerProvider.Dispose();
 
 **Why:** Releases resources when the Lambda environment shuts down. In practice, `ForceFlush()` in step 3 is the real safeguard since Lambda environments are often terminated without reaching this line.
 
+### Explanation on why and how much code changes would be required
+Auto instrumentation method does not and cannot work with Native AOT because AOT apps are compiled into native code so there is no bytecode to rewrite. This is not a Datadog trace dotnet shortcoming. In fact, the [Datadog Trace .NET SDK](https://github.com/DataDog/dd-trace-dotnet) and [OpenTelemetry's .NET Automatic Instrumentation](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation) ([was a fork of dd-trace-dotnet](https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/commit/9560dd167754ae15ebddbc108eb79e51799333be)) both rewrite bytecode at run time to modify the user's application. So this explains why auto instrumentation doesn't work. Hence, there is a need for manual instrumentation while with minimal code changes.
+
+The code changes would be like in ([my example](https://github.com/jek-bao-choo/datadog-proof/blob/main/csharp-lambda/dotnet10__al2023__lambda__native__aot/Function.cs#L34)). ![](opentelemetry-dotnet-add-instrumentation.png) and I can see those that I can add: [OpenTelemetry .NET Contrib instrumentations](https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/main/src) ![](opentelemetry-dotnet-instrumentation.png) look for those named `OpenTelemetry.Instrumentation.*`  so just add a single config line (like the `.AddHttpClientInstrumentation()`. 
+
+These OTel instrumentation provide "automatic" instrumentation (but yes, there is still code changes - not full automatic instrumentation) in the sense that they only configure it once and don't need to create each span manually. These type of code changes can work with Native AOT .NET app. 
