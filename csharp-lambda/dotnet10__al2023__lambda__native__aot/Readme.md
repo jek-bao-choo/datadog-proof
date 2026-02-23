@@ -203,7 +203,7 @@ Creates a self-contained .NET application (Native AOT disabled for OpenTelemetry
 
 ---
 
-## Task 3: OpenTelemetry & Datadog Integration (COMPLETED)
+## Task 3: OpenTelemetry & Datadog Integration
 
 ### Why These Code Changes Are Required
 
@@ -269,3 +269,8 @@ Auto-instrumentation does not and cannot work with Native AOT because AOT apps a
 The required changes are shown in [my example](https://github.com/jek-bao-choo/datadog-proof/blob/main/csharp-lambda/dotnet10__al2023__lambda__native__aot/Function.cs#L34): ![](opentelemetry-dotnet-add-instrumentation.png). Additional instrumentations are available in [OpenTelemetry .NET Contrib](https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/main/src) ![](opentelemetry-dotnet-instrumentation.png); look for packages named `OpenTelemetry.Instrumentation.*`. Each one requires only a single config line, such as `.AddHttpClientInstrumentation()`.
 
 These OTel instrumentations act as "semi-automatic" instrumentation: you configure them once and they automatically capture spans without needing to create each span manually. This type of code change is compatible with Native AOT .NET applications.
+
+### Background on Observability for .NET Native AOT
+- .NET Native AOT supports observability and telemetry https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/diagnostics. The Native AOT runtime supports EventPipe, which is the foundational layer used by many logging and tracing libraries. You can interface with EventPipe directly through APIs such as `EventSource.WriteEvent`, or use libraries built on top of it, such as OpenTelemetry. EventPipe support also allows .NET diagnostic tools such as `dotnet-trace`, `dotnet-counters`, and `dotnet-monitor` to work seamlessly with both Native AOT and full .NET runtime applications. Note that EventPipe is an optional component in Native AOT — to include it, set the `EventSourceSupport` MSBuild property to `true`. Native AOT also provides partial support for some well-known event providers https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/diagnostics
+- For a general .NET Native AOT application (not specific to a Lambda Native AOT function), this walkthrough https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs provides an example of how to add distributed tracing instrumentation using the OpenTelemetry .NET SDK.
+- It is worth noting that AWS does not recommend using layers to manage dependencies for Lambda functions written in .NET. Since .NET is a compiled language, functions must still manually load any shared assemblies into memory during the Init phase, which can increase cold start times. Using layers not only complicates the deployment process but also prevents you from taking advantage of built-in compiler optimizations. Instead, include external dependencies directly in your deployment package at compile time — this simplifies deployment and allows you to benefit from .NET's built-in compiler optimizations. For an example of how to import and use dependencies such as NuGet packages, see https://docs.aws.amazon.com/lambda/latest/dg/dotnet-layers.html
