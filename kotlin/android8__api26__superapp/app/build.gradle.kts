@@ -51,4 +51,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.dd.sdk.android.rum)
     implementation(libs.dd.sdk.android.webview)
+    implementation(libs.dd.sdk.android.okhttp)
+    implementation(libs.dd.sdk.android.trace)
+    implementation(libs.okhttp)
 }

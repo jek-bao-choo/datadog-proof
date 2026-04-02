@@ -8,6 +8,8 @@ import com.datadog.android.privacy.TrackingConsent
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
+import com.datadog.android.trace.Trace
+import com.datadog.android.trace.TraceConfiguration
 
 class MyApplication : Application() {
     override fun onCreate() {
@@ -41,5 +43,9 @@ class MyApplication : Application() {
             .build()
 
         Rum.enable(rumConfiguration)
+
+        // Configure Trace for RUM-to-APM correlation
+        val traceConfiguration = TraceConfiguration.Builder().build()
+        Trace.enable(traceConfiguration)
     }
 }

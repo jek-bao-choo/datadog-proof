@@ -34,6 +34,11 @@
     <string name="placeholder_dashboard">Dashboard - Coming Soon</string>
     <string name="placeholder_settings">Settings - Coming Soon</string>
 
+    <!-- Testing -->
+    <string name="category_testing">Testing</string>
+    <string name="service_test_api">Test API</string>
+    <string name="service_test_api_v2">Test API v2</string>
+
     <!-- Menu -->
     <string name="menu_profile">Profile</string>
 </resources>
